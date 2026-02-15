@@ -1,0 +1,227 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+
+class RolePermissionSeeder extends Seeder
+{
+    /**
+     * Run the database seeder.
+     */
+    public function run(): void
+    {
+        // إعادة تعيين cache الصلاحيات
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // Create permissions - نظام شامل
+        $permissions = [
+            // إدارة المستخدمين
+            'view-users', 'create-users', 'edit-users', 'delete-users',
+            
+            // إدارة الموظفين
+            'view-employees', 'create-employees', 'edit-employees', 'delete-employees',
+            
+            // إدارة المشاريع
+            'view-all-projects', 'view-own-projects', 'create-projects', 'edit-projects', 'delete-projects',
+            
+            // إدارة المهام
+            'view-all-tasks', 'view-own-tasks', 'create-tasks', 'edit-tasks', 'delete-tasks',
+            
+            // إدارة العملاء
+            'view-clients', 'create-clients', 'edit-clients', 'delete-clients',
+            
+            // إدارة المبيعات
+            'view-sales', 'create-sales', 'edit-sales', 'delete-sales',
+            
+            // إدارة التصميم
+            'view-design', 'create-design', 'edit-design', 'delete-design', 'manage-design',
+            
+            // إدارة التسويق
+            'view-marketing', 'create-marketing', 'edit-marketing', 'delete-marketing', 'manage-marketing',
+            
+            // إدارة المالية والمحاسبة
+            'view-finance', 'create-finance', 'edit-finance', 'delete-finance', 'approve-expenses',
+            
+            // إدارة الحضور والانصراف
+            'view-attendance', 'create-attendance', 'edit-attendance', 'delete-attendance',
+            
+            // إدارة الإجازات
+            'view-leaves', 'create-leaves', 'edit-leaves', 'delete-leaves', 'approve-leaves',
+            
+            // إدارة الرواتب
+            'view-salaries', 'create-salaries', 'edit-salaries', 'delete-salaries', 'approve-salaries',
+            
+            // إدارة الفواتير
+            'view-invoices', 'create-invoices', 'edit-invoices', 'delete-invoices',
+            
+            // إدارة العقود
+            'view-contracts', 'create-contracts', 'edit-contracts', 'delete-contracts',
+            
+            // إدارة الأخطاء
+            'view-bugs', 'create-bugs', 'edit-bugs', 'delete-bugs',
+            
+            // إدارة الاختبارات
+            'view-qa', 'create-qa', 'edit-qa', 'delete-qa',
+            
+            // إدارة التذاكر
+            'view-tickets', 'create-tickets', 'edit-tickets', 'delete-tickets',
+            
+            // إدارة الأقسام
+            'view-departments', 'create-departments', 'edit-departments', 'delete-departments',
+            
+            // التقارير
+            'view-reports', 'generate-reports', 'export-reports',
+            
+            // لوحة التحكم
+            'view-dashboard', 'view-analytics',
+            
+            // الإعدادات
+            'view-settings', 'edit-settings', 'manage-roles',
+            
+            // إدارة التدريب والتطوير
+            'view-training', 'create-training', 'edit-training', 'delete-training',
+            
+            // إدارة الاجتماعات والمؤتمرات
+            'view-meetings', 'create-meetings', 'edit-meetings', 'delete-meetings',
+            
+            // إضافية
+            'view-assets',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        // ========== الأدوار الوظيفية ==========
+        
+        // 1. مدير النظام (Super Admin)
+        $superAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $superAdmin->syncPermissions(Permission::all());
+
+        // 2. مدير (Admin)
+        $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $admin->syncPermissions([
+            'view-users', 'create-users', 'edit-users',
+            'view-employees', 'create-employees', 'edit-employees',
+            'view-all-projects', 'create-projects', 'edit-projects', 'delete-projects',
+            'view-all-tasks', 'create-tasks', 'edit-tasks', 'delete-tasks',
+            'view-clients', 'create-clients', 'edit-clients', 'delete-clients',
+            'view-sales', 'create-sales', 'edit-sales', 'delete-sales',
+            'view-design', 'create-design', 'edit-design', 'delete-design', 'manage-design',
+            'view-marketing', 'create-marketing', 'edit-marketing', 'delete-marketing', 'manage-marketing',
+            'view-finance', 'create-finance', 'edit-finance',
+            'view-attendance', 'create-attendance', 'edit-attendance',
+            'view-leaves', 'create-leaves', 'edit-leaves', 'approve-leaves',
+            'view-salaries', 'create-salaries', 'edit-salaries', 'approve-salaries',
+            'view-training', 'create-training', 'edit-training', 'delete-training',
+            'view-meetings', 'create-meetings', 'edit-meetings', 'delete-meetings',
+            'view-assets',
+            'view-invoices', 'create-invoices', 'edit-invoices',
+            'view-contracts', 'create-contracts', 'edit-contracts',
+            'view-bugs', 'create-bugs', 'edit-bugs',
+            'view-qa', 'create-qa', 'edit-qa',
+            'view-tickets', 'create-tickets', 'edit-tickets',
+            'view-departments', 'create-departments', 'edit-departments',
+            'view-reports', 'generate-reports', 'export-reports',
+            'view-dashboard', 'view-analytics',
+            'view-settings'
+        ]);
+
+        // 3. مدير مشاريع (Project Manager)
+        $projectManager = Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
+        $projectManager->syncPermissions([
+            'view-employees',
+            'view-all-projects', 'create-projects', 'edit-projects',
+            'view-all-tasks', 'create-tasks', 'edit-tasks',
+            'view-clients', 'edit-clients',
+            'view-bugs', 'create-bugs', 'edit-bugs',
+            'view-qa', 'create-qa', 'edit-qa',
+            'view-reports', 'generate-reports',
+            'view-dashboard',
+            'view-training', 'create-training', 'edit-training',
+            'view-meetings', 'create-meetings', 'edit-meetings'
+        ]);
+
+        // 4. موظف (Employee)
+        $employee = Role::firstOrCreate(['name' => 'employee', 'guard_name' => 'web']);
+        $employee->syncPermissions([
+            'view-own-projects', 'view-own-tasks', 'edit-tasks',
+            'view-clients',
+            'view-bugs', 'create-bugs',
+            'view-dashboard',
+            'view-training', 'view-meetings'
+        ]);
+
+        // 5. الموارد البشرية (HR)
+        $hr = Role::firstOrCreate(['name' => 'hr', 'guard_name' => 'web']);
+        $hr->syncPermissions([
+            'view-users', 'create-users', 'edit-users',
+            'view-employees', 'create-employees', 'edit-employees',
+            'view-attendance', 'create-attendance', 'edit-attendance',
+            'view-leaves', 'create-leaves', 'edit-leaves', 'approve-leaves',
+            'view-salaries', 'create-salaries', 'edit-salaries',
+            'view-reports', 'generate-reports',
+            'view-dashboard',
+            'view-training', 'create-training', 'edit-training', 'delete-training',
+            'view-meetings', 'create-meetings', 'edit-meetings', 'delete-meetings',
+            'view-assets'
+        ]);
+
+        // 6. محاسب (Accountant)
+        $accountant = Role::firstOrCreate(['name' => 'accountant', 'guard_name' => 'web']);
+        $accountant->syncPermissions([
+            'view-finance', 'create-finance', 'edit-finance', 'delete-finance', 'approve-expenses',
+            'view-invoices', 'create-invoices', 'edit-invoices',
+            'view-salaries',
+            'view-contracts',
+            'view-reports', 'generate-reports', 'export-reports',
+            'view-dashboard', 'view-analytics'
+        ]);
+
+        // 7. موظف مبيعات (Sales Representative)
+        $salesRep = Role::firstOrCreate(['name' => 'sales_rep', 'guard_name' => 'web']);
+        $salesRep->syncPermissions([
+            'view-clients', 'create-clients', 'edit-clients',
+            'view-sales', 'create-sales', 'edit-sales',
+            'view-marketing', 'create-marketing', 'edit-marketing',
+            'view-invoices', 'create-invoices',
+            'view-contracts', 'create-contracts',
+            'view-dashboard'
+        ]);
+
+        // 8. دعم فني (Support)
+        $support = Role::firstOrCreate(['name' => 'support', 'guard_name' => 'web']);
+        $support->syncPermissions([
+            'view-clients',
+            'view-tickets', 'create-tickets', 'edit-tickets',
+            'view-bugs', 'create-bugs',
+            'view-dashboard'
+        ]);
+
+        // 9. مطور (Developer)
+        $developer = Role::firstOrCreate(['name' => 'developer', 'guard_name' => 'web']);
+        $developer->syncPermissions([
+            'view-own-projects', 'view-own-tasks', 'edit-tasks',
+            'view-bugs', 'create-bugs', 'edit-bugs',
+            'view-qa', 'create-qa', 'edit-qa',
+            'view-dashboard',
+            'view-training', 'create-training', 'edit-training',
+            'view-meetings', 'create-meetings', 'edit-meetings'
+        ]);
+
+        // 10. مصمم (Designer)
+        $designer = Role::firstOrCreate(['name' => 'designer', 'guard_name' => 'web']);
+        $designer->syncPermissions([
+            'view-own-projects', 'view-own-tasks', 'edit-tasks',
+            'view-clients',
+            'view-design', 'create-design', 'edit-design', 'manage-design',
+            'view-dashboard',
+            'view-training', 'create-training', 'edit-training',
+            'view-meetings', 'create-meetings', 'edit-meetings'
+        ]);
+    }
+}
