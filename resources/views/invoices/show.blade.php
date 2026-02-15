@@ -12,14 +12,14 @@
                 <p class="text-sm sm:text-base text-gray-600">تفاصيل الفاتورة رقم {{ $invoice->invoice_number }}</p>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('invoices.index') }}" class="bg-gray-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-gray-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
+                <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.index') : route('invoices.index') }}" class="bg-gray-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-gray-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
                     <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                     العودة للقائمة
                 </a>
                 @if($invoice->status !== 'paid')
-                <button onclick="markAsPaid({{ $invoice->id }})" class="bg-green-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
+                <button onclick="markAsPaid({{ $invoice->id }}, '{{ request()->routeIs("financial-invoices.*") ? "financial-invoices" : "invoices" }}')" class="bg-green-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
                     <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -103,10 +103,10 @@
                     <div class="bg-white border-r-4 border-gray-900 p-4 rounded">
                         <h3 class="text-xs font-bold text-gray-900 mb-3 uppercase tracking-wide">إلى (To)</h3>
                         <div class="space-y-1.5">
-                            <h4 class="font-bold text-gray-900 text-sm">{{ $invoice->client->name ?? 'غير محدد' }}</h4>
-                            <p class="text-xs text-gray-600 hide-address-print">{{ $invoice->client->address ?? '' }}</p>
-                            <p class="text-xs text-gray-700">{{ $invoice->client->email ?? '' }}</p>
-                            <p class="text-xs text-gray-700">{{ $invoice->client->phone ?? '' }}</p>
+                            <h4 class="font-bold text-gray-900 text-sm">{{ optional($invoice->client)->name ?? 'غير محدد' }}</h4>
+                            <p class="text-xs text-gray-600 hide-address-print">{{ optional($invoice->client)->address ?? '' }}</p>
+                            <p class="text-xs text-gray-700">{{ optional($invoice->client)->email ?? '' }}</p>
+                            <p class="text-xs text-gray-700">{{ optional($invoice->client)->phone ?? '' }}</p>
                         </div>
                     </div>
                 </div>
@@ -174,8 +174,8 @@
         </div>
         @endif
 
-        <!-- Contract Info -->
-        @if($invoice->contract)
+        <!-- Contract Info (الفواتير العادية فقط - الفواتير المالية لا تحتوي عقد) -->
+        @if(method_exists($invoice, 'contract') && $invoice->contract)
         <div class="px-10 py-3 bg-purple-50 border-t border-gray-200">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -196,7 +196,20 @@
         <!-- Invoice Items -->
         <div class="px-10 py-5">
             <h3 class="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">بنود الفاتورة / Invoice Items</h3>
-            @if($invoice->items && is_array($invoice->items) && count($invoice->items) > 0)
+            @php
+                $itemsArray = [];
+                if ($invoice->items && is_array($invoice->items) && count($invoice->items) > 0) {
+                    $itemsArray = $invoice->items;
+                } elseif (method_exists($invoice, 'getRelation') && $invoice->relationLoaded('items') && $invoice->items->isNotEmpty()) {
+                    $itemsArray = $invoice->items->map(fn($i) => [
+                        'description' => $i->description ?? $i->item_name ?? '',
+                        'quantity' => $i->quantity,
+                        'unit_price' => $i->unit_price,
+                        'amount' => $i->amount ?? ($i->quantity * $i->unit_price),
+                    ])->toArray();
+                }
+            @endphp
+            @if(count($itemsArray) > 0)
             <div class="overflow-x-auto">
                 <table class="w-full border-collapse">
                     <thead>
@@ -208,12 +221,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($invoice->items as $index => $item)
+                        @foreach($itemsArray as $index => $item)
                         <tr class="border-b border-gray-200 {{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }}">
                             <td class="py-3 px-4 text-sm text-gray-900 font-medium">{{ $item['description'] ?? '' }}</td>
                             <td class="py-3 px-4 text-center text-sm text-gray-900">{{ $item['quantity'] ?? 0 }}</td>
                             <td class="py-3 px-4 text-center text-sm text-gray-900">{{ number_format($item['unit_price'] ?? 0, 2) }} ج.م</td>
-                            <td class="py-3 px-4 text-center text-sm font-bold text-gray-900">{{ number_format(($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0), 2) }} ج.م</td>
+                            <td class="py-3 px-4 text-center text-sm font-bold text-gray-900">{{ number_format($item['amount'] ?? (($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0)), 2) }} ج.م</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -349,9 +362,10 @@
 @endif
 
 <script class="no-print">
-function markAsPaid(invoiceId) {
+function markAsPaid(invoiceId, basePath) {
+    basePath = basePath || 'invoices';
     if (confirm('هل أنت متأكد من تحديد هذه الفاتورة كمدفوعة؟')) {
-        fetch(`/invoices/${invoiceId}/mark-as-paid`, {
+        fetch(`/${basePath}/${invoiceId}/mark-as-paid`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),

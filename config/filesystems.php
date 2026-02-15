@@ -33,7 +33,7 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            'serve' => false, // معطّل لاستخدام Route مخصص لعرض الملفات من storage/app/public
             'throw' => false,
             'report' => false,
         ],

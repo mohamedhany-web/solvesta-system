@@ -35,6 +35,96 @@ use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\MeetingController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Route مخصص لعرض الملفات من storage/app/public (صور، PDF، إلخ)
+| يجب أن يكون قبل أي routes أخرى لتفادي اعتراض الطلبات
+|--------------------------------------------------------------------------
+*/
+Route::get('/storage/{path}', function ($path) {
+    try {
+        $path = str_replace('..', '', $path);
+        $path = ltrim($path, '/');
+
+        $basePath = storage_path('app/public');
+        $filePath = $basePath . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        $filePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $filePath);
+
+        \Log::info('Storage route accessed', [
+            'requested_path' => $path,
+            'file_path' => $filePath,
+            'file_exists' => @file_exists($filePath),
+            'is_file' => @is_file($filePath),
+            'storage_path' => $basePath,
+        ]);
+
+        if (!@file_exists($filePath)) {
+            \Log::warning('Storage file not found', ['requested_path' => $path, 'file_path' => $filePath]);
+            abort(404, 'File not found');
+        }
+
+        if (!@is_file($filePath)) {
+            \Log::warning('Storage path is not a file', ['requested_path' => $path, 'file_path' => $filePath]);
+            abort(404, 'Not a file');
+        }
+
+        $realPath = @realpath($filePath) ?: $filePath;
+        $allowedPath = @realpath($basePath) ?: $basePath;
+        $normalizedRealPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $realPath);
+        $normalizedAllowedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $allowedPath);
+
+        if (strpos($normalizedRealPath, $normalizedAllowedPath) !== 0) {
+            \Log::warning('Storage access denied - path outside allowed directory', [
+                'requested_path' => $path, 'file_path' => $filePath, 'real_path' => $realPath, 'allowed_path' => $allowedPath,
+            ]);
+            abort(404, 'Access denied');
+        }
+
+        if (!@is_readable($realPath)) {
+            \Log::warning('Storage file is not readable', ['requested_path' => $path, 'real_path' => $realPath]);
+            abort(403, 'File not readable');
+        }
+
+        $mimeType = @mime_content_type($realPath);
+        if (!$mimeType) {
+            $extension = strtolower(pathinfo($realPath, PATHINFO_EXTENSION));
+            $mimeTypes = [
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                'svg' => 'image/svg+xml',
+                'pdf' => 'application/pdf',
+                'doc' => 'application/msword',
+                'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ];
+            $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
+        }
+
+        $headers = [
+            'Content-Type' => $mimeType,
+            'Cache-Control' => 'public, max-age=31536000',
+        ];
+        if ($mimeType === 'application/pdf') {
+            $headers['Content-Disposition'] = 'inline; filename="' . basename($realPath) . '"';
+        }
+
+        \Log::info('Storage file served successfully', [
+            'requested_path' => $path, 'real_path' => $realPath, 'mime_type' => $mimeType,
+        ]);
+
+        return response()->file($realPath, $headers);
+    } catch (\Exception $e) {
+        \Log::error('Storage route error', [
+            'path' => $path ?? 'unknown',
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        abort(404, 'File not found');
+    }
+})->where('path', '.*')->name('storage.file')->middleware('web');
+
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');

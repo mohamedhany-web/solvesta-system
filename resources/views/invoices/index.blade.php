@@ -12,7 +12,7 @@
                 <p class="text-gray-600">إدارة وتتبع الفواتير والمدفوعات المالية</p>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('invoices.create') }}" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center shadow-sm">
+                <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.create') : route('invoices.create') }}" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center shadow-sm">
                     <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
@@ -213,7 +213,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center gap-2">
-                                <a href="{{ route('invoices.show', $invoice) }}" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded-lg hover:bg-blue-100 transition-colors duration-200">عرض</a>
+                                <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.show', $invoice) : route('invoices.show', $invoice) }}" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded-lg hover:bg-blue-100 transition-colors duration-200">عرض</a>
                                 @if($invoice->status !== 'paid')
                                 <button onclick="markAsPaid({{ $invoice->id }})" class="text-green-600 hover:text-green-800 bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 transition-colors duration-200">تحديد كمدفوع</button>
                                 @endif
@@ -253,16 +253,24 @@
 </div>
 
 <script>
+var invoicesBasePath = '{{ request()->routeIs("financial-invoices.*") ? "financial-invoices" : "invoices" }}';
 function markAsPaid(invoiceId) {
     if (confirm('هل أنت متأكد من تحديد هذه الفاتورة كمدفوعة؟')) {
-        fetch(`/invoices/${invoiceId}/mark-as-paid`, {
+        fetch(`/${invoicesBasePath}/${invoiceId}/mark-as-paid`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             },
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => { throw new Error(data.message || 'حدث خطأ'); });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 showNotification('تم تحديث حالة الفاتورة بنجاح', 'success');
@@ -272,14 +280,14 @@ function markAsPaid(invoiceId) {
             }
         })
         .catch(error => {
-            showNotification('حدث خطأ في الاتصال', 'error');
+            showNotification(error.message || 'حدث خطأ في الاتصال', 'error');
         });
     }
 }
 
 function deleteInvoice(invoiceId) {
     if (confirm('هل أنت متأكد من حذف هذه الفاتورة؟\n\nملاحظة: لا يمكن التراجع عن هذا الإجراء.')) {
-        fetch(`/invoices/${invoiceId}`, {
+        fetch(`/${invoicesBasePath}/${invoiceId}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),

@@ -125,11 +125,11 @@ class FinancialInvoiceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Invoice $invoice)
+    public function show(Invoice $financialInvoice)
     {
-        $invoice->load(['client', 'project', 'createdBy']);
+        $financialInvoice->load(['client', 'project', 'createdBy', 'items']);
         
-        return view('invoices.show', compact('invoice'));
+        return view('invoices.show', ['invoice' => $financialInvoice]);
     }
 
     /**
@@ -211,9 +211,9 @@ class FinancialInvoiceController extends Controller
     {
         $invoice->update([
             'status' => 'paid',
+            'payment_status' => 'paid',
             'paid_amount' => $invoice->total_amount,
-            'balance_amount' => 0,
-            'payment_date' => now()
+            'balance_due' => 0,
         ]);
         
         return response()->json([
