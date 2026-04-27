@@ -76,6 +76,7 @@ class TaskController extends Controller
      */
     public function create()
     {
+        $this->authorize('viewAny', Task::class);
         $projects = Project::where('status', 'in_progress')->get();
         // جلب المستخدمين من جميع المشاريع المتاحة للمستخدم الحالي (أعضاء الفريق ومديري المشاريع)
         $users = $this->getProjectMembers($projects);
@@ -153,6 +154,9 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
+        $project = Project::find($request->input('project_id'));
+        $this->authorize('create', [Task::class, $project]);
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -346,26 +350,79 @@ class TaskController extends Controller
      */
     public function addUpdate(Request $request, Task $task)
     {
+        // Allow: admin/management, department manager (via policy), or assignee to add updates
+        $this->authorize('view', $task);
+
+        $user = auth()->user();
+        $isAssignee = (int) $task->assigned_to === (int) auth()->id();
+        $isPrivileged = $user && ($user->hasRole('super_admin') || $user->hasRole('admin') || $user->can('view-all-tasks'));
+        $isDeptManager = \App\Policies\DepartmentAccess::isDepartmentManager($user);
+
+        if (!$isPrivileged && !$isDeptManager && !$isAssignee) {
+            abort(403);
+        }
+
         $validator = Validator::make($request->all(), [
-            'comment' => 'required|string|max:5000',
-            'type' => 'nullable|in:comment,update',
+            'comment' => 'nullable|string|max:5000',
+            'type' => 'nullable|in:comment,update,progress_update,file_upload',
+            'progress_percentage' => 'nullable|integer|min:0|max:100',
+            'attachments.*' => 'nullable|file|max:10240',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()->first()], 422);
         }
 
-        // تحديد النوع: إذا لم يتم تحديده، نستخدم 'comment' كافتراضي
         $type = $request->input('type', 'comment');
+
+        if ($type === 'progress_update' && $request->input('progress_percentage') === null) {
+            return response()->json(['error' => 'الرجاء إدخال نسبة الإنجاز'], 422);
+        }
+        if ($type === 'file_upload' && !$request->hasFile('attachments')) {
+            return response()->json(['error' => 'الرجاء اختيار ملف للتسليم'], 422);
+        }
+        if (!$request->filled('comment') && !$request->hasFile('attachments') && $request->input('progress_percentage') === null) {
+            return response()->json(['error' => 'أدخل تعليق/تحديث أو ارفع ملف أو حدّث نسبة الإنجاز'], 422);
+        }
+
+        $attachments = [];
+        if ($request->hasFile('attachments')) {
+            foreach ((array) $request->file('attachments') as $file) {
+                if ($file && $file->isValid()) {
+                    $path = $file->store('tasks/updates', 'public');
+                    $attachments[] = [
+                        'path' => $path,
+                        'name' => $file->getClientOriginalName(),
+                        'size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                        'uploaded_at' => now()->toDateTimeString(),
+                    ];
+                }
+            }
+        }
+
+        $metadata = [];
+        if ($type === 'progress_update') {
+            $metadata['progress_percentage'] = (int) $request->input('progress_percentage');
+            // keep task progress in sync (soft requirement)
+            $task->update(['progress_percentage' => (int) $request->input('progress_percentage')]);
+        }
 
         \App\Models\TaskUpdate::create([
             'task_id' => $task->id,
             'user_id' => auth()->id(),
-            'comment' => $request->comment,
+            'comment' => (string) ($request->comment ?? ''),
             'type' => $type,
+            'metadata' => !empty($metadata) ? $metadata : null,
+            'attachments' => !empty($attachments) ? $attachments : null,
         ]);
 
-        $message = $type === 'update' ? 'تم إضافة التحديث بنجاح' : 'تم إضافة التعليق بنجاح';
+        $message = match ($type) {
+            'update' => 'تم إضافة التحديث بنجاح',
+            'progress_update' => 'تم تحديث نسبة الإنجاز بنجاح',
+            'file_upload' => 'تم رفع التسليم بنجاح',
+            default => 'تم إضافة التعليق بنجاح',
+        };
 
         return response()->json(['success' => true, 'message' => $message]);
     }

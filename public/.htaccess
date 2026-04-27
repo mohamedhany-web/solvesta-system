@@ -18,6 +18,12 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # Force /storage/* through Laravel (avoid symlink / server quirks)
+    # This makes the custom Route /storage/{path} always handle requests,
+    # even when public/storage exists or symlinks behave inconsistently on hosting.
+    RewriteCond %{REQUEST_URI} ^/storage/
+    RewriteRule ^ index.php [L]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f

@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-50 py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-full">
         <!-- Header -->
         <div class="mb-6">
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6" style="border-color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}30;">

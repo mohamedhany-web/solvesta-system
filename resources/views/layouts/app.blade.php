@@ -8,8 +8,9 @@
     <title>@yield('page-title', \App\Helpers\SettingsHelper::getSystemName()) - {{ \App\Helpers\SettingsHelper::getCompanyName() }}</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SettingsHelper::getFaviconPath() }}">
-    <link rel="shortcut icon" type="image/x-icon" href="{{ \App\Helpers\SettingsHelper::getFaviconPath() }}">
+    @php $faviconUrl = \App\Helpers\SettingsHelper::getFaviconUrl(); @endphp
+    <link rel="icon" type="image/x-icon" href="{{ $faviconUrl ?: '/favicon.ico' }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ $faviconUrl ?: '/favicon.ico' }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -214,6 +215,14 @@
     <script src="{{ asset('js/whatsapp-automation.js') }}"></script>
 </head>
 <body class="bg-gray-50 font-tajawal">
+    @php
+        $webUser = Auth::guard('web')->user();
+        $clientAccount = Auth::guard('client')->user();
+        $isClientGuard = (bool) $clientAccount && !$webUser;
+        $displayName = $webUser?->name ?? $clientAccount?->name ?? 'مستخدم';
+        $displayEmail = $webUser?->email ?? $clientAccount?->email ?? null;
+        $displayRole = $webUser?->roles?->first()?->name ?? ($isClientGuard ? 'عميل' : 'مستخدم');
+    @endphp
     <div class="flex h-screen">
         <!-- Mobile Overlay -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -252,8 +261,13 @@
                     @endif
                     
                     <div class="flex-1">
-                        <h1 class="text-xl font-bold text-white drop-shadow-sm tracking-wide">{{ \App\Helpers\SettingsHelper::getSystemName() }}</h1>
-                        <p class="text-sm text-slate-300 leading-relaxed">{{ \App\Helpers\SettingsHelper::getSystemDescription() }}</p>
+                        @if($isClientGuard)
+                            <h1 class="text-xl font-bold text-white drop-shadow-sm tracking-wide">بوابة العميل</h1>
+                            <p class="text-sm text-slate-300 leading-relaxed">{{ \App\Helpers\SettingsHelper::getCompanyName() }}</p>
+                        @else
+                            <h1 class="text-xl font-bold text-white drop-shadow-sm tracking-wide">{{ \App\Helpers\SettingsHelper::getSystemName() }}</h1>
+                            <p class="text-sm text-slate-300 leading-relaxed">{{ \App\Helpers\SettingsHelper::getSystemDescription() }}</p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -262,7 +276,8 @@
             <nav class="flex-1 overflow-y-auto sidebar-scroll sidebar-nav-bg">
                 <div class="p-3">
                     <div class="space-y-1">
-                        <!-- Dashboard -->
+                        <!-- Dashboard (web users only) -->
+                        @if(!$isClientGuard)
                         <a href="{{ route('dashboard') }}" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                             <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -270,8 +285,45 @@
                             </svg>
                             لوحة التحكم
                         </a>
+                        @endif
+
+                        {{-- Client Portal (for client role) --}}
+                        @if(Auth::guard('client')->check())
+                        <div class="mt-6">
+                            <h3 class="sidebar-section-title px-4">بوابة العميل</h3>
+                            <a href="{{ route('client.dashboard') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.dashboard') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 1.656-1.791 3-4 3s-4-1.344-4-3 1.791-3 4-3 4 1.344 4 3zm8 0c0 1.656-1.791 3-4 3s-4-1.344-4-3 1.791-3 4-3 4 1.344 4 3z" />
+                                </svg>
+                                لوحة العميل
+                            </a>
+                            <a href="{{ route('client.projects') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.projects') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" />
+                                </svg>
+                                مشاريعي
+                            </a>
+                            <a href="{{ route('client.invoices') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.invoices') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                فواتيري
+                            </a>
+                            <a href="{{ route('client.support.tickets') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.support.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-1.414-1.414a2 2 0 00-2.828 0L7 11.343V15h3.657l7.707-7.707a2 2 0 000-2.828z" />
+                                </svg>
+                                ما بعد البيع
+                            </a>
+                        </div>
+                        @endif
                         
-                        <!-- الرسائل - متاحة للجميع -->
+                        <!-- الرسائل - web users only -->
+                        @if(!$isClientGuard)
                         <a href="{{ route('messages.index') }}" 
                            class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('messages.*') ? 'active' : '' }}">
                             <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -280,8 +332,10 @@
                             الرسائل
                             <span id="unread-messages-count" class="mr-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
                         </a>
+                        @endif
                         
-                        <!-- الإشعارات - متاحة للجميع -->
+                        <!-- الإشعارات - web users only -->
+                        @if(!$isClientGuard)
                         <a href="{{ route('notifications.index') }}" 
                            class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
                             <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -290,9 +344,10 @@
                             الإشعارات
                             <span id="unread-notifications-count" class="mr-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
                         </a>
+                        @endif
                         
                         <!-- Administration Section -->
-                        @if(auth()->user()->can('view-users') || auth()->user()->can('view-reports') || auth()->user()->can('view-departments') || auth()->user()->can('view-settings') || auth()->user()->can('manage-roles'))
+                        @if($webUser && ($webUser->can('view-users') || $webUser->can('view-reports') || $webUser->can('view-departments') || $webUser->can('view-settings') || $webUser->can('manage-roles')))
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">الإدارة العليا</h3>
                             
@@ -324,6 +379,22 @@
                                 </svg>
                                 التقارير والتحليل
                             </a>
+
+                            <a href="{{ route('admin.department-oversight.index') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('admin.department-oversight.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4V7M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                                </svg>
+                                متابعة الأقسام
+                            </a>
+
+                            <a href="{{ route('admin.department-reports.index') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('admin.department-reports.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                تقارير الأقسام
+                            </a>
                             @endcan
                             
                             @can('view-departments')
@@ -336,7 +407,7 @@
                             </a>
                             @endcan
                             
-                            @if(auth()->user()->can('view-users') || auth()->user()->can('manage-roles'))
+                            @if($webUser && ($webUser->can('view-users') || $webUser->can('manage-roles')))
                             <a href="{{ route('login-activity.index') }}" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('login-activity.*') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -346,7 +417,7 @@
                             </a>
                             @endif
                             
-                            @if(auth()->user()->can('view-users') || auth()->user()->can('manage-roles'))
+                            @if($webUser && ($webUser->can('view-users') || $webUser->can('manage-roles')))
                             <a href="{{ route('system-monitoring.index') }}" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('system-monitoring.*') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -371,7 +442,7 @@
                         @endif
 
                         <!-- Advanced HR Management -->
-                        @if(auth()->user()->can('view-employees') || auth()->user()->can('view-attendance') || auth()->user()->can('view-leaves') || auth()->user()->can('view-salaries'))
+                        @if($webUser && ($webUser->can('view-employees') || $webUser->can('view-attendance') || $webUser->can('view-leaves') || $webUser->can('view-salaries')))
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">إدارة الموارد البشرية المتقدمة</h3>
                             
@@ -418,11 +489,11 @@
                         @endif
 
                         <!-- Project Management Section -->
-                        @if(auth()->user()->can('view-own-projects') || auth()->user()->can('view-all-projects') || auth()->user()->can('view-own-tasks') || auth()->user()->can('view-all-tasks'))
+                        @if($webUser && ($webUser->can('view-own-projects') || $webUser->can('view-all-projects') || $webUser->can('view-own-tasks') || $webUser->can('view-all-tasks')))
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">إدارة المشاريع</h3>
                             
-                            @if(auth()->user()->can('view-own-projects') || auth()->user()->can('view-all-projects'))
+                            @if($webUser && ($webUser->can('view-own-projects') || $webUser->can('view-all-projects')))
                             <a href="{{ route('projects.index') }}" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('projects.*') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -432,7 +503,7 @@
                             </a>
                             @endif
                             
-                            @if(auth()->user()->can('view-own-tasks') || auth()->user()->can('view-all-tasks'))
+                            @if($webUser && ($webUser->can('view-own-tasks') || $webUser->can('view-all-tasks')))
                             <a href="{{ route('tasks.index') }}" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('tasks.*') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -475,7 +546,7 @@
                         @endcan
 
                         <!-- Assets & Properties Section -->
-                        @if(auth()->user()->can('view-assets'))
+                        @if($webUser && $webUser->can('view-assets'))
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">الأصول والممتلكات</h3>
                             
@@ -490,7 +561,7 @@
                         @endif
 
                         <!-- CRM System -->
-                        @if(auth()->user()->can('view-clients') || auth()->user()->can('view-sales') || auth()->user()->can('view-contracts') || auth()->user()->can('view-invoices'))
+                        @if($webUser && ($webUser->can('view-clients') || $webUser->can('view-sales') || $webUser->can('view-contracts') || $webUser->can('view-invoices')))
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">نظام إدارة العملاء (CRM)</h3>
                             
@@ -503,6 +574,15 @@
                                 العملاء
                             </a>
                             @endcan
+
+                            <a href="{{ route('client-accounts.index') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client-accounts.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 1.656-1.791 3-4 3s-4-1.344-4-3 1.791-3 4-3 4 1.344 4 3zm8 0c0 1.656-1.791 3-4 3s-4-1.344-4-3 1.791-3 4-3 4 1.344 4 3z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20v-1a5 5 0 0110 0v1M14 20v-1a5 5 0 0110 0v1" />
+                                </svg>
+                                حسابات العملاء
+                            </a>
                             
                             @can('view-sales')
                             <a href="{{ route('sales.index') }}" 
@@ -537,7 +617,7 @@
                         @endif
 
                         <!-- Development Section -->
-                        @if(auth()->user()->can('view-bugs') || auth()->user()->can('view-qa'))
+                        @if($webUser && ($webUser->can('view-bugs') || $webUser->can('view-qa')))
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">التطوير والبرمجة</h3>
                             
@@ -604,6 +684,14 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                                 </svg>
                                 تذاكر الدعم
+                            </a>
+
+                            <a href="{{ route('support.contact-requests.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('support.contact-requests.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                                </svg>
+                                نماذج التواصل
                             </a>
                         </div>
                         @endif
@@ -708,19 +796,19 @@
 
             <!-- User Info & Logout -->
             <div class="p-6 border-t border-slate-700 sidebar-user-bg shadow-sm">
-                @auth
+                @if($webUser || $clientAccount)
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3 space-x-reverse">
                             <div class="h-10 w-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg relative overflow-hidden">
                                 <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-50"></div>
-                                <span class="text-lg font-bold text-white relative z-10">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                                <span class="text-lg font-bold text-white relative z-10">{{ substr($displayName, 0, 1) }}</span>
                             </div>
                             <div>
-                                <div class="text-sm font-medium text-white">{{ Auth::user()->name }}</div>
-                                <div class="text-xs text-slate-300">{{ Auth::user()->roles->first()->name ?? 'مستخدم' }}</div>
+                                <div class="text-sm font-medium text-white">{{ $displayName }}</div>
+                                <div class="text-xs text-slate-300">{{ $displayRole }}</div>
                             </div>
                         </div>
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="{{ $isClientGuard ? route('client.logout') : route('logout') }}">
                             @csrf
                             <button type="submit" class="text-slate-400 hover:text-white transition duration-200 p-2 hover:bg-slate-700 rounded-lg">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -729,7 +817,7 @@
                             </button>
                         </form>
                     </div>
-                @endauth
+                @endif
             </div>
         </div>
         
@@ -761,12 +849,38 @@
                                         <span id="current-date">{{ now()->format('Y/m/d') }}</span>
                                     </div>
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1 hidden sm:block font-tajawal">مرحباً بك في نظام {{ \App\Helpers\SettingsHelper::getSystemName() }}</p>
+                                @if($isClientGuard)
+                                    <p class="text-xs text-gray-500 mt-1 hidden sm:block font-tajawal">
+                                        بوابة العميل — {{ \App\Helpers\SettingsHelper::getCompanyName() }}
+                                    </p>
+                                @else
+                                    <p class="text-xs text-gray-500 mt-1 hidden sm:block font-tajawal">مرحباً بك في نظام {{ \App\Helpers\SettingsHelper::getSystemName() }}</p>
+                                @endif
                             </div>
                         </div>
                         
                         <!-- Right Side - Actions -->
                         <div class="flex items-center gap-2 sm:gap-3">
+                            @if($isClientGuard)
+                                <div class="hidden sm:flex items-center gap-2">
+                                    <a href="{{ route('client.projects') }}"
+                                       class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-sm font-bold text-gray-800 transition">
+                                        المشاريع
+                                    </a>
+                                    <a href="{{ route('client.invoices') }}"
+                                       class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-sm font-bold text-gray-800 transition">
+                                        الفواتير
+                                    </a>
+                                </div>
+                                <a href="{{ route('client.support.tickets.create') }}"
+                                   class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-white text-sm font-extrabold shadow-md hover:shadow-lg transition flex-shrink-0"
+                                   style="background: linear-gradient(135deg, {{ \App\Helpers\SettingsHelper::getThemeColor() }} 0%, {{ \App\Helpers\SettingsHelper::getThemeColor() }}dd 100%);">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                    </svg>
+                                    افتح تذكرة
+                                </a>
+                            @else
                             <!-- Start Day Button -->
                             <button id="startDayBtn" 
                                     class="hidden sm:flex items-center gap-2.5 px-4 sm:px-5 py-2.5 text-white rounded-xl transition-all duration-300 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-tajawal"
@@ -816,6 +930,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                             </a>
+                            @endif
 
                             <!-- User Profile Dropdown -->
                             <div class="relative overflow-visible user-dropdown-container">
@@ -826,11 +941,11 @@
                                         onmouseout="this.style.background='{{ \App\Helpers\SettingsHelper::getThemeColor() }}10'">
                                     <!-- User info - hidden on small screens -->
                                     <div class="text-right hidden sm:block ml-2">
-                                        <div class="text-sm font-bold text-gray-900 truncate max-w-28 font-tajawal">{{ Auth::user()->name }}</div>
-                                        <div class="text-xs text-gray-600 truncate max-w-28 font-tajawal">{{ Auth::user()->roles->first()->name ?? 'مستخدم' }}</div>
+                                        <div class="text-sm font-bold text-gray-900 truncate max-w-28 font-tajawal">{{ $displayName }}</div>
+                                        <div class="text-xs text-gray-600 truncate max-w-28 font-tajawal">{{ $displayRole }}</div>
                                     </div>
                                     <!-- Profile picture - always visible -->
-                                    @if(Auth::user()->profile_picture)
+                                    @if($webUser && $webUser->profile_picture)
                                         <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}" 
                                              alt="Profile Picture" 
                                              class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl object-cover shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-white ring-2 ring-transparent group-hover:ring-opacity-50 flex-shrink-0"
@@ -838,7 +953,7 @@
                                     @else
                                         <div class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-white ring-2 ring-transparent group-hover:ring-opacity-50 flex-shrink-0"
                                              style="background: linear-gradient(135deg, {{ \App\Helpers\SettingsHelper::getThemeColor() }} 0%, {{ \App\Helpers\SettingsHelper::getThemeColor() }}dd 100%); border-color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}30;">
-                                            <span class="text-sm sm:text-base font-bold text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                                            <span class="text-sm sm:text-base font-bold text-white">{{ substr($displayName, 0, 1) }}</span>
                                         </div>
                                     @endif
                                     <!-- Dropdown arrow - hidden on small screens -->
@@ -855,36 +970,40 @@
                                                     <!-- Profile Header -->
                                                     <div class="px-4 py-3 border-b border-gray-100">
                             <div class="flex items-center space-x-3 space-x-reverse">
-                                                            @if(Auth::user()->profile_picture)
+                                                            @if($webUser && $webUser->profile_picture)
                                                                 <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}" alt="Profile Picture" class="h-12 w-12 rounded-full object-cover shadow-sm">
                                                             @else
                                                                 <div class="h-12 w-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
-                                                                    <span class="text-lg font-bold text-white">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                                                                    <span class="text-lg font-bold text-white">{{ substr($displayName, 0, 1) }}</span>
                                                                 </div>
                                                             @endif
                                                             <div class="flex-1">
-                                                                <div class="text-sm font-semibold text-gray-900">{{ Auth::user()->name }}</div>
-                                                                <div class="text-xs text-gray-500">{{ Auth::user()->email }}</div>
-                                                                <div class="text-xs text-blue-600">{{ Auth::user()->roles->first()->name ?? 'مستخدم' }}</div>
+                                                                <div class="text-sm font-semibold text-gray-900">{{ $displayName }}</div>
+                                                                <div class="text-xs text-gray-500">{{ $displayEmail }}</div>
+                                                                <div class="text-xs text-blue-600">{{ $displayRole }}</div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     
                                                     <!-- Menu Items -->
                                                     <div class="py-1">
+                                                        @if(!$isClientGuard)
                                                         <a href="{{ route('profile.edit') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
                                                             <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                             </svg>
                                                             الملف الشخصي
                                                         </a>
+                                                        @endif
                                                         
+                                                        @if(!$isClientGuard)
                                                         <a href="{{ route('system-settings.index') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
                                                             <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                                             </svg>
                                                             الإعدادات
                                                         </a>
+                                                        @endif
                                                         
                                                         <!-- Mobile-only items -->
                                                         <div class="sm:hidden">
@@ -910,7 +1029,7 @@
                                                         
                                                         <div class="border-t border-gray-100 my-1"></div>
                                                         
-                                                        <form method="POST" action="{{ route('logout') }}">
+                                                        <form method="POST" action="{{ $isClientGuard ? route('client.logout') : route('logout') }}">
                                                             @csrf
                                                             <button type="submit" class="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition duration-150">
                                                                 <svg class="ml-3 h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -930,7 +1049,7 @@
             
             <!-- Page Content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-                <div class="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+                <div class="{{ request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.create', 'users.edit') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6' }}">
                     @if(session('success'))
                         <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded-r-lg shadow-sm">
                             {{ session('success') }}

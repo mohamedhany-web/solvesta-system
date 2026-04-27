@@ -3,7 +3,7 @@
 @section('page-title', 'الإشعارات')
 
 @section('content')
-<div class="w-full max-w-7xl mx-auto">
+<div class="w-full max-w-full">
     <!-- Page Header -->
     <div class="mb-6">
         <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 sm:p-8 border border-blue-100">

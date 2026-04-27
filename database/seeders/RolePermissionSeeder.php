@@ -90,6 +90,13 @@ class RolePermissionSeeder extends Seeder
             
             // إضافية
             'view-assets',
+
+            // بوابة العميل + ما بعد البيع
+            'view-client-portal',
+            'view-client-projects',
+            'view-client-invoices',
+            'view-client-tickets',
+            'create-client-tickets',
         ];
 
         foreach ($permissions as $permission) {
@@ -200,6 +207,17 @@ class RolePermissionSeeder extends Seeder
             'view-tickets', 'create-tickets', 'edit-tickets',
             'view-bugs', 'create-bugs',
             'view-dashboard'
+        ]);
+
+        // 9. عميل (Client) - بوابة العميل
+        $client = Role::firstOrCreate(['name' => 'client', 'guard_name' => 'web']);
+        $client->syncPermissions([
+            'view-client-portal',
+            'view-client-projects',
+            'view-client-invoices',
+            'view-client-tickets',
+            'create-client-tickets',
+            // الرسائل/الإشعارات متاحة للجميع داخل النظام بالفعل
         ]);
 
         // 9. مطور (Developer)

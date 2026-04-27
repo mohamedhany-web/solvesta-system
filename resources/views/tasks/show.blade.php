@@ -142,7 +142,7 @@
                     التحديثات والتعليقات
                 </h3>
                 
-                <!-- Add Comment/Update Form -->
+                <!-- Add Comment/Update/Deliverable Form -->
                 <form id="commentForm" class="mb-6">
                     @csrf
                     <div class="mb-4">
@@ -156,7 +156,30 @@
                                 <input type="radio" name="update_type" value="comment" id="type_comment" class="ml-2 text-blue-600 focus:ring-blue-500">
                                 <span class="text-sm font-medium text-gray-700">تعليق</span>
                             </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="update_type" value="progress_update" id="type_progress" class="ml-2 text-blue-600 focus:ring-blue-500">
+                                <span class="text-sm font-medium text-gray-700">تحديث نسبة الإنجاز</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="update_type" value="file_upload" id="type_file" class="ml-2 text-blue-600 focus:ring-blue-500">
+                                <span class="text-sm font-medium text-gray-700">تسليم ملف</span>
+                            </label>
                         </div>
+
+                        <div id="progressWrap" class="hidden mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">نسبة الإنجاز (%)</label>
+                            <input type="number" id="progressPercentage" min="0" max="100"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="مثال: 60">
+                        </div>
+
+                        <div id="filesWrap" class="hidden mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ملفات التسليم</label>
+                            <input type="file" id="updateAttachments" name="attachments[]" multiple
+                                   class="w-full px-4 py-3 border border-dashed border-gray-300 rounded-xl bg-gray-50">
+                            <p class="text-xs text-gray-500 mt-2">حد أقصى 10MB لكل ملف</p>
+                        </div>
+
                         <textarea 
                             id="commentText" 
                             name="comment" 
@@ -201,7 +224,29 @@
                                         <span class="text-xs text-gray-500">{{ $update->created_at->diffForHumans() }}</span>
                                     </div>
                                 </div>
-                                <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $update->comment }}</p>
+                                @if($update->type === 'progress_update')
+                                    <div class="mb-2">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800">
+                                            نسبة الإنجاز: {{ data_get($update->metadata, 'progress_percentage') }}%
+                                        </span>
+                                    </div>
+                                @endif
+
+                                @if(!empty($update->comment))
+                                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $update->comment }}</p>
+                                @endif
+
+                                @if(is_array($update->attachments) && count($update->attachments))
+                                    <div class="mt-3 space-y-2">
+                                        @foreach($update->attachments as $file)
+                                            <a class="block text-sm text-blue-600 hover:underline"
+                                               href="{{ asset('storage/' . ($file['path'] ?? '')) }}"
+                                               target="_blank" rel="noopener">
+                                                {{ $file['name'] ?? 'ملف' }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -346,30 +391,39 @@ document.addEventListener('DOMContentLoaded', function() {
     const commentsList = document.getElementById('commentsList');
     const typeUpdate = document.getElementById('type_update');
     const typeComment = document.getElementById('type_comment');
+    const typeProgress = document.getElementById('type_progress');
+    const typeFile = document.getElementById('type_file');
     const buttonText = document.getElementById('buttonText');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressPercentage = document.getElementById('progressPercentage');
+    const filesWrap = document.getElementById('filesWrap');
+    const updateAttachments = document.getElementById('updateAttachments');
 
     // تحديث نص الزر بناءً على النوع المختار
     function updateButtonText() {
         if (typeUpdate.checked) {
             buttonText.textContent = 'إضافة تحديث';
         } else {
-            buttonText.textContent = 'إضافة تعليق';
+            buttonText.textContent = typeComment.checked ? 'إضافة تعليق' : (typeProgress.checked ? 'تحديث النسبة' : 'رفع التسليم');
         }
+
+        // toggle extra inputs
+        progressWrap.classList.toggle('hidden', !typeProgress.checked);
+        filesWrap.classList.toggle('hidden', !typeFile.checked);
     }
 
     typeUpdate.addEventListener('change', updateButtonText);
     typeComment.addEventListener('change', updateButtonText);
+    typeProgress.addEventListener('change', updateButtonText);
+    typeFile.addEventListener('change', updateButtonText);
+    updateButtonText();
 
     commentForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
         const comment = commentText.value.trim();
-        const updateType = typeUpdate.checked ? 'update' : 'comment';
-        
-        if (!comment) {
-            alert('الرجاء إدخال ' + (updateType === 'update' ? 'تحديث' : 'تعليق'));
-            return;
-        }
+        const updateType = typeUpdate.checked ? 'update' : (typeComment.checked ? 'comment' : (typeProgress.checked ? 'progress_update' : 'file_upload'));
+        const progress = progressPercentage ? progressPercentage.value : '';
 
         // Show loading state
         const submitBtn = document.getElementById('submitButton');
@@ -380,17 +434,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get CSRF token
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
+        const formData = new FormData();
+        formData.append('type', updateType);
+        if (comment) formData.append('comment', comment);
+        if (updateType === 'progress_update' && progress) formData.append('progress_percentage', progress);
+        if (updateAttachments && updateAttachments.files && updateAttachments.files.length) {
+            for (const file of updateAttachments.files) {
+                formData.append('attachments[]', file);
+            }
+        }
+
         fetch('{{ route("tasks.updates.store", $task) }}', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ 
-                comment: comment,
-                type: updateType
-            })
+            body: formData
         })
         .then(response => response.json())
         .then(data => {

@@ -27,7 +27,7 @@ class SettingsHelper
      */
     public static function getCompanyName()
     {
-        return SystemSetting::get('company_name', 'اسم شركتك');
+        return SystemSetting::get('company_name', '');
     }
 
     /**
@@ -35,7 +35,7 @@ class SettingsHelper
      */
     public static function getCompanyAddress()
     {
-        return SystemSetting::get('company_address', 'عنوان الشركة، مصر');
+        return SystemSetting::get('company_address', '');
     }
 
     /**
@@ -43,7 +43,7 @@ class SettingsHelper
      */
     public static function getCompanyPhone()
     {
-        return SystemSetting::get('company_phone', '+20');
+        return SystemSetting::get('company_phone', '');
     }
 
     /**
@@ -51,7 +51,7 @@ class SettingsHelper
      */
     public static function getCompanyEmail()
     {
-        return SystemSetting::get('company_email', 'info@company.com');
+        return SystemSetting::get('company_email', '');
     }
 
     /**
@@ -73,25 +73,16 @@ class SettingsHelper
             return null;
         }
         
-        // إذا كان المسار الافتراضي، نتحقق من وجود الملف
-        if ($logoPath === 'system/logo.png') {
-            try {
-                if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($logoPath)) {
-                    return null;
-                }
-            } catch (\Exception $e) {
-                return null;
-            }
+        // IMPORTANT:
+        // Return a relative URL to avoid breaking assets when APP_URL is misconfigured on hosting
+        // (common cause of "sometimes works" due to cached HTML / mixed environments).
+        $url = '/storage/' . ltrim($logoPath, '/');
+
+        // Optional cache busting: only when debug enabled (avoid killing browser/CDN caching in production)
+        if (config('app.debug')) {
+            $url .= '?v=' . time();
         }
-        
-        // إرجاع URL كامل للوجو مباشرة
-        // لا نتحقق من وجود الملف لأن ذلك قد يفشل لأسباب مختلفة
-        // المتصفح سيعرض خطأ إذا لم يكن الملف موجوداً
-        $url = asset('storage/' . $logoPath);
-        
-        // إضافة timestamp للتحايل على الكاش
-        $url .= '?v=' . time();
-        
+
         return $url;
     }
 
@@ -114,13 +105,8 @@ class SettingsHelper
             return null;
         }
         
-        // التحقق من وجود الملف
-        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($faviconPath)) {
-            return null;
-        }
-        
-        // إرجاع URL كامل للأيقونة
-        return asset('storage/' . $faviconPath);
+        // Return relative URL (same reasoning as logo)
+        return '/storage/' . ltrim($faviconPath, '/');
     }
 
     /**

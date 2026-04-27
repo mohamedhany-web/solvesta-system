@@ -14,6 +14,7 @@ class ProjectController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', Project::class);
         // Get projects based on user permissions
         $query = Project::with(['client', 'projectManager', 'teamMembers']);
         
@@ -128,6 +129,7 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
+        $this->authorize('view', $project);
         $project->load(['client', 'projectManager', 'teamMembers', 'tasks']);
         
         // إحصائيات المشروع

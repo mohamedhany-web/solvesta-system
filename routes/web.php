@@ -7,6 +7,11 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\DepartmentManager\DepartmentManagerController;
+use App\Http\Controllers\DepartmentManager\DepartmentManagerTaskController;
+use App\Http\Controllers\DepartmentManager\DepartmentReportController as DepartmentManagerReportController;
+use App\Http\Controllers\Admin\DepartmentReportController as AdminDepartmentReportController;
+use App\Http\Controllers\Admin\DepartmentOversightController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\SalaryController;
@@ -33,6 +38,12 @@ use App\Http\Controllers\LoginActivityController;
 use App\Http\Controllers\SystemMonitoringController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\MeetingController;
+use App\Http\Controllers\ClientPortalController;
+use App\Http\Controllers\ClientSupportTicketController;
+use App\Http\Controllers\ClientAuthController;
+use App\Http\Controllers\Admin\ClientAccountController;
+use App\Http\Controllers\WebsiteController;
+use App\Http\Controllers\Support\ContactRequestController as SupportContactRequestController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -125,11 +136,22 @@ Route::get('/storage/{path}', function ($path) {
     }
 })->where('path', '.*')->name('storage.file')->middleware('web');
 
-Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
-    return view('welcome');
+Route::get('/', [WebsiteController::class, 'home'])->name('website.home');
+Route::get('/about', [WebsiteController::class, 'about'])->name('website.about');
+Route::get('/services', [WebsiteController::class, 'services'])->name('website.services');
+Route::get('/pricing', [WebsiteController::class, 'pricing'])->name('website.pricing');
+Route::get('/contact', [WebsiteController::class, 'contact'])->name('website.contact');
+Route::post('/contact', [WebsiteController::class, 'submitContact'])->name('website.contact.submit');
+Route::get('/case-studies', [WebsiteController::class, 'caseStudies'])->name('website.case-studies.index');
+Route::get('/case-studies/{slug}', [WebsiteController::class, 'caseStudyShow'])->name('website.case-studies.show');
+
+// =========================
+// Client Auth (تسجيل دخول العملاء)
+// =========================
+Route::prefix('client')->name('client.')->group(function () {
+    Route::get('login', [ClientAuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [ClientAuthController::class, 'login'])->name('login.submit');
+    Route::post('logout', [ClientAuthController::class, 'logout'])->name('logout');
 });
 
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
@@ -145,6 +167,11 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
 
 // All authenticated routes
 Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
+    // =========================
+    // Client Portal (بوابة العميل)
+    // =========================
+    // (تم نقل بوابة العميل إلى auth:client بدلاً من role:client)
+
     // Administration - Users
     Route::get('users', [UserController::class, 'index'])->name('users.index')->middleware('permission:view-users');
     Route::get('users/create', [UserController::class, 'create'])->name('users.create')->middleware('permission:create-users');
@@ -270,6 +297,30 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::put('tasks/{task}', [TaskController::class, 'update'])->name('tasks.update')->middleware('permission:edit-tasks');
     Route::delete('tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy')->middleware('permission:delete-tasks');
     Route::post('tasks/{task}/updates', [TaskController::class, 'addUpdate'])->name('tasks.updates.store')->middleware('permission:view-own-tasks|view-all-tasks');
+
+    // Department manager workspace
+    Route::prefix('department-manager')->name('department-manager.')->middleware('department.manager')->group(function () {
+        Route::get('/', [DepartmentManagerController::class, 'dashboard'])->name('dashboard');
+        Route::get('/tasks/create', [DepartmentManagerTaskController::class, 'create'])->name('tasks.create');
+        Route::post('/tasks', [DepartmentManagerTaskController::class, 'store'])->name('tasks.store');
+
+        Route::get('/reports', [DepartmentManagerReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/create', [DepartmentManagerReportController::class, 'create'])->name('reports.create');
+        Route::post('/reports', [DepartmentManagerReportController::class, 'store'])->name('reports.store');
+        Route::get('/reports/{departmentReport}', [DepartmentManagerReportController::class, 'show'])->name('reports.show');
+    });
+
+    // Admin oversight: Department reports
+    Route::get('admin/department-reports', [AdminDepartmentReportController::class, 'index'])
+        ->name('admin.department-reports.index')
+        ->middleware('permission:view-reports');
+    Route::get('admin/department-reports/{departmentReport}', [AdminDepartmentReportController::class, 'show'])
+        ->name('admin.department-reports.show')
+        ->middleware('permission:view-reports');
+
+    Route::get('admin/department-oversight', [DepartmentOversightController::class, 'index'])
+        ->name('admin.department-oversight.index')
+        ->middleware('permission:view-reports|view-departments');
     
     // Development - Bugs
     Route::get('bugs', [BugController::class, 'index'])->name('bugs.index')->middleware('permission:view-bugs');
@@ -298,6 +349,16 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit')->middleware('permission:edit-clients');
     Route::put('clients/{client}', [ClientController::class, 'update'])->name('clients.update')->middleware('permission:edit-clients');
     Route::delete('clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy')->middleware('permission:delete-clients');
+
+    // Client Accounts (بوابة العملاء) - داخل لوحة الأدمن
+    Route::prefix('client-accounts')->name('client-accounts.')->middleware('permission:view-clients')->group(function () {
+        Route::get('/', [ClientAccountController::class, 'index'])->name('index');
+        Route::get('/create', [ClientAccountController::class, 'create'])->name('create')->middleware('permission:create-clients');
+        Route::post('/', [ClientAccountController::class, 'store'])->name('store')->middleware('permission:create-clients');
+        Route::get('/{clientAccount}/edit', [ClientAccountController::class, 'edit'])->name('edit')->middleware('permission:edit-clients');
+        Route::put('/{clientAccount}', [ClientAccountController::class, 'update'])->name('update')->middleware('permission:edit-clients');
+        Route::delete('/{clientAccount}', [ClientAccountController::class, 'destroy'])->name('destroy')->middleware('permission:delete-clients');
+    });
     
     // Sales & Marketing - Sales
     Route::get('sales', [SaleController::class, 'index'])->name('sales.index')->middleware('permission:view-sales');
@@ -319,6 +380,11 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('tickets/{ticket}/edit', [TicketController::class, 'edit'])->name('tickets.edit')->middleware('permission:edit-tickets');
     Route::put('tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update')->middleware('permission:edit-tickets');
     Route::delete('tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy')->middleware('permission:delete-tickets');
+
+    // Support - Contact requests / Consultation bookings
+    Route::get('support/contact-requests', [SupportContactRequestController::class, 'index'])->name('support.contact-requests.index')->middleware('permission:view-tickets');
+    Route::get('support/contact-requests/{contactRequest}', [SupportContactRequestController::class, 'show'])->name('support.contact-requests.show')->middleware('permission:view-tickets');
+    Route::patch('support/contact-requests/{contactRequest}/status', [SupportContactRequestController::class, 'updateStatus'])->name('support.contact-requests.status')->middleware('permission:edit-tickets');
     
     // Finance & Accounting
     Route::prefix('accounting')->name('accounting.')->middleware('permission:view-finance')->group(function () {
@@ -456,6 +522,21 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('assets', function () {
         return view('assets.index');
     })->name('assets.index')->middleware('permission:view-assets');
+});
+
+// =========================
+// Client Portal (بوابة العميل) - Guard مستقل
+// =========================
+Route::prefix('client')->name('client.')->middleware('auth:client')->group(function () {
+    Route::get('/', [ClientPortalController::class, 'dashboard'])->name('dashboard');
+    Route::get('/projects', [ClientPortalController::class, 'projects'])->name('projects');
+    Route::get('/invoices', [ClientPortalController::class, 'invoices'])->name('invoices');
+
+    Route::prefix('support')->name('support.')->group(function () {
+        Route::get('/tickets', [ClientSupportTicketController::class, 'index'])->name('tickets');
+        Route::get('/tickets/create', [ClientSupportTicketController::class, 'create'])->name('tickets.create');
+        Route::post('/tickets', [ClientSupportTicketController::class, 'store'])->name('tickets.store');
+    });
 });
 
 Route::middleware('auth')->group(function () {

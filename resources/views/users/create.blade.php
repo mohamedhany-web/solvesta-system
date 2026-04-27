@@ -19,7 +19,7 @@
     </div>
 </div>
 
-<div class="max-w-5xl mx-auto">
+<div class="w-full max-w-full">
     <form action="{{ route('users.store') }}" method="POST" class="space-y-4 sm:space-y-6">
         @csrf
 

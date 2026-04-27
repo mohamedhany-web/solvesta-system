@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified.code' => \App\Http\Middleware\EnsureVerifiedCode::class,
             'secure.auth' => \App\Http\Middleware\SecureAuth::class,
             'block.suspicious' => \App\Http\Middleware\BlockSuspiciousActivity::class,
+            'department.manager' => \App\Http\Middleware\EnsureDepartmentManager::class,
         ]);
         
         // Global security middleware

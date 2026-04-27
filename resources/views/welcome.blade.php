@@ -7,8 +7,9 @@
     <title>{{ \App\Helpers\SettingsHelper::getSystemName() }} - تسجيل الدخول</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ \App\Helpers\SettingsHelper::getFaviconPath() }}">
-    <link rel="shortcut icon" type="image/x-icon" href="{{ \App\Helpers\SettingsHelper::getFaviconPath() }}">
+    @php $faviconUrl = \App\Helpers\SettingsHelper::getFaviconUrl(); @endphp
+    <link rel="icon" type="image/x-icon" href="{{ $faviconUrl ?: '/favicon.ico' }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ $faviconUrl ?: '/favicon.ico' }}">
 
     <!-- Arabic Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -3,7 +3,7 @@
 @section('page-title', 'إعدادات النظام')
 
 @section('content')
-<div class="w-full max-w-7xl mx-auto">
+<div class="w-full max-w-full">
     <!-- Page Header -->
     <div class="mb-6">
         <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 sm:p-6 lg:p-8 border border-blue-100">
