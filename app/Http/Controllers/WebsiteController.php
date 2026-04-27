@@ -390,13 +390,6 @@ class WebsiteController extends Controller
 
     public function home(Request $request)
     {
-        if (Auth::guard('web')->check()) {
-            return redirect()->route('dashboard');
-        }
-        if (Auth::guard('client')->check()) {
-            return redirect()->route('client.dashboard');
-        }
-
         return view('website.home');
     }
 
