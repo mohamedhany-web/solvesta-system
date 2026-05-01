@@ -60,6 +60,7 @@
                 <a class="hover:text-gray-900 transition {{ request()->routeIs('website.home') ? 'text-gray-900' : '' }}" href="{{ route('website.home') }}">الرئيسية</a>
                 <a class="hover:text-gray-900 transition {{ request()->routeIs('website.about') ? 'text-gray-900' : '' }}" href="{{ route('website.about') }}">عن الشركة</a>
                 <a class="hover:text-gray-900 transition {{ request()->routeIs('website.services') ? 'text-gray-900' : '' }}" href="{{ route('website.services') }}">الخدمات</a>
+                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.training*') ? 'text-gray-900' : '' }}" href="{{ route('website.training') }}">التدريب</a>
                 <a class="hover:text-gray-900 transition {{ request()->routeIs('website.case-studies.*') ? 'text-gray-900' : '' }}" href="{{ route('website.case-studies.index') }}">نماذج الأعمال</a>
                 <a class="hover:text-gray-900 transition {{ request()->routeIs('website.pricing') ? 'text-gray-900' : '' }}" href="{{ route('website.pricing') }}">حلول الشركات</a>
                 <a class="hover:text-gray-900 transition {{ request()->routeIs('website.contact') ? 'text-gray-900' : '' }}" href="{{ route('website.contact') }}">تواصل</a>
@@ -121,6 +122,7 @@
                             ['route'=>'website.home','label'=>'الرئيسية'],
                             ['route'=>'website.about','label'=>'عن الشركة'],
                             ['route'=>'website.services','label'=>'الخدمات'],
+                            ['route'=>'website.training','label'=>'التدريب'],
                             ['route'=>'website.case-studies.index','label'=>'نماذج الأعمال'],
                             ['route'=>'website.pricing','label'=>'حلول الشركات'],
                             ['route'=>'website.contact','label'=>'تواصل'],
@@ -150,55 +152,60 @@
         @yield('content')
     </main>
 
-    <footer class="mt-16 text-gray-200">
-        <div class="relative overflow-hidden bg-gradient-to-b from-gray-950 to-gray-900">
-            <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-                <div class="absolute -top-24 right-0 h-72 w-72 rounded-full blur-3xl opacity-20" style="background: var(--brand)"></div>
-                <div class="absolute bottom-0 left-0 h-72 w-72 rounded-full blur-3xl opacity-10" style="background: var(--brand)"></div>
-                <div class="absolute top-0 left-0 right-0 h-1" style="background: linear-gradient(90deg, transparent, var(--brand), transparent)"></div>
-            </div>
+    <footer class="mt-16 bg-white border-t border-gray-200 text-gray-700 relative overflow-hidden">
+        {{-- Blue accents (soft, like the UI) --}}
+        <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+            <div class="absolute top-0 left-0 right-0 h-[2px]" style="background: linear-gradient(90deg, transparent, var(--brand), transparent)"></div>
+            <div class="absolute -top-24 right-[-70px] h-80 w-80 rounded-full blur-3xl opacity-[0.10]" style="background: var(--brand)"></div>
+            <div class="absolute bottom-[-120px] left-[-90px] h-96 w-96 rounded-full blur-3xl opacity-[0.08]" style="background: var(--brand)"></div>
+            <div class="absolute top-[35%] left-[10%] h-56 w-56 rounded-full blur-3xl opacity-[0.06]" style="background: var(--brand)"></div>
+        </div>
 
-            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="md:col-span-2">
-                    <div class="text-2xl font-extrabold font-cairo mb-3 text-white">{{ $companyName }}</div>
-                    <p class="text-gray-300 leading-relaxed">
+                    <div class="text-2xl font-extrabold font-cairo mb-3 text-gray-900">{{ $companyName }}</div>
+                    <p class="text-gray-600 leading-relaxed">
                         نبني حلولًا تشغيلية وبنى تحتية رقمية للشركات — من التشغيل الداخلي إلى بوابة العميل وخدمة ما بعد البيع — بتجربة عربية حديثة ومعايير B2B.
                     </p>
                     <div class="mt-5 flex flex-col sm:flex-row gap-3">
-                        <a href="{{ route('website.contact') }}" class="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-extrabold transition">
+                        <a href="{{ route('website.contact') }}"
+                           class="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-gray-900 text-white font-extrabold hover:bg-black transition shadow-sm">
                             احجز جلسة
                         </a>
-                        <a href="{{ route('client.login') }}" class="inline-flex items-center justify-center px-5 py-3 rounded-2xl text-white font-extrabold btn-brand shadow-md hover:shadow-lg transition">
+                        <a href="{{ route('client.login') }}"
+                           class="inline-flex items-center justify-center px-5 py-3 rounded-2xl text-white font-extrabold btn-brand shadow-md hover:shadow-lg transition">
                             بوابة العملاء
                         </a>
                     </div>
                 </div>
+
                 <div>
-                    <div class="font-bold mb-3">روابط</div>
-                    <div class="space-y-2 text-sm text-gray-300">
-                        <a class="block hover:text-white transition" href="{{ route('website.about') }}">عن الشركة</a>
-                        <a class="block hover:text-white transition" href="{{ route('website.services') }}">الخدمات</a>
-                        <a class="block hover:text-white transition" href="{{ route('website.case-studies.index') }}">نماذج الأعمال</a>
-                        <a class="block hover:text-white transition" href="{{ route('website.pricing') }}">حلول الشركات</a>
-                        <a class="block hover:text-white transition" href="{{ route('website.contact') }}">تواصل</a>
+                    <div class="font-extrabold mb-3 text-gray-900">روابط</div>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.about') }}">عن الشركة</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.services') }}">الخدمات</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.training') }}">التدريب</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.case-studies.index') }}">نماذج الأعمال</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.pricing') }}">حلول الشركات</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.contact') }}">تواصل</a>
                     </div>
                 </div>
+
                 <div>
-                    <div class="font-bold mb-3">بيانات التواصل</div>
-                    <div class="space-y-2 text-sm text-gray-300">
-                        <div><span class="text-gray-400">هاتف:</span> {{ \App\Helpers\SettingsHelper::getCompanyPhone() }}</div>
-                        <div><span class="text-gray-400">بريد:</span> {{ \App\Helpers\SettingsHelper::getCompanyEmail() }}</div>
-                        <div><span class="text-gray-400">عنوان:</span> {{ \App\Helpers\SettingsHelper::getCompanyAddress() }}</div>
+                    <div class="font-extrabold mb-3 text-gray-900">بيانات التواصل</div>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div><span class="text-gray-500">هاتف:</span> {{ \App\Helpers\SettingsHelper::getCompanyPhone() }}</div>
+                        <div><span class="text-gray-500">بريد:</span> {{ \App\Helpers\SettingsHelper::getCompanyEmail() }}</div>
+                        <div><span class="text-gray-500">عنوان:</span> {{ \App\Helpers\SettingsHelper::getCompanyAddress() }}</div>
                     </div>
                 </div>
             </div>
 
-            <div class="border-t border-white/10 mt-10 pt-6 text-sm text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="border-t border-gray-200 mt-10 pt-6 text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div>© {{ date('Y') }} {{ $companyName }}. جميع الحقوق محفوظة.</div>
-                <div class="text-gray-300">{{ \App\Helpers\SettingsHelper::getSystemName() }}</div>
+                <div class="text-gray-600">{{ \App\Helpers\SettingsHelper::getSystemName() }}</div>
             </div>
-        </div>
         </div>
     </footer>
 

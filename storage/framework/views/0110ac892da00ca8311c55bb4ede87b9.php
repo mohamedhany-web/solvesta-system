@@ -8,8 +8,9 @@
     <title><?php echo $__env->yieldContent('page-title', \App\Helpers\SettingsHelper::getSystemName()); ?> - <?php echo e(\App\Helpers\SettingsHelper::getCompanyName()); ?></title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="<?php echo e(\App\Helpers\SettingsHelper::getFaviconPath()); ?>">
-    <link rel="shortcut icon" type="image/x-icon" href="<?php echo e(\App\Helpers\SettingsHelper::getFaviconPath()); ?>">
+    <?php $faviconUrl = \App\Helpers\SettingsHelper::getFaviconUrl(); ?>
+    <link rel="icon" type="image/x-icon" href="<?php echo e($faviconUrl ?: '/favicon.ico'); ?>">
+    <link rel="shortcut icon" type="image/x-icon" href="<?php echo e($faviconUrl ?: '/favicon.ico'); ?>">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

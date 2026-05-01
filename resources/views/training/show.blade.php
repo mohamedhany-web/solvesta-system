@@ -17,7 +17,18 @@
                 <p class="text-blue-100">{{ $training->description ? Str::limit($training->description, 60) : 'لا يوجد وصف' }}</p>
             </div>
         </div>
-        <div class="flex items-center space-x-3 space-x-reverse">
+        <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+            @can('view-training')
+            <a href="{{ route('training.applications', $training) }}" class="inline-flex items-center gap-2 bg-amber-400 text-amber-950 px-4 py-2 rounded-lg hover:bg-amber-300 transition-all duration-200 font-bold text-sm shadow-sm">
+                طلبات التسجيل (الموقع)
+                @if(($internshipApplicationsCount ?? 0) > 0)
+                    <span class="min-w-[1.5rem] text-center rounded-full bg-amber-950 text-amber-100 text-xs px-2 py-0.5">{{ $internshipApplicationsCount }}</span>
+                    @if(($pendingInternshipApplicationsCount ?? 0) > 0)
+                        <span class="text-xs font-normal opacity-90">({{ $pendingInternshipApplicationsCount }} قيد المراجعة)</span>
+                    @endif
+                @endif
+            </a>
+            @endcan
             @can('edit-training')
             <a href="{{ route('training.edit', $training) }}" class="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-all duration-200">
                 تعديل

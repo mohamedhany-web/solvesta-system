@@ -79,6 +79,7 @@
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ البدء</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ الانتهاء</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المشاركون</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">طلبات الموقع</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
                         </tr>
@@ -115,6 +116,15 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ $training->participants->count() }} / {{ $training->max_participants }}
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                @if(($training->internship_applications_count ?? 0) > 0)
+                                    <a href="{{ route('training.applications', $training) }}" class="inline-flex items-center gap-1.5 font-bold text-amber-800 hover:text-amber-950 hover:underline">
+                                        {{ $training->internship_applications_count }} طلب
+                                    </a>
+                                @else
+                                    <span class="text-gray-400">—</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full
                                     @if($training->status == 'completed') bg-green-100 text-green-800
@@ -130,8 +140,11 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <a href="{{ route('training.show', $training) }}" class="text-blue-600 hover:text-blue-900">عرض</a>
+                                    @can('view-training')
+                                    <a href="{{ route('training.applications', $training) }}" class="text-amber-800 hover:text-amber-950 font-bold text-sm">طلبات الموقع</a>
+                                    @endcan
                                     @can('edit-training')
                                     <a href="{{ route('training.edit', $training) }}" class="text-indigo-600 hover:text-indigo-900">تعديل</a>
                                     @endcan

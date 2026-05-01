@@ -12,13 +12,18 @@ class TrainingParticipant extends Model
 
     protected $fillable = [
         'training_id',
-        'employee_id',
+        'user_id',
         'status',
-        'score',
-        'feedback',
+        'attendance_rate',
+        'grade',
+        'certificate_issued',
+        'certificate_issued_at',
+        'notes',
     ];
 
     protected $casts = [
+        'certificate_issued' => 'boolean',
+        'certificate_issued_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -28,9 +33,9 @@ class TrainingParticipant extends Model
         return $this->belongsTo(Training::class);
     }
 
-    public function employee(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
 

@@ -6,19 +6,50 @@
 <div class="w-full max-w-4xl mx-auto">
     <!-- Page Header -->
     <div class="mb-8">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">برنامج تدريبي جديد</h1>
                 <p class="text-gray-600">أضف برنامج تدريبي جديد للموظفين</p>
             </div>
-            <a href="{{ route('training.index') }}" class="bg-gray-600 text-white px-6 py-3 rounded-xl hover:bg-gray-700 transition-all duration-200 flex items-center shadow-sm">
-                <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                العودة
-            </a>
+            <div class="flex flex-wrap items-center gap-3">
+                @if($departments->isNotEmpty())
+                <form method="POST" action="{{ route('training.seed-demos') }}" class="inline"
+                      onsubmit="return confirm('سيتم إنشاء 3 برامج تدريبية تجريبية وربطها بأول قسم في القائمة. هل تتابع؟');">
+                    @csrf
+                    <button type="submit" class="bg-emerald-600 text-white px-5 py-3 rounded-xl hover:bg-emerald-700 transition-all duration-200 flex items-center shadow-sm text-sm font-bold">
+                        <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        إنشاء برامج تجريبية (3)
+                    </button>
+                </form>
+                @endif
+                <a href="{{ route('training.index') }}" class="bg-gray-600 text-white px-6 py-3 rounded-xl hover:bg-gray-700 transition-all duration-200 flex items-center shadow-sm">
+                    <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    العودة
+                </a>
+            </div>
         </div>
     </div>
+
+    @if($errors->any())
+        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 text-red-800 px-4 py-3 text-sm" role="alert">
+            <p class="font-bold mb-2">لم يتم الحفظ — يوجد {{ $errors->count() }} خطأ:</p>
+            <ul class="list-disc list-inside space-y-1">
+                @foreach($errors->all() as $message)
+                    <li>{{ $message }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    @if($departments->isEmpty())
+        <div class="mb-6 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 px-4 py-3 text-sm">
+            لا توجد أقسام في النظام. أضف قسمًا من <a href="{{ route('departments.index') }}" class="font-bold underline hover:text-amber-950">إدارة الأقسام</a> قبل إنشاء أي برنامج تدريبي.
+        </div>
+    @endif
 
     <!-- Form -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
@@ -181,7 +212,7 @@
                 <a href="{{ route('training.index') }}" class="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                     إلغاء
                 </a>
-                <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                <button type="submit" @disabled($departments->isEmpty()) class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>

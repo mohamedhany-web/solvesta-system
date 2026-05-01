@@ -210,4 +210,9 @@ class User extends Authenticatable
     {
         return UserPermission::setPermission($this->id, $permissionKey, $isEnabled, $customSettings);
     }
+
+    public function trainingParticipants(): HasMany
+    {
+        return $this->hasMany(TrainingParticipant::class, 'user_id');
+    }
 }

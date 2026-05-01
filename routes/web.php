@@ -140,6 +140,9 @@ Route::get('/', [WebsiteController::class, 'home'])->name('website.home');
 Route::get('/about', [WebsiteController::class, 'about'])->name('website.about');
 Route::get('/services', [WebsiteController::class, 'services'])->name('website.services');
 Route::get('/pricing', [WebsiteController::class, 'pricing'])->name('website.pricing');
+Route::get('/academy', [WebsiteController::class, 'training'])->name('website.training');
+Route::get('/academy/{training}', [WebsiteController::class, 'trainingShow'])->name('website.training.show');
+Route::post('/academy/{training}/apply', [WebsiteController::class, 'trainingApply'])->name('website.training.apply');
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('website.contact');
 Route::post('/contact', [WebsiteController::class, 'submitContact'])->name('website.contact.submit');
 Route::get('/case-studies', [WebsiteController::class, 'caseStudies'])->name('website.case-studies.index');
@@ -499,6 +502,7 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     // Training & Development
     Route::get('training', [TrainingController::class, 'index'])->name('training.index')->middleware('permission:view-training');
     Route::get('training/create', [TrainingController::class, 'create'])->name('training.create')->middleware('permission:create-training');
+    Route::post('training/seed-demos', [TrainingController::class, 'storeDemo'])->name('training.seed-demos')->middleware('permission:create-training');
     Route::post('training', [TrainingController::class, 'store'])->name('training.store')->middleware('permission:create-training');
     Route::get('training/{training}', [TrainingController::class, 'show'])->name('training.show')->middleware('permission:view-training');
     Route::get('training/{training}/edit', [TrainingController::class, 'edit'])->name('training.edit')->middleware('permission:edit-training');
@@ -506,6 +510,8 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::delete('training/{training}', [TrainingController::class, 'destroy'])->name('training.destroy')->middleware('permission:delete-training');
     Route::post('training/{training}/participants', [TrainingController::class, 'addParticipant'])->name('training.add-participant')->middleware('permission:edit-training');
     Route::delete('training/{training}/participants/{participant}', [TrainingController::class, 'removeParticipant'])->name('training.remove-participant')->middleware('permission:edit-training');
+    Route::get('training/{training}/applications', [TrainingController::class, 'applications'])->name('training.applications')->middleware('permission:view-training');
+    Route::patch('training/applications/{application}/status', [TrainingController::class, 'updateApplicationStatus'])->name('training.applications.status')->middleware('permission:edit-training');
     
     // Meetings & Conferences
     Route::get('meetings', [MeetingController::class, 'index'])->name('meetings.index')->middleware('permission:view-meetings');

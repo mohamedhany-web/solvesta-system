@@ -44,6 +44,11 @@ class Training extends Model
         return $this->hasMany(TrainingParticipant::class);
     }
 
+    public function internshipApplications(): HasMany
+    {
+        return $this->hasMany(InternshipApplication::class);
+    }
+
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);

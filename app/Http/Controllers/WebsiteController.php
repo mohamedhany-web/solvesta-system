@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use App\Models\ContactRequest as ContactRequestModel;
+use App\Models\Training;
+use App\Models\InternshipApplication;
 
 class WebsiteController extends Controller
 {
@@ -406,6 +409,85 @@ class WebsiteController extends Controller
     public function pricing()
     {
         return view('website.pricing');
+    }
+
+    /**
+     * Public training / internship landing page (marketing).
+     */
+    public function training()
+    {
+        $trainings = Training::query()
+            ->whereIn('status', ['planned', 'ongoing'])
+            ->orderBy('start_date')
+            ->get();
+
+        return view('website.training', compact('trainings'));
+    }
+
+    public function trainingShow(Training $training)
+    {
+        abort_unless(in_array($training->status, ['planned', 'ongoing'], true), 404);
+        $training->load(['department', 'instructor']);
+
+        return view('website.training-show', compact('training'));
+    }
+
+    public function trainingApply(Request $request, Training $training)
+    {
+        abort_unless(in_array($training->status, ['planned', 'ongoing'], true), 404);
+
+        $data = $request->validate([
+            'full_name' => 'required|string|max:190',
+            'email' => [
+                'required',
+                'email',
+                'max:190',
+                Rule::unique('internship_applications', 'email')->where('training_id', $training->id),
+            ],
+            'phone' => 'nullable|string|max:60',
+            'university' => 'nullable|string|max:190',
+            'major' => 'nullable|string|max:190',
+            'level' => 'nullable|string|max:190',
+            'linkedin_url' => 'nullable|string|max:500',
+            'portfolio_url' => 'nullable|string|max:500',
+            'message' => 'nullable|string|max:5000',
+            'cv' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+        ], [
+            'email.unique' => 'سبق تقديم طلب بهذا البريد على نفس البرنامج.',
+        ]);
+
+        foreach (['linkedin_url', 'portfolio_url'] as $urlField) {
+            $v = isset($data[$urlField]) ? trim((string) $data[$urlField]) : '';
+            if ($v === '') {
+                $data[$urlField] = null;
+            } elseif (! filter_var($v, FILTER_VALIDATE_URL)) {
+                return back()->withInput()->withErrors([$urlField => 'يرجى إدخال رابط صحيح يبدأ بـ http:// أو https:// أو ترك الحقل فارغًا.']);
+            } else {
+                $data[$urlField] = $v;
+            }
+        }
+
+        $cvPath = null;
+        if ($request->hasFile('cv') && $request->file('cv')->isValid()) {
+            $cvPath = $request->file('cv')->store('internships/cv', 'public');
+        }
+
+        InternshipApplication::create([
+            'training_id' => $training->id,
+            'full_name' => $data['full_name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'university' => $data['university'] ?? null,
+            'major' => $data['major'] ?? null,
+            'level' => $data['level'] ?? null,
+            'linkedin_url' => $data['linkedin_url'] ?? null,
+            'portfolio_url' => $data['portfolio_url'] ?? null,
+            'message' => $data['message'] ?? null,
+            'cv_path' => $cvPath,
+            'status' => 'pending',
+        ]);
+
+        return back()->with('success', 'تم استلام طلب التسجيل بنجاح. سيتم التواصل معك قريبًا.');
     }
 
     public function contact()

@@ -44,7 +44,9 @@
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
   <div class="text-center mb-14">
     <h2 class="text-3xl sm:text-4xl font-black font-cairo text-gray-900">مسارات الحلول</h2>
-    <p class="mt-4 text-gray-600 max-w-2xl mx-auto leading-relaxed">اختر ما تحتاجه شركتك الآن… ثم نتوسع معك بإطلاق مرحلي.</p>
+    <p class="mt-4 text-gray-600 max-w-2xl mx-auto leading-relaxed">
+      نبدأ من “الأساسيات” التي تثبّت التشغيل والبيانات، ثم نضيف طبقات التكامل والأتمتة والذكاء الاصطناعي حسب الأولويات.
+    </p>
   </div>
 
   @php
@@ -71,6 +73,61 @@
   </div>
 </section>
 
+{{-- Infrastructure blueprint --}}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+    <div class="bg-white rounded-3xl border border-gray-200 p-8">
+      <h2 class="text-2xl font-black font-cairo text-gray-900 mb-3">كيف نبني البنية التحتية التكنولوجية؟</h2>
+      <p class="text-gray-600 leading-relaxed">
+        البنية ليست “سيرفر فقط”. هي مزيج من <span class="font-bold text-gray-900">الهوية والصلاحيات</span> + <span class="font-bold text-gray-900">نموذج بيانات</span> +
+        <span class="font-bold text-gray-900">تكاملات</span> + <span class="font-bold text-gray-900">تشغيل ومراقبة</span> + <span class="font-bold text-gray-900">حوكمة</span>.
+        هدفنا: نظام يعيش سنوات، يتوسع مع الشركة، ويعطي الإدارة رؤية تشغيلية دقيقة.
+      </p>
+
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+        <div class="rounded-2xl border border-gray-200 p-5">
+          <div class="font-extrabold text-gray-900 mb-1">Identity &amp; Access</div>
+          <div class="text-gray-600">RBAC، صلاحيات دقيقة، سجل تدقيق (Audit).</div>
+        </div>
+        <div class="rounded-2xl border border-gray-200 p-5">
+          <div class="font-extrabold text-gray-900 mb-1">Data Model</div>
+          <div class="text-gray-600">تعريف “مصدر الحقيقة” للعميل/المشروع/الفاتورة/التذكرة.</div>
+        </div>
+        <div class="rounded-2xl border border-gray-200 p-5">
+          <div class="font-extrabold text-gray-900 mb-1">Integrations</div>
+          <div class="text-gray-600">APIs + Webhooks + ربط WhatsApp/Email/ERP/CRM.</div>
+        </div>
+        <div class="rounded-2xl border border-gray-200 p-5">
+          <div class="font-extrabold text-gray-900 mb-1">Operations</div>
+          <div class="text-gray-600">Monitoring، نسخ احتياطي، سياسات نشر وتحديث.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-3xl border border-gray-200 bg-gray-50 p-8">
+      <h3 class="text-xl font-black font-cairo text-gray-900 mb-4">مخرجات واضحة (Deliverables) من أول أسبوع</h3>
+      <div class="space-y-3 text-sm text-gray-700 leading-relaxed">
+        <div class="flex items-start gap-2">
+          <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
+          <div><span class="font-bold">خارطة نظم (System Map):</span> ما الذي نُبقيه؟ ما الذي ندمجه؟ وما الذي نبنيه؟</div>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
+          <div><span class="font-bold">نموذج بيانات مُبسّط:</span> تعريف الكيانات الأساسية وعلاقاتها (Client/Project/Invoice/Ticket).</div>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
+          <div><span class="font-bold">صلاحيات وسياسات:</span> من يرى ماذا؟ ومن يعتمد ماذا؟ مع مسارات قرار واقعية.</div>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
+          <div><span class="font-bold">لوحة KPIs أولية:</span> مؤشرات تشغيل/مالية/دعم لتبدأ القياس مبكرًا.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 {{-- Delivery model --}}
 <section class="bg-gray-50 border-y border-gray-100">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -80,19 +137,19 @@
         <div class="space-y-3 text-sm text-gray-700 leading-relaxed">
           <div class="flex items-start gap-2">
             <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-            <div><span class="font-bold">اكتشاف وتشخيص:</span> تحليل دورة العمل الحالية وتحديد نقاط الألم والأولويات.</div>
+            <div><span class="font-bold">اكتشاف وتشخيص:</span> مقابلات سريعة + تحليل الإجراءات + تحديد الاختناقات (وقت/تكلفة/مخاطر).</div>
           </div>
           <div class="flex items-start gap-2">
             <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-            <div><span class="font-bold">تصميم بنية تشغيلية:</span> إجراءات + صلاحيات + نموذج بيانات + مسارات اعتمادات.</div>
+            <div><span class="font-bold">تصميم معماري وتشغيلي:</span> Domain Model + RBAC + مواصفات تكامل + خطة بيانات (ترحيل/تنظيف).</div>
           </div>
           <div class="flex items-start gap-2">
             <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-            <div><span class="font-bold">تطبيق وإطلاق مرحلي:</span> تنفيذ سريع ثم توسع تدريجي مع تدريب الفرق.</div>
+            <div><span class="font-bold">تنفيذ وإطلاق مرحلي:</span> MVP مُستخدم فعليًا ثم توسعة في دورات (Sprints) مع تدريب وقياس.</div>
           </div>
           <div class="flex items-start gap-2">
             <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-            <div><span class="font-bold">قياس وتحسين:</span> KPIs + تقارير + تحسينات مستمرة بناءً على البيانات.</div>
+            <div><span class="font-bold">تشغيل وتحسين:</span> Monitoring + SLA + تقارير دورية للإدارة + تحسينات على أساس البيانات.</div>
           </div>
         </div>
       </div>
@@ -129,20 +186,48 @@
   </div>
 </section>
 
+{{-- Practical examples --}}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+  <div class="text-center mb-14">
+    <h2 class="text-3xl sm:text-4xl font-black font-cairo text-gray-900">أمثلة عملية لحلول الشركات</h2>
+    <p class="mt-4 text-gray-600 max-w-2xl mx-auto leading-relaxed">أفكار جاهزة تُنفّذ كمنظومة—ليست “صفحات” فقط.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    @php
+      $examples = [
+        ['t'=>'مسارات اعتمادات','d'=>'اعتماد مشتريات/مصروفات/تغييرات نطاق المشروع مع سجل قرار واضح.'],
+        ['t'=>'بوابة عميل B2B','d'=>'متابعة التقدم + التقارير + الفواتير + فتح تذكرة خلال ثوانٍ مع SLA.'],
+        ['t'=>'إغلاق الفجوة بين التشغيل والمالية','d'=>'ربط المشروع بالمصروفات والتحصيل لقراءة الربحية لحظيًا.'],
+        ['t'=>'تكاملات تنبيهات حرجة','d'=>'WhatsApp/Email للإنذارات والاعتمادات وتحديثات الحالة.'],
+        ['t'=>'حوكمة وأمان','d'=>'RBAC، Audit، سياسات وصول حسب القسم/المشروع، مع تقارير امتثال.'],
+        ['t'=>'AI للقرارات السريعة','d'=>'تلخيص تحديثات الفريق، تصنيف التذاكر، تنبيه استباقي للتأخير.'],
+      ];
+    @endphp
+
+    @foreach($examples as $e)
+      <div class="bg-white rounded-2xl border border-gray-200 p-7 hover:shadow-xl hover:border-gray-300 transition-all">
+        <div class="text-lg font-extrabold text-gray-900 mb-2">{{ $e['t'] }}</div>
+        <div class="text-sm text-gray-600 leading-relaxed">{{ $e['d'] }}</div>
+      </div>
+    @endforeach
+  </div>
+</section>
+
 {{-- Quick guidance cards --}}
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="bg-white rounded-2xl border border-gray-200 p-7">
       <div class="text-sm font-extrabold text-gray-900 mb-2">مناسب لـ</div>
-      <div class="text-sm text-gray-600 leading-relaxed">الشركات التي تريد توحيد التشغيل والمالية والدعم في منصة واحدة.</div>
+      <div class="text-sm text-gray-600 leading-relaxed">الشركات التي تريد تحويل التشغيل إلى منظومة قابلة للقياس: مشاريع + مالية + دعم + حوكمة.</div>
     </div>
     <div class="bg-white rounded-2xl border border-gray-200 p-7">
       <div class="text-sm font-extrabold text-gray-900 mb-2">النتيجة</div>
-      <div class="text-sm text-gray-600 leading-relaxed">شفافية تشغيلية، تقارير لحظية، واستجابة أسرع مع ما بعد البيع.</div>
+      <div class="text-sm text-gray-600 leading-relaxed">رؤية للإدارة، مسارات قرار واضحة، وتقليل العمل اليدوي مع تكاملات وتنبيهات.</div>
     </div>
     <div class="bg-white rounded-2xl border border-gray-200 p-7">
       <div class="text-sm font-extrabold text-gray-900 mb-2">الخطوة التالية</div>
-      <div class="text-sm text-gray-600 leading-relaxed">جلسة تعريف لتحديد النطاق وخارطة طريق التنفيذ المرحلي.</div>
+      <div class="text-sm text-gray-600 leading-relaxed">جلسة تعريف + تحديد نطاق + خارطة طريق تنفيذ مرحلي بمخرجات واضحة لكل مرحلة.</div>
     </div>
   </div>
 </section>
