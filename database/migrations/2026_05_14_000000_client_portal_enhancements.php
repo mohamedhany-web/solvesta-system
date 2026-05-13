@@ -8,46 +8,52 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('client_notifications', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('client_id')->constrained()->cascadeOnDelete();
-            $table->string('type', 64);
-            $table->string('title');
-            $table->text('body')->nullable();
-            $table->string('action_url', 2000)->nullable();
-            $table->json('meta')->nullable();
-            $table->timestamp('read_at')->nullable();
-            $table->timestamps();
+        if (! Schema::hasTable('client_notifications')) {
+            Schema::create('client_notifications', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('client_id')->constrained()->cascadeOnDelete();
+                $table->string('type', 64);
+                $table->string('title');
+                $table->text('body')->nullable();
+                $table->string('action_url', 2000)->nullable();
+                $table->json('meta')->nullable();
+                $table->timestamp('read_at')->nullable();
+                $table->timestamps();
 
-            $table->index(['client_id', 'read_at']);
-            $table->index(['client_id', 'created_at']);
-        });
+                $table->index(['client_id', 'read_at']);
+                $table->index(['client_id', 'created_at']);
+            });
+        }
 
-        Schema::create('client_shared_documents', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('client_id')->constrained()->cascadeOnDelete();
-            $table->string('title');
-            $table->string('document_type', 64)->default('general');
-            $table->string('file_path');
-            $table->string('original_filename')->nullable();
-            $table->string('mime', 128)->nullable();
-            $table->text('notes')->nullable();
-            $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamps();
+        if (! Schema::hasTable('client_shared_documents')) {
+            Schema::create('client_shared_documents', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('client_id')->constrained()->cascadeOnDelete();
+                $table->string('title');
+                $table->string('document_type', 64)->default('general');
+                $table->string('file_path');
+                $table->string('original_filename')->nullable();
+                $table->string('mime', 128)->nullable();
+                $table->text('notes')->nullable();
+                $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
+                $table->timestamps();
 
-            $table->index(['client_id', 'created_at']);
-        });
+                $table->index(['client_id', 'created_at']);
+            });
+        }
 
-        Schema::create('client_portal_feedbacks', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('client_id')->constrained()->cascadeOnDelete();
-            $table->morphs('feedbackable');
-            $table->unsignedTinyInteger('rating');
-            $table->text('comment')->nullable();
-            $table->timestamps();
+        if (! Schema::hasTable('client_portal_feedbacks')) {
+            Schema::create('client_portal_feedbacks', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('client_id')->constrained()->cascadeOnDelete();
+                $table->morphs('feedbackable');
+                $table->unsignedTinyInteger('rating');
+                $table->text('comment')->nullable();
+                $table->timestamps();
 
-            $table->unique(['feedbackable_type', 'feedbackable_id', 'client_id'], 'client_portal_feedback_unique');
-        });
+                $table->unique(['feedbackable_type', 'feedbackable_id', 'client_id'], 'client_portal_feedback_unique');
+            });
+        }
 
         Schema::table('invoices', function (Blueprint $table) {
             if (! Schema::hasColumn('invoices', 'payment_link')) {
@@ -61,33 +67,47 @@ return new class extends Migration
             }
         });
 
-        // MySQL (وغيره): لا يمكن حذف UNIQUE على client_id طالما المفتاح الأجنبي يعتمد عليه.
-        // نحذف FK ثم UNIQUE ثم نضيف index عادي ثم نعيد FK.
-        Schema::table('client_accounts', function (Blueprint $table) {
-            $table->dropForeign(['client_id']);
-        });
+        // MySQL: لا يمكن حذف UNIQUE على client_id طالما المفتاح الأجنبي يعتمد عليه.
+        if (Schema::hasTable('client_accounts') && ! Schema::hasColumn('client_accounts', 'portal_role')) {
+            try {
+                Schema::table('client_accounts', function (Blueprint $table) {
+                    $table->dropForeign(['client_id']);
+                });
+            } catch (\Throwable) {
+                // قد يكون المفتاح محذوفاً من محاولة سابقة
+            }
 
-        Schema::table('client_accounts', function (Blueprint $table) {
-            $indexes = Schema::getConnection()->getSchemaBuilder()->getIndexes('client_accounts');
-            foreach ($indexes as $index) {
-                $cols = $index['columns'] ?? [];
-                if ($cols === ['client_id'] && ($index['unique'] ?? false) && ! ($index['primary'] ?? false)) {
-                    $table->dropIndex($index['name']);
-                    break;
+            Schema::table('client_accounts', function (Blueprint $table) {
+                $indexes = Schema::getConnection()->getSchemaBuilder()->getIndexes('client_accounts');
+                foreach ($indexes as $index) {
+                    $cols = $index['columns'] ?? [];
+                    if ($cols === ['client_id'] && ($index['unique'] ?? false) && ! ($index['primary'] ?? false)) {
+                        $table->dropIndex($index['name']);
+                        break;
+                    }
                 }
-            }
-        });
+            });
 
-        Schema::table('client_accounts', function (Blueprint $table) {
-            if (! Schema::hasColumn('client_accounts', 'portal_role')) {
+            Schema::table('client_accounts', function (Blueprint $table) {
                 $table->string('portal_role', 32)->default('owner')->after('is_active');
-            }
-        });
+            });
 
-        Schema::table('client_accounts', function (Blueprint $table) {
-            $table->index('client_id');
-            $table->foreign('client_id')->references('id')->on('clients')->cascadeOnDelete();
-        });
+            try {
+                Schema::table('client_accounts', function (Blueprint $table) {
+                    $table->index('client_id');
+                });
+            } catch (\Throwable) {
+                // فهرس client_id قد يكون موجوداً
+            }
+
+            try {
+                Schema::table('client_accounts', function (Blueprint $table) {
+                    $table->foreign('client_id')->references('id')->on('clients')->cascadeOnDelete();
+                });
+            } catch (\Throwable) {
+                // المفتاح الأجنبي قد يكون مضافاً
+            }
+        }
     }
 
     public function down(): void
