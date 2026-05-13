@@ -61,15 +61,32 @@ return new class extends Migration
             }
         });
 
+        // MySQL (وغيره): لا يمكن حذف UNIQUE على client_id طالما المفتاح الأجنبي يعتمد عليه.
+        // نحذف FK ثم UNIQUE ثم نضيف index عادي ثم نعيد FK.
         Schema::table('client_accounts', function (Blueprint $table) {
-            try {
-                $table->dropUnique(['client_id']);
-            } catch (\Throwable) {
-                // Index may not exist on older installs
+            $table->dropForeign(['client_id']);
+        });
+
+        Schema::table('client_accounts', function (Blueprint $table) {
+            $indexes = Schema::getConnection()->getSchemaBuilder()->getIndexes('client_accounts');
+            foreach ($indexes as $index) {
+                $cols = $index['columns'] ?? [];
+                if ($cols === ['client_id'] && ($index['unique'] ?? false) && ! ($index['primary'] ?? false)) {
+                    $table->dropIndex($index['name']);
+                    break;
+                }
             }
+        });
+
+        Schema::table('client_accounts', function (Blueprint $table) {
             if (! Schema::hasColumn('client_accounts', 'portal_role')) {
                 $table->string('portal_role', 32)->default('owner')->after('is_active');
             }
+        });
+
+        Schema::table('client_accounts', function (Blueprint $table) {
+            $table->index('client_id');
+            $table->foreign('client_id')->references('id')->on('clients')->cascadeOnDelete();
         });
     }
 
@@ -92,10 +109,29 @@ return new class extends Migration
         });
 
         Schema::table('client_accounts', function (Blueprint $table) {
+            $table->dropForeign(['client_id']);
+        });
+
+        Schema::table('client_accounts', function (Blueprint $table) {
+            $indexes = Schema::getConnection()->getSchemaBuilder()->getIndexes('client_accounts');
+            foreach ($indexes as $index) {
+                $cols = $index['columns'] ?? [];
+                if ($cols === ['client_id'] && ! ($index['unique'] ?? false) && ! ($index['primary'] ?? false)) {
+                    $table->dropIndex($index['name']);
+                    break;
+                }
+            }
+        });
+
+        Schema::table('client_accounts', function (Blueprint $table) {
             if (Schema::hasColumn('client_accounts', 'portal_role')) {
                 $table->dropColumn('portal_role');
             }
+        });
+
+        Schema::table('client_accounts', function (Blueprint $table) {
             $table->unique('client_id');
+            $table->foreign('client_id')->references('id')->on('clients')->cascadeOnDelete();
         });
     }
 };

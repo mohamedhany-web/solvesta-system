@@ -137,7 +137,7 @@ class ProjectController extends Controller
             'total_tasks' => $project->tasks()->count(),
             'completed_tasks' => $project->tasks()->where('status', 'completed')->count(),
             'in_progress_tasks' => $project->tasks()->where('status', 'in_progress')->count(),
-            'pending_tasks' => $project->tasks()->where('status', 'pending')->count(),
+            'pending_tasks' => $project->tasks()->whereIn('status', ['todo', 'review', 'pending'])->count(),
             'team_members_count' => $project->teamMembers()->count(),
             'progress_percentage' => $project->tasks()->count() > 0 
                 ? round(($project->tasks()->where('status', 'completed')->count() / $project->tasks()->count()) * 100, 2)
