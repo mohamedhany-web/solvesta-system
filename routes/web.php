@@ -591,6 +591,7 @@ Route::prefix('client')->name('client.')->middleware('auth:client')->group(funct
             Route::get('/create', [ClientWebsiteIssueController::class, 'create'])->name('create');
             Route::post('/', [ClientWebsiteIssueController::class, 'store'])->name('store');
             Route::get('/{websiteIssue}/files/{index}', [ClientWebsiteIssueController::class, 'file'])->name('file')->whereNumber('index');
+            Route::delete('/{websiteIssue}', [ClientWebsiteIssueController::class, 'destroy'])->name('destroy');
             Route::get('/{websiteIssue}', [ClientWebsiteIssueController::class, 'show'])->name('show');
         });
 

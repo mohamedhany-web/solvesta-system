@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClientWebsiteIssue;
-use Illuminate\Http\Request;
 use App\Services\ClientPortalAdminAlertService;
+use Illuminate\Http\Request;
 
 class ClientWebsiteIssueController extends Controller
 {
@@ -94,6 +94,24 @@ class ClientWebsiteIssueController extends Controller
         ]);
     }
 
+    public function destroy(Request $request, ClientWebsiteIssue $websiteIssue)
+    {
+        $this->authorizeClientIssue($request, $websiteIssue);
+
+        if ($websiteIssue->status !== 'open') {
+            return redirect()
+                ->route('client.website-issues.index')
+                ->with('error', 'يمكن حذف البلاغ فقط وهو في حالة «مفتوح». للبلاغات قيد المعالجة أو المغلقة تواصل مع الدعم.');
+        }
+
+        $this->deleteIssueAttachments($websiteIssue);
+        $websiteIssue->delete();
+
+        return redirect()
+            ->route('client.website-issues.index')
+            ->with('success', 'تم حذف البلاغ بنجاح.');
+    }
+
     public function file(Request $request, ClientWebsiteIssue $websiteIssue, int $index)
     {
         $this->authorizeClientIssue($request, $websiteIssue);
@@ -104,15 +122,18 @@ class ClientWebsiteIssueController extends Controller
         }
 
         $path = $attachments[$index]['path'];
-        if (! Storage::disk('local')->exists($path)) {
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+
+        if (! $disk->exists($path)) {
             abort(404);
         }
 
-        $mime = $attachments[$index]['mime'] ?? Storage::disk('local')->mimeType($path) ?: 'image/jpeg';
+        $mime = $attachments[$index]['mime'] ?? $disk->mimeType($path) ?: 'image/jpeg';
+        $downloadName = $attachments[$index]['original'] ?? basename($path);
 
-        return response()->file(Storage::disk('local')->path($path), [
+        return $disk->response($path, $downloadName, [
             'Content-Type' => $mime,
-        ]);
+        ], 'inline');
     }
 
     private function authorizeClientIssue(Request $request, ClientWebsiteIssue $issue): void
@@ -121,6 +142,16 @@ class ClientWebsiteIssueController extends Controller
         $client = $account?->client;
         if (! $client || $issue->client_id !== $client->id) {
             abort(403);
+        }
+    }
+
+    private function deleteIssueAttachments(ClientWebsiteIssue $issue): void
+    {
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        foreach ($issue->attachments ?? [] as $att) {
+            if (! empty($att['path']) && $disk->exists($att['path'])) {
+                $disk->delete($att['path']);
+            }
         }
     }
 

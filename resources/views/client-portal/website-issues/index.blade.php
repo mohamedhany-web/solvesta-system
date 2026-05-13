@@ -20,6 +20,11 @@
             {{ session('success') }}
         </div>
     @endif
+    @if(session('error'))
+        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm font-medium">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="overflow-x-auto">
@@ -30,7 +35,7 @@
                         <th class="px-6 py-3 text-right font-semibold text-gray-700">العنوان</th>
                         <th class="px-6 py-3 text-right font-semibold text-gray-700">الحالة</th>
                         <th class="px-6 py-3 text-right font-semibold text-gray-700">التاريخ</th>
-                        <th class="px-6 py-3 text-left font-semibold text-gray-700 w-28">تفاصيل</th>
+                        <th class="px-6 py-3 text-left font-semibold text-gray-700 min-w-[8rem]">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -50,12 +55,22 @@
                             </td>
                             <td class="px-6 py-4 text-gray-600 whitespace-nowrap">{{ $issue->created_at->format('Y/m/d') }}</td>
                             <td class="px-6 py-4 text-left">
-                                <a href="{{ route('client.website-issues.show', $issue) }}" class="text-blue-600 hover:text-blue-800 font-semibold">عرض</a>
+                                <div class="flex flex-wrap items-center justify-end gap-2">
+                                    <a href="{{ route('client.website-issues.show', $issue) }}" class="text-blue-600 hover:text-blue-800 font-semibold text-sm">عرض</a>
+                                    @if($issue->status === 'open')
+                                        <form action="{{ route('client.website-issues.destroy', $issue) }}" method="POST" class="inline"
+                                              onsubmit="return confirm('حذف هذا البلاغ نهائياً؟ لا يمكن التراجع.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-800 font-semibold text-sm">حذف</button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">لا توجد بلاغات بعد. استخدم «بلاغ جديد» عند مواجهة أي مشكلة.</td>
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">لا توجد بلاغات بعد. استخدم «بلاغ جديد» عند مواجهة أي مشكلة.</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -9,7 +9,7 @@
             <p class="text-sm text-gray-500 mb-1 font-mono">{{ $issue->reference_code }}</p>
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $issue->title }}</h1>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <span class="inline-flex px-3 py-1.5 rounded-full text-sm font-semibold
                 @if($issue->status === 'open') bg-red-100 text-red-800
                 @elseif($issue->status === 'in_progress') bg-amber-100 text-amber-900
@@ -18,6 +18,14 @@
                 @endif">
                 {{ $issue->status_label }}
             </span>
+            @if($issue->status === 'open')
+                <form action="{{ route('client.website-issues.destroy', $issue) }}" method="POST" class="inline"
+                      onsubmit="return confirm('حذف هذا البلاغ نهائياً؟ لا يمكن التراجع.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition font-semibold">حذف البلاغ</button>
+                </form>
+            @endif
             <a href="{{ route('client.website-issues.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition">القائمة</a>
         </div>
     </div>
@@ -25,6 +33,11 @@
     @if(session('success'))
         <div class="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-800 text-sm font-medium">
             {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm font-medium">
+            {{ session('error') }}
         </div>
     @endif
 
