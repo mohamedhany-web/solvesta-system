@@ -289,6 +289,7 @@
 
                         {{-- Client Portal (for client role) --}}
                         @if(Auth::guard('client')->check())
+                        @php $cPortal = Auth::guard('client')->user(); @endphp
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">بوابة العميل</h3>
                             <a href="{{ route('client.dashboard') }}"
@@ -298,6 +299,13 @@
                                 </svg>
                                 لوحة العميل
                             </a>
+                            <a href="{{ route('client.notifications') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.notifications*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                                الإشعارات
+                            </a>
                             <a href="{{ route('client.projects') }}"
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.projects') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -305,6 +313,7 @@
                                 </svg>
                                 مشاريعي
                             </a>
+                            @if($cPortal && $cPortal->canAccessBilling())
                             <a href="{{ route('client.invoices') }}"
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.invoices') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -312,12 +321,57 @@
                                 </svg>
                                 فواتيري
                             </a>
+                            @endif
+                            <a href="{{ route('client.service-reports') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.service-reports', 'client.service-reports.download') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                تقارير الخدمة
+                            </a>
+                            <a href="{{ route('client.documents') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.documents*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                المستندات المشتركة
+                            </a>
+                            @if($cPortal && $cPortal->canAccessTechnicalRequests())
+                            <a href="{{ route('client.website-issues.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.website-issues.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                بلاغات الموقع
+                            </a>
+                            <a href="{{ route('client.meeting-requests.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.meeting-requests.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                طلبات الاجتماعات
+                            </a>
+                            <a href="{{ route('client.calendar') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.calendar') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                التقويم
+                            </a>
+                            @endif
                             <a href="{{ route('client.support.tickets') }}"
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.support.*') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-1.414-1.414a2 2 0 00-2.828 0L7 11.343V15h3.657l7.707-7.707a2 2 0 000-2.828z" />
                                 </svg>
                                 ما بعد البيع
+                            </a>
+                            <a href="{{ route('client.help') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.help') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                المساعدة
                             </a>
                         </div>
                         @endif
@@ -573,6 +627,20 @@
                                 </svg>
                                 العملاء
                             </a>
+                            <a href="{{ route('client-service-reports.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client-service-reports.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                تقارير العملاء
+                            </a>
+                            <a href="{{ route('client-shared-documents.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client-shared-documents.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                مستندات العملاء (بوابة)
+                            </a>
                             @endcan
 
                             <a href="{{ route('client-accounts.index') }}" 
@@ -684,6 +752,22 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                                 </svg>
                                 تذاكر الدعم
+                            </a>
+
+                            <a href="{{ route('client-website-issues.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client-website-issues.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                بلاغات عملاء الموقع
+                            </a>
+
+                            <a href="{{ route('client-meeting-requests.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client-meeting-requests.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                طلبات اجتماعات العملاء
                             </a>
 
                             <a href="{{ route('support.contact-requests.index') }}"
@@ -862,24 +946,43 @@
                         <!-- Right Side - Actions -->
                         <div class="flex items-center gap-2 sm:gap-3">
                             @if($isClientGuard)
-                                <div class="hidden sm:flex items-center gap-2">
-                                    <a href="{{ route('client.projects') }}"
-                                       class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-sm font-bold text-gray-800 transition">
-                                        المشاريع
-                                    </a>
-                                    <a href="{{ route('client.invoices') }}"
-                                       class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-sm font-bold text-gray-800 transition">
-                                        الفواتير
-                                    </a>
-                                </div>
-                                <a href="{{ route('client.support.tickets.create') }}"
-                                   class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-white text-sm font-extrabold shadow-md hover:shadow-lg transition flex-shrink-0"
-                                   style="background: linear-gradient(135deg, {{ \App\Helpers\SettingsHelper::getThemeColor() }} 0%, {{ \App\Helpers\SettingsHelper::getThemeColor() }}dd 100%);">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                                    </svg>
-                                    افتح تذكرة
-                                </a>
+                                @php $cHdr = $clientAccount; @endphp
+                                <details class="relative z-50 group/client-actions">
+                                    <summary class="flex items-center gap-2 cursor-pointer select-none list-none rounded-xl border border-gray-200 bg-white px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-extrabold text-gray-800 shadow-sm hover:bg-gray-50 transition max-w-[10.5rem] sm:max-w-none [&::-webkit-details-marker]:hidden">
+                                        <svg class="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        <span class="truncate">طلب جديد</span>
+                                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-gray-500 mr-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </summary>
+                                    <div class="absolute end-0 top-[calc(100%+6px)] w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-gray-200 bg-white py-1 shadow-xl text-sm font-semibold text-gray-800 overflow-hidden">
+                                        <a href="{{ route('client.support.tickets.create') }}"
+                                           class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-100">
+                                            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white shrink-0" style="background: linear-gradient(135deg, {{ \App\Helpers\SettingsHelper::getThemeColor() }} 0%, {{ \App\Helpers\SettingsHelper::getThemeColor() }}cc 100%);">
+                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                                            </span>
+                                            <span class="text-right leading-snug">افتح تذكرة دعم</span>
+                                        </a>
+                                        @if($cHdr && $cHdr->canAccessTechnicalRequests())
+                                        <a href="{{ route('client.website-issues.create') }}"
+                                           class="flex items-center gap-3 px-4 py-3 hover:bg-amber-50/80 border-b border-gray-100 text-amber-950">
+                                            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-800 shrink-0">
+                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                            </span>
+                                            <span class="text-right leading-snug">بلاغ عن الموقع</span>
+                                        </a>
+                                        <a href="{{ route('client.meeting-requests.create') }}"
+                                           class="flex items-center gap-3 px-4 py-3 hover:bg-cyan-50/80 text-cyan-950">
+                                            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-100 text-cyan-800 shrink-0">
+                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                            </span>
+                                            <span class="text-right leading-snug">طلب اجتماع</span>
+                                        </a>
+                                        @endif
+                                    </div>
+                                </details>
                             @else
                             <!-- Start Day Button -->
                             <button id="startDayBtn" 
@@ -1005,7 +1108,8 @@
                                                         </a>
                                                         @endif
                                                         
-                                                        <!-- Mobile-only items -->
+                                                        @if(!$isClientGuard)
+                                                        <!-- Mobile-only items (staff) -->
                                                         <div class="sm:hidden">
                                                             <div class="border-t border-gray-100 my-1"></div>
                                                             
@@ -1026,6 +1130,18 @@
                                                                 الإشعارات
                                                             </a>
                                                         </div>
+                                                        @else
+                                                        <!-- Mobile-only (client portal) -->
+                                                        <div class="sm:hidden">
+                                                            <div class="border-t border-gray-100 my-1"></div>
+                                                            <a href="{{ route('client.notifications') }}" class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
+                                                                <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                                                </svg>
+                                                                إشعارات البوابة
+                                                            </a>
+                                                        </div>
+                                                        @endif
                                                         
                                                         <div class="border-t border-gray-100 my-1"></div>
                                                         
@@ -1049,7 +1165,7 @@
             
             <!-- Page Content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-                <div class="{{ request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.create', 'users.edit') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6' }}">
+                <div class="{{ request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.create', 'users.edit') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') || request()->routeIs('client-service-reports.*') || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*') || request()->routeIs('client-website-issues.*') || request()->routeIs('client-meeting-requests.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6' }}">
                     @if(session('success'))
                         <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded-r-lg shadow-sm">
                             {{ session('success') }}

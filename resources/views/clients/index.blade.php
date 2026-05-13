@@ -11,6 +11,15 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">إدارة العملاء</h1>
                 <p class="text-sm sm:text-base text-gray-600">إدارة قاعدة بيانات العملاء والعلاقات التجارية</p>
             </div>
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            @can('view-clients')
+            <a href="{{ route('client-service-reports.index') }}" class="bg-violet-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg hover:bg-violet-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
+                <svg class="h-4 w-4 sm:h-5 sm:w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                تقارير العملاء
+            </a>
+            @endcan
             <a href="{{ route('clients.create') }}" class="bg-blue-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
                 <svg class="h-4 w-4 sm:h-5 sm:w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -18,6 +27,7 @@
                 <span class="hidden sm:inline">عميل جديد</span>
                 <span class="sm:hidden">جديد</span>
             </a>
+            </div>
         </div>
     </div>
 

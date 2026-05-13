@@ -31,6 +31,7 @@
 @php
     $account = \Illuminate\Support\Facades\Auth::guard('client')->user();
     $client = $account?->client;
+    $cPortal = $account;
 @endphp
 
 <div class="min-h-screen flex">
@@ -66,17 +67,49 @@
                 <span class="inline-flex h-2.5 w-2.5 rounded-full" style="background:var(--brand)"></span>
                 لوحة العميل
             </a>
+            <a href="{{ route('client.notifications') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.notifications*') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
+                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-slate-500"></span>
+                الإشعارات
+            </a>
             <a href="{{ route('client.projects') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.projects') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
                 <span class="inline-flex h-2.5 w-2.5 rounded-full bg-blue-500"></span>
                 المشاريع
             </a>
+            @if($cPortal && $cPortal->canAccessBilling())
             <a href="{{ route('client.invoices') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.invoices') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
                 <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
                 الفواتير
             </a>
+            @endif
+            <a href="{{ route('client.service-reports') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.service-reports', 'client.service-reports.download') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
+                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-violet-500"></span>
+                تقارير الخدمة
+            </a>
+            <a href="{{ route('client.documents') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.documents*') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
+                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-indigo-500"></span>
+                المستندات المشتركة
+            </a>
+            @if($cPortal && $cPortal->canAccessTechnicalRequests())
+            <a href="{{ route('client.website-issues.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.website-issues.*') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
+                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-orange-500"></span>
+                بلاغات الموقع
+            </a>
+            <a href="{{ route('client.meeting-requests.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.meeting-requests.*') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
+                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-cyan-500"></span>
+                طلبات الاجتماعات
+            </a>
+            <a href="{{ route('client.calendar') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.calendar') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
+                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-teal-500"></span>
+                التقويم
+            </a>
+            @endif
             <a href="{{ route('client.support.tickets') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.support.*') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
                 <span class="inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"></span>
                 الدعم الفني
+            </a>
+            <a href="{{ route('client.help') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.help') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
+                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-gray-400"></span>
+                المساعدة
             </a>
         </nav>
 
@@ -110,9 +143,22 @@
                         <div class="text-xs text-gray-500 truncate">{{ $client?->company ?? 'Solvesta Client' }}</div>
                     </div>
                 </div>
-                <a href="{{ route('client.support.tickets.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-white text-sm font-extrabold btn-brand shadow-md hover:shadow-lg transition">
-                    افتح تذكرة
-                </a>
+                <div class="flex items-center shrink-0">
+                    <details class="relative z-50">
+                        <summary class="flex items-center gap-2 cursor-pointer select-none list-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-extrabold text-gray-800 shadow-sm hover:bg-gray-50 [&::-webkit-details-marker]:hidden">
+                            <svg class="w-4 h-4 shrink-0 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                            <span>جديد</span>
+                            <svg class="w-3.5 h-3.5 shrink-0 text-gray-500 mr-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </summary>
+                        <div class="absolute end-0 top-[calc(100%+6px)] w-56 rounded-xl border border-gray-200 bg-white py-1 shadow-xl text-sm font-semibold text-gray-800 overflow-hidden">
+                            <a href="{{ route('client.support.tickets.create') }}" class="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 border-b border-gray-100">تذكرة</a>
+                            @if($cPortal && $cPortal->canAccessTechnicalRequests())
+                            <a href="{{ route('client.website-issues.create') }}" class="flex items-center gap-2 px-3 py-2.5 hover:bg-amber-50 border-b border-gray-100 text-amber-950">بلاغ موقع</a>
+                            <a href="{{ route('client.meeting-requests.create') }}" class="flex items-center gap-2 px-3 py-2.5 hover:bg-cyan-50 text-cyan-950">طلب اجتماع</a>
+                            @endif
+                        </div>
+                    </details>
+                </div>
             </div>
         </div>
 
@@ -137,9 +183,20 @@
         </div>
         <div class="p-4 space-y-2 text-sm font-semibold text-gray-700">
             <a href="{{ route('client.dashboard') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.dashboard') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">لوحة العميل</a>
+            <a href="{{ route('client.notifications') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.notifications*') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">الإشعارات</a>
             <a href="{{ route('client.projects') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.projects') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">المشاريع</a>
+            @if($cPortal && $cPortal->canAccessBilling())
             <a href="{{ route('client.invoices') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.invoices') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">الفواتير</a>
+            @endif
+            <a href="{{ route('client.service-reports') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.service-reports', 'client.service-reports.download') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">تقارير الخدمة</a>
+            <a href="{{ route('client.documents') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.documents*') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">المستندات المشتركة</a>
+            @if($cPortal && $cPortal->canAccessTechnicalRequests())
+            <a href="{{ route('client.website-issues.index') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.website-issues.*') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">بلاغات الموقع</a>
+            <a href="{{ route('client.meeting-requests.index') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.meeting-requests.*') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">طلبات الاجتماعات</a>
+            <a href="{{ route('client.calendar') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.calendar') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">التقويم</a>
+            @endif
             <a href="{{ route('client.support.tickets') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.support.*') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">الدعم الفني</a>
+            <a href="{{ route('client.help') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.help') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">المساعدة</a>
 
             <a href="{{ route('website.home') }}" class="mt-4 block text-center text-xs text-gray-500 hover:text-gray-700">العودة إلى موقع الشركة</a>
             <form method="POST" action="{{ route('client.logout') }}" class="mt-3">

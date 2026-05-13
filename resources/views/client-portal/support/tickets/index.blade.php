@@ -27,6 +27,7 @@
                         <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الحالة</th>
                         <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الأولوية</th>
                         <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">المسند إليه</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 w-24">تفاصيل</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -37,9 +38,12 @@
                             <td class="px-6 py-4 text-sm text-gray-700">{{ $ticket->status_name }}</td>
                             <td class="px-6 py-4 text-sm text-gray-700">{{ $ticket->priority }}</td>
                             <td class="px-6 py-4 text-sm text-gray-700">{{ optional($ticket->assignedTo)->name ?? '—' }}</td>
+                            <td class="px-6 py-4 text-left">
+                                <a href="{{ route('client.support.tickets.show', $ticket) }}" class="text-blue-600 hover:text-blue-800 font-semibold text-sm">عرض</a>
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-6 py-10 text-center text-sm text-gray-500">لا توجد تذاكر.</td></tr>
+                        <tr><td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">لا توجد تذاكر.</td></tr>
                     @endforelse
                 </tbody>
             </table>

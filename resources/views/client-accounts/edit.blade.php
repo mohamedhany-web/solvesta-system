@@ -57,6 +57,16 @@
                 </div>
             </div>
 
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">صلاحية البوابة</label>
+                <select name="portal_role" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 @error('portal_role') border-red-500 @enderror">
+                    <option value="owner" {{ old('portal_role', $clientAccount->portal_role ?? 'owner') === 'owner' ? 'selected' : '' }}>مالك — كامل الوصول</option>
+                    <option value="billing" {{ old('portal_role', $clientAccount->portal_role ?? 'owner') === 'billing' ? 'selected' : '' }}>محاسبة — الفواتير والمستندات المالية</option>
+                    <option value="technical" {{ old('portal_role', $clientAccount->portal_role ?? 'owner') === 'technical' ? 'selected' : '' }}>تقني — البلاغات والاجتماعات والتقويم</option>
+                </select>
+                @error('portal_role')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+
             <div class="flex items-center gap-2">
                 <input type="checkbox" name="is_active" value="1" {{ old('is_active', $clientAccount->is_active) ? 'checked' : '' }} class="rounded border-gray-300">
                 <label class="text-sm text-gray-700">الحساب مفعل</label>

@@ -32,7 +32,17 @@
                                 <div class="font-semibold text-gray-900">{{ $project->name }}</div>
                                 <div class="text-sm text-gray-500 line-clamp-1">{{ $project->description }}</div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-700">{{ $project->status }}</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold
+                                    @if($project->status === 'planning') bg-amber-100 text-amber-900
+                                    @elseif($project->status === 'in_progress') bg-blue-100 text-blue-900
+                                    @elseif($project->status === 'completed') bg-green-100 text-green-800
+                                    @elseif($project->status === 'on_hold') bg-orange-100 text-orange-900
+                                    @else bg-gray-100 text-gray-800
+                                    @endif">
+                                    {{ $project->status_name }}
+                                </span>
+                            </td>
                             <td class="px-6 py-4 text-sm text-gray-700">{{ $project->progress_percentage ?? 0 }}%</td>
                             <td class="px-6 py-4 text-sm text-gray-700">{{ optional($project->start_date)->format('Y/m/d') ?? '—' }}</td>
                         </tr>

@@ -18,6 +18,7 @@ class ClientAccount extends Authenticatable
         'email',
         'password',
         'is_active',
+        'portal_role',
     ];
 
     protected $hidden = [
@@ -36,6 +37,21 @@ class ClientAccount extends Authenticatable
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function portalRole(): string
+    {
+        return $this->portal_role ?: 'owner';
+    }
+
+    public function canAccessBilling(): bool
+    {
+        return in_array($this->portalRole(), ['owner', 'billing'], true);
+    }
+
+    public function canAccessTechnicalRequests(): bool
+    {
+        return in_array($this->portalRole(), ['owner', 'technical'], true);
     }
 }
 

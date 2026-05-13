@@ -37,11 +37,12 @@ class ClientAccountController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'client_id' => ['required', 'exists:clients,id', 'unique:client_accounts,client_id'],
+            'client_id' => ['required', 'exists:clients,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:client_accounts,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'is_active' => ['nullable', 'boolean'],
+            'portal_role' => ['required', 'in:owner,billing,technical'],
         ]);
 
         ClientAccount::create([
@@ -50,6 +51,7 @@ class ClientAccountController extends Controller
             'email' => $validated['email'],
             'password' => $validated['password'],
             'is_active' => (bool) ($validated['is_active'] ?? true),
+            'portal_role' => $validated['portal_role'],
         ]);
 
         return redirect()->route('client-accounts.index')->with('success', 'تم إنشاء حساب العميل بنجاح');
@@ -64,17 +66,19 @@ class ClientAccountController extends Controller
     public function update(Request $request, ClientAccount $clientAccount)
     {
         $validated = $request->validate([
-            'client_id' => ['required', 'exists:clients,id', Rule::unique('client_accounts', 'client_id')->ignore($clientAccount->id)],
+            'client_id' => ['required', 'exists:clients,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('client_accounts', 'email')->ignore($clientAccount->id)],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'is_active' => ['nullable', 'boolean'],
+            'portal_role' => ['required', 'in:owner,billing,technical'],
         ]);
 
         $clientAccount->client_id = $validated['client_id'];
         $clientAccount->name = $validated['name'];
         $clientAccount->email = $validated['email'];
         $clientAccount->is_active = (bool) ($validated['is_active'] ?? false);
+        $clientAccount->portal_role = $validated['portal_role'];
         if (!empty($validated['password'])) {
             $clientAccount->password = $validated['password'];
         }

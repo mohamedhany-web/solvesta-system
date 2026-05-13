@@ -74,7 +74,7 @@ class ClientController extends Controller
     public function show(Client $client)
     {
         // تحميل العلاقات مع التحقق من وجودها
-        $client->load(['projects', 'sales']);
+        $client->load(['projects', 'sales', 'serviceReports.uploader']);
         
         // التحقق من أن العلاقة تعمل بشكل صحيح
         if (!$client->relationLoaded('projects')) {

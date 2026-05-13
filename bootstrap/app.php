@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'secure.auth' => \App\Http\Middleware\SecureAuth::class,
             'block.suspicious' => \App\Http\Middleware\BlockSuspiciousActivity::class,
             'department.manager' => \App\Http\Middleware\EnsureDepartmentManager::class,
+            'client.section' => \App\Http\Middleware\EnsureClientPortalSection::class,
         ]);
         
         // Global security middleware

@@ -14,6 +14,12 @@
         </div>
     </div>
 
+    <div class="mb-6 rounded-xl border border-blue-100 bg-blue-50/80 p-4 text-sm text-gray-800">
+        <span class="font-bold text-gray-900">للاستفسار عن الدفع أو الاستحقاق:</span>
+        هاتف الشركة: {{ \App\Helpers\SettingsHelper::getCompanyPhone() ?: '—' }} —
+        البريد: {{ \App\Helpers\SettingsHelper::getCompanyEmail() ?: '—' }}
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
@@ -26,6 +32,8 @@
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الرقم</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الإجمالي</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">المتبقي</th>
+                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الاستحقاق</th>
+                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الدفع</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الحالة</th>
                         </tr>
                     </thead>
@@ -35,10 +43,18 @@
                                 <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ $inv->invoice_number }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ number_format($inv->total_amount) }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ number_format($inv->balance_amount) }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ $inv->due_date?->format('Y/m/d') ?? '—' }}</td>
+                                <td class="px-6 py-4 text-sm">
+                                    @if($inv->payment_link)
+                                        <a href="{{ $inv->payment_link }}" target="_blank" rel="noopener" class="text-blue-600 font-semibold hover:underline">رابط دفع</a>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ $inv->status }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500">لا توجد فواتير.</td></tr>
+                            <tr><td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">لا توجد فواتير.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -59,6 +75,8 @@
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الرقم</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الإجمالي</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">المتبقي</th>
+                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الاستحقاق</th>
+                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الدفع</th>
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700">الحالة</th>
                         </tr>
                     </thead>
@@ -68,10 +86,18 @@
                                 <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ $finv->invoice_number }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ number_format($finv->total_amount) }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ number_format($finv->balance_due) }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{{ $finv->due_date?->format('Y/m/d') ?? '—' }}</td>
+                                <td class="px-6 py-4 text-sm">
+                                    @if($finv->payment_link)
+                                        <a href="{{ $finv->payment_link }}" target="_blank" rel="noopener" class="text-blue-600 font-semibold hover:underline">رابط دفع</a>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-700">{{ $finv->payment_status }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500">لا توجد فواتير مالية.</td></tr>
+                            <tr><td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">لا توجد فواتير مالية.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

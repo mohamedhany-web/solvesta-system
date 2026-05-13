@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Client extends Model
 {
@@ -52,8 +51,32 @@ class Client extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function account(): HasOne
+    public function accounts(): HasMany
     {
-        return $this->hasOne(ClientAccount::class);
+        return $this->hasMany(ClientAccount::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(ClientNotification::class)->orderByDesc('created_at');
+    }
+
+    public function sharedDocuments(): HasMany
+    {
+        return $this->hasMany(ClientSharedDocument::class)->orderByDesc('created_at');
+    }
+    public function serviceReports(): HasMany
+    {
+        return $this->hasMany(ClientServiceReport::class)->orderByDesc('created_at');
+    }
+
+    public function websiteIssues(): HasMany
+    {
+        return $this->hasMany(ClientWebsiteIssue::class)->orderByDesc('created_at');
+    }
+
+    public function meetingRequests(): HasMany
+    {
+        return $this->hasMany(ClientMeetingRequest::class)->orderByDesc('created_at');
     }
 }

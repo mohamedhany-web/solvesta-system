@@ -32,6 +32,7 @@ class Invoice extends Model
         'payment_method',
         'payment_date',
         'notes',
+        'payment_link',
         'items',
         'created_by',
     ];

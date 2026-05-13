@@ -28,6 +28,12 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <div class="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-800 text-sm font-medium">
+            {{ session('success') }}
+        </div>
+    @endif
+
     <!-- Client Details -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Main Information -->
@@ -237,6 +243,105 @@
                         <p class="text-sm text-gray-500 text-center py-4">لا توجد مبيعات</p>
                     @endif
                 </div>
+            </div>
+
+            <!-- تقارير الخدمة (رفع من الإدارة — تظهر في بوابة العميل) -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">تقارير الخدمة</h3>
+                        <p class="text-sm text-gray-600 mt-1">رفع تقارير عن الخدمة؛ يستطيع العميل عرضها وتنزيلها من بوابة العميل.</p>
+                    </div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800 shrink-0">
+                        {{ $client->serviceReports->count() }} تقرير
+                    </span>
+                </div>
+
+                @can('edit-clients')
+                <form method="POST" action="{{ route('clients.service-reports.store', $client) }}" enctype="multipart/form-data" class="mb-8 pb-8 border-b border-gray-200 space-y-4">
+                    @csrf
+                    @if($errors->any())
+                        <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm">
+                            <ul class="list-disc list-inside space-y-1">
+                                @foreach($errors->all() as $err)
+                                    <li>{{ $err }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">عنوان التقرير <span class="text-red-500">*</span></label>
+                            <input type="text" name="title" value="{{ old('title') }}" required maxlength="255"
+                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="مثال: تقرير أداء أسبوعي">
+                            @error('title')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">الملف <span class="text-red-500">*</span></label>
+                            <input type="file" name="file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt"
+                                   class="block w-full text-sm text-gray-600 file:ml-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            <p class="text-xs text-gray-500 mt-1">PDF، Word، Excel، PowerPoint، ZIP أو نص — بحد أقصى 20 ميجابايت</p>
+                            @error('file')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">وصف أو ملاحظات (اختياري)</label>
+                        <textarea name="description" rows="2" maxlength="5000"
+                                  class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="نبذة للعميل تظهر في بوابة العميل">{{ old('description') }}</textarea>
+                        @error('description')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <button type="submit" class="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">
+                        رفع التقرير
+                    </button>
+                </form>
+                @endcan
+
+                @if($client->serviceReports->count() > 0)
+                    <div class="overflow-x-auto">
+                        <table class="w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-right font-semibold text-gray-700">العنوان</th>
+                                    <th class="px-4 py-2 text-right font-semibold text-gray-700">التاريخ</th>
+                                    <th class="px-4 py-2 text-right font-semibold text-gray-700">رفع بواسطة</th>
+                                    <th class="px-4 py-2 text-left font-semibold text-gray-700 w-48">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($client->serviceReports as $report)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3">
+                                            <div class="font-medium text-gray-900">{{ $report->title }}</div>
+                                            @if($report->original_filename)
+                                                <div class="text-xs text-gray-500">{{ $report->original_filename }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-gray-600 whitespace-nowrap">{{ $report->created_at->format('Y/m/d') }}</td>
+                                        <td class="px-4 py-3 text-gray-600">{{ $report->uploader?->name ?? '—' }}</td>
+                                        <td class="px-4 py-3 text-left">
+                                            <div class="flex flex-wrap items-center justify-end gap-2">
+                                                @can('view-clients')
+                                                <a href="{{ route('clients.service-reports.download', [$client, $report]) }}" class="text-blue-600 hover:text-blue-800 font-medium">تنزيل</a>
+                                                @endcan
+                                                @can('edit-clients')
+                                                <form method="POST" action="{{ route('clients.service-reports.destroy', [$client, $report]) }}" class="inline" onsubmit="return confirm('حذف هذا التقرير؟');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-800 font-medium">حذف</button>
+                                                </form>
+                                                @endcan
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <p class="text-sm text-gray-500 text-center py-6">لا توجد تقارير مرفوعة بعد.</p>
+                @endif
             </div>
         </div>
 

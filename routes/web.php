@@ -39,9 +39,15 @@ use App\Http\Controllers\SystemMonitoringController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\ClientPortalController;
+use App\Http\Controllers\ClientServiceReportController;
 use App\Http\Controllers\ClientSupportTicketController;
+use App\Http\Controllers\ClientWebsiteIssueController;
+use App\Http\Controllers\ClientMeetingRequestController;
 use App\Http\Controllers\ClientAuthController;
 use App\Http\Controllers\Admin\ClientAccountController;
+use App\Http\Controllers\Admin\ClientWebsiteIssueController as AdminClientWebsiteIssueController;
+use App\Http\Controllers\Admin\ClientMeetingRequestController as AdminClientMeetingRequestController;
+use App\Http\Controllers\Admin\ClientSharedDocumentController as AdminClientSharedDocumentController;
 use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\Support\ContactRequestController as SupportContactRequestController;
 use Illuminate\Support\Facades\Route;
@@ -352,6 +358,20 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit')->middleware('permission:edit-clients');
     Route::put('clients/{client}', [ClientController::class, 'update'])->name('clients.update')->middleware('permission:edit-clients');
     Route::delete('clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy')->middleware('permission:delete-clients');
+    Route::post('clients/{client}/service-reports', [ClientServiceReportController::class, 'store'])->name('clients.service-reports.store')->middleware('permission:edit-clients');
+    Route::get('clients/{client}/service-reports/{serviceReport}/download', [ClientServiceReportController::class, 'download'])->name('clients.service-reports.download')->middleware('permission:view-clients');
+    Route::delete('clients/{client}/service-reports/{serviceReport}', [ClientServiceReportController::class, 'destroy'])->name('clients.service-reports.destroy')->middleware('permission:edit-clients');
+
+    Route::get('client-service-reports', [ClientServiceReportController::class, 'index'])->name('client-service-reports.index')->middleware('permission:view-clients');
+    Route::get('client-service-reports/create', [ClientServiceReportController::class, 'create'])->name('client-service-reports.create')->middleware('permission:edit-clients');
+    Route::post('client-service-reports', [ClientServiceReportController::class, 'storeFromAdmin'])->name('client-service-reports.store')->middleware('permission:edit-clients');
+    Route::delete('client-service-reports/{serviceReport}', [ClientServiceReportController::class, 'destroyStandalone'])->name('client-service-reports.destroy')->middleware('permission:edit-clients');
+
+    Route::get('client-shared-documents', [AdminClientSharedDocumentController::class, 'index'])->name('client-shared-documents.index')->middleware('permission:view-clients');
+    Route::get('client-shared-documents/create', [AdminClientSharedDocumentController::class, 'create'])->name('client-shared-documents.create')->middleware('permission:edit-clients');
+    Route::post('client-shared-documents', [AdminClientSharedDocumentController::class, 'store'])->name('client-shared-documents.store')->middleware('permission:edit-clients');
+    Route::get('client-shared-documents/{sharedDocument}/download', [AdminClientSharedDocumentController::class, 'download'])->name('client-shared-documents.download')->middleware('permission:view-clients');
+    Route::delete('client-shared-documents/{sharedDocument}', [AdminClientSharedDocumentController::class, 'destroy'])->name('client-shared-documents.destroy')->middleware('permission:edit-clients');
 
     // Client Accounts (بوابة العملاء) - داخل لوحة الأدمن
     Route::prefix('client-accounts')->name('client-accounts.')->middleware('permission:view-clients')->group(function () {
@@ -388,6 +408,15 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('support/contact-requests', [SupportContactRequestController::class, 'index'])->name('support.contact-requests.index')->middleware('permission:view-tickets');
     Route::get('support/contact-requests/{contactRequest}', [SupportContactRequestController::class, 'show'])->name('support.contact-requests.show')->middleware('permission:view-tickets');
     Route::patch('support/contact-requests/{contactRequest}/status', [SupportContactRequestController::class, 'updateStatus'])->name('support.contact-requests.status')->middleware('permission:edit-tickets');
+
+    Route::get('client-website-issues', [AdminClientWebsiteIssueController::class, 'index'])->name('client-website-issues.index')->middleware('permission:view-tickets');
+    Route::get('client-website-issues/{websiteIssue}/files/{index}', [AdminClientWebsiteIssueController::class, 'file'])->name('client-website-issues.file')->middleware('permission:view-tickets')->whereNumber('index');
+    Route::get('client-website-issues/{websiteIssue}', [AdminClientWebsiteIssueController::class, 'show'])->name('client-website-issues.show')->middleware('permission:view-tickets');
+    Route::put('client-website-issues/{websiteIssue}', [AdminClientWebsiteIssueController::class, 'update'])->name('client-website-issues.update')->middleware('permission:edit-tickets');
+
+    Route::get('client-meeting-requests', [AdminClientMeetingRequestController::class, 'index'])->name('client-meeting-requests.index')->middleware('permission:view-tickets');
+    Route::get('client-meeting-requests/{meetingRequest}', [AdminClientMeetingRequestController::class, 'show'])->name('client-meeting-requests.show')->middleware('permission:view-tickets');
+    Route::put('client-meeting-requests/{meetingRequest}', [AdminClientMeetingRequestController::class, 'update'])->name('client-meeting-requests.update')->middleware('permission:edit-tickets');
     
     // Finance & Accounting
     Route::prefix('accounting')->name('accounting.')->middleware('permission:view-finance')->group(function () {
@@ -536,12 +565,50 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
 Route::prefix('client')->name('client.')->middleware('auth:client')->group(function () {
     Route::get('/', [ClientPortalController::class, 'dashboard'])->name('dashboard');
     Route::get('/projects', [ClientPortalController::class, 'projects'])->name('projects');
-    Route::get('/invoices', [ClientPortalController::class, 'invoices'])->name('invoices');
+    Route::get('/service-reports', [ClientPortalController::class, 'serviceReports'])->name('service-reports');
+    Route::get('/service-reports/{serviceReport}/download', [ClientPortalController::class, 'downloadServiceReport'])->name('service-reports.download');
+
+    Route::get('/notifications', [ClientPortalController::class, 'notifications'])->name('notifications');
+    Route::post('/notifications/{clientNotification}/read', [ClientPortalController::class, 'markNotificationRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [ClientPortalController::class, 'markAllNotificationsRead'])->name('notifications.read-all');
+
+    Route::get('/documents', [ClientPortalController::class, 'documents'])->name('documents');
+    Route::get('/documents/{sharedDocument}/download', [ClientPortalController::class, 'downloadSharedDocument'])->name('documents.download');
+
+    Route::get('/calendar', [ClientPortalController::class, 'calendar'])->name('calendar');
+
+    Route::get('/help', function () {
+        return view('client-portal.help');
+    })->name('help');
+
+    Route::middleware('client.section:billing')->group(function () {
+        Route::get('/invoices', [ClientPortalController::class, 'invoices'])->name('invoices');
+    });
+
+    Route::middleware('client.section:technical_requests')->group(function () {
+        Route::prefix('website-issues')->name('website-issues.')->group(function () {
+            Route::get('/', [ClientWebsiteIssueController::class, 'index'])->name('index');
+            Route::get('/create', [ClientWebsiteIssueController::class, 'create'])->name('create');
+            Route::post('/', [ClientWebsiteIssueController::class, 'store'])->name('store');
+            Route::get('/{websiteIssue}/files/{index}', [ClientWebsiteIssueController::class, 'file'])->name('file')->whereNumber('index');
+            Route::get('/{websiteIssue}', [ClientWebsiteIssueController::class, 'show'])->name('show');
+        });
+
+        Route::prefix('meeting-requests')->name('meeting-requests.')->group(function () {
+            Route::get('/', [ClientMeetingRequestController::class, 'index'])->name('index');
+            Route::get('/create', [ClientMeetingRequestController::class, 'create'])->name('create');
+            Route::post('/', [ClientMeetingRequestController::class, 'store'])->name('store');
+            Route::post('/{meetingRequest}/feedback', [ClientMeetingRequestController::class, 'storeFeedback'])->name('feedback');
+            Route::get('/{meetingRequest}', [ClientMeetingRequestController::class, 'show'])->name('show');
+        });
+    });
 
     Route::prefix('support')->name('support.')->group(function () {
         Route::get('/tickets', [ClientSupportTicketController::class, 'index'])->name('tickets');
         Route::get('/tickets/create', [ClientSupportTicketController::class, 'create'])->name('tickets.create');
         Route::post('/tickets', [ClientSupportTicketController::class, 'store'])->name('tickets.store');
+        Route::get('/tickets/{ticket}', [ClientSupportTicketController::class, 'show'])->name('tickets.show');
+        Route::post('/tickets/{ticket}/feedback', [ClientSupportTicketController::class, 'storeFeedback'])->name('tickets.feedback');
     });
 });
 

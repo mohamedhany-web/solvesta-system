@@ -30,6 +30,7 @@ class FinancialInvoice extends Model
         'payment_status',
         'currency',
         'notes',
+        'payment_link',
         'terms_conditions',
         'created_by',
     ];
