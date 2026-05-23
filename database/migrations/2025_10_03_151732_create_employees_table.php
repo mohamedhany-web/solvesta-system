@@ -31,6 +31,10 @@ return new class extends Migration
             $table->string('emergency_phone')->nullable();
             $table->timestamps();
         });
+
+        Schema::table('departments', function (Blueprint $table) {
+            $table->foreign('head_of_department')->references('id')->on('employees')->onDelete('set null');
+        });
     }
 
     /**
@@ -38,6 +42,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('departments', function (Blueprint $table) {
+            $table->dropForeign(['head_of_department']);
+        });
+
         Schema::dropIfExists('employees');
     }
 };

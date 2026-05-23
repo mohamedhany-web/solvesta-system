@@ -11,8 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // تحديث جدول الحسابات - نعيد إنشاؤه من الصفر
+        Schema::disableForeignKeyConstraints();
+
+        Schema::dropIfExists('journal_entry_lines');
+        Schema::dropIfExists('journal_entries');
         Schema::dropIfExists('accounts');
+
+        Schema::enableForeignKeyConstraints();
+
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -25,8 +31,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // تحديث جدول journal_entries
-        Schema::dropIfExists('journal_entries');
         Schema::create('journal_entries', function (Blueprint $table) {
             $table->id();
             $table->date('date');
@@ -41,8 +45,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // تحديث جدول journal_entry_lines
-        Schema::dropIfExists('journal_entry_lines');
         Schema::create('journal_entry_lines', function (Blueprint $table) {
             $table->id();
             $table->foreignId('journal_entry_id')->constrained()->cascadeOnDelete();

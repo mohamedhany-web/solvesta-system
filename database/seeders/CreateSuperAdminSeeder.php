@@ -17,10 +17,10 @@ class CreateSuperAdminSeeder extends Seeder
     {
         // إنشاء Super Admin
         $superAdmin = User::firstOrCreate(
-            ['email' => 'admin@solvesta.com'],
+            ['email' => 'loransmogay@gmail.com'],
             [
                 'name' => 'Super Admin',
-                'email' => 'admin@solvesta.com',
+                'email' => 'loransmogay@gmail.com',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ]
@@ -47,7 +47,7 @@ class CreateSuperAdminSeeder extends Seeder
                 'employee_id' => 'EMP001',
                 'first_name' => 'Super',
                 'last_name' => 'Admin',
-                'email' => 'admin@solvesta.com',
+                'email' => 'loransmogay@gmail.com',
                 'phone' => '+966501234567',
                 'hire_date' => now()->subYears(2),
                 'salary' => 50000,
@@ -61,7 +61,7 @@ class CreateSuperAdminSeeder extends Seeder
         );
 
         $this->command->info('تم إنشاء Super Admin بنجاح!');
-        $this->command->info('البريد الإلكتروني: admin@solvesta.com');
+        $this->command->info('البريد الإلكتروني: loransmogay@gmail.com');
         $this->command->info('كلمة المرور: password');
     }
 }

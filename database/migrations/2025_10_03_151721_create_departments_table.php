@@ -24,8 +24,7 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
-            $table->foreign('head_of_department')->references('id')->on('employees')->onDelete('set null');
+
             $table->foreign('parent_id')->references('id')->on('departments')->onDelete('cascade');
         });
     }

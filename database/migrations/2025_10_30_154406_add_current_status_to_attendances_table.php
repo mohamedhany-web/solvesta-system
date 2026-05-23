@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('attendances', function (Blueprint $table) {
-            $table->enum('current_status', ['working', 'on_break', 'completed'])->nullable()->after('status');
-        });
+        if (! Schema::hasColumn('attendances', 'current_status')) {
+            Schema::table('attendances', function (Blueprint $table) {
+                $table->enum('current_status', ['working', 'on_break', 'completed'])->nullable()->after('status');
+            });
+        }
     }
 
     /**

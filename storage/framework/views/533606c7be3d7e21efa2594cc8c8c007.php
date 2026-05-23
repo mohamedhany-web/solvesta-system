@@ -1,8 +1,6 @@
-@extends('layouts.app')
+<?php $__env->startSection('page-title', 'إدارة العملاء'); ?>
 
-@section('page-title', 'إدارة العملاء')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="w-full">
     <!-- Page Header -->
     <div class="mb-6">
@@ -12,15 +10,15 @@
                 <p class="text-sm sm:text-base text-gray-600">إدارة قاعدة بيانات العملاء والعلاقات التجارية</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-            @can('view-clients')
-            <a href="{{ route('client-service-reports.index') }}" class="bg-violet-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg hover:bg-violet-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view-clients')): ?>
+            <a href="<?php echo e(route('client-service-reports.index')); ?>" class="bg-violet-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg hover:bg-violet-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
                 <svg class="h-4 w-4 sm:h-5 sm:w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 تقارير العملاء
             </a>
-            @endcan
-            <a href="{{ route('clients.create') }}" class="bg-blue-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
+            <?php endif; ?>
+            <a href="<?php echo e(route('clients.create')); ?>" class="bg-blue-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
                 <svg class="h-4 w-4 sm:h-5 sm:w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
@@ -38,7 +36,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex-1">
                     <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">إجمالي العملاء</p>
-                    <p class="text-2xl sm:text-3xl font-bold text-gray-900">{{ \App\Models\Client::count() }}</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900"><?php echo e(\App\Models\Client::count()); ?></p>
                 </div>
                 <div class="hidden sm:block p-3 sm:p-4 bg-blue-50 rounded-lg flex-shrink-0 mt-2 sm:mt-0">
                     <svg class="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -53,8 +51,8 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 mb-1">عملاء نشطين</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ \App\Models\Client::where('status', 'active')->count() }}</p>
-                    <p class="text-xs text-green-600 mt-1">{{ \App\Models\Client::count() > 0 ? round((\App\Models\Client::where('status', 'active')->count() / \App\Models\Client::count()) * 100, 1) : 0 }}% من إجمالي العملاء</p>
+                    <p class="text-3xl font-bold text-gray-900"><?php echo e(\App\Models\Client::where('status', 'active')->count()); ?></p>
+                    <p class="text-xs text-green-600 mt-1"><?php echo e(\App\Models\Client::count() > 0 ? round((\App\Models\Client::where('status', 'active')->count() / \App\Models\Client::count()) * 100, 1) : 0); ?>% من إجمالي العملاء</p>
                 </div>
                 <div class="hidden sm:block p-3 sm:p-4 bg-green-50 rounded-lg flex-shrink-0 mt-2 sm:mt-0">
                     <svg class="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -69,7 +67,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 mb-1">عملاء جدد</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ \App\Models\Client::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count() }}</p>
+                    <p class="text-3xl font-bold text-gray-900"><?php echo e(\App\Models\Client::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count()); ?></p>
                     <p class="text-xs text-purple-600 mt-1">هذا الشهر</p>
                 </div>
                 <div class="hidden sm:block p-3 sm:p-4 bg-purple-50 rounded-lg flex-shrink-0 mt-2 sm:mt-0">
@@ -85,7 +83,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 mb-1">إجمالي الإيرادات</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ number_format(\App\Models\Sale::sumAmount()) }} ج.م</p>
+                    <p class="text-3xl font-bold text-gray-900"><?php echo e(number_format(\App\Models\Sale::sumAmount())); ?> ج.م</p>
                     <p class="text-xs text-orange-600 mt-1">من جميع المبيعات</p>
                 </div>
                 <div class="hidden sm:block p-3 sm:p-4 bg-orange-50 rounded-lg flex-shrink-0 mt-2 sm:mt-0">
@@ -126,54 +124,59 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($clients as $client)
+                    <?php $__empty_1 = true; $__currentLoopData = $clients; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $client): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 w-1/6">
                             <div class="flex items-center">
                                 <div class="h-10 w-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center ml-3">
-                                    <span class="text-sm font-medium text-white">{{ substr($client->name, 0, 1) }}</span>
+                                    <span class="text-sm font-medium text-white"><?php echo e(substr($client->name, 0, 1)); ?></span>
                                 </div>
                                 <div>
-                                    <div class="text-sm font-medium text-gray-900">{{ $client->name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $client->industry ?? 'غير محدد' }}</div>
+                                    <div class="text-sm font-medium text-gray-900"><?php echo e($client->name); ?></div>
+                                    <div class="text-sm text-gray-500"><?php echo e($client->industry ?? 'غير محدد'); ?></div>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 w-1/6 text-sm text-gray-900">
-                            {{ $client->company_name ?? 'غير محدد' }}
+                            <?php echo e($client->company_name ?? 'غير محدد'); ?>
+
                         </td>
                         <td class="px-6 py-4 w-1/6 text-sm text-gray-900">
-                            {{ $client->email }}
+                            <?php echo e($client->email); ?>
+
                         </td>
                         <td class="px-6 py-4 w-1/6 text-sm text-gray-900">
-                            {{ $client->phone }}
+                            <?php echo e($client->phone); ?>
+
                         </td>
                         <td class="px-6 py-4 w-1/6 text-sm text-gray-500">
-                            {{ $client->created_at->format('Y/m/d') }}
+                            <?php echo e($client->created_at->format('Y/m/d')); ?>
+
                         </td>
                         <td class="px-6 py-4 w-1/6">
                             <div class="flex items-center gap-2">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                    @if($client->status == 'active') bg-green-100 text-green-800
-                                    @elseif($client->status == 'inactive') bg-gray-100 text-gray-800
-                                    @elseif($client->status == 'suspended') bg-red-100 text-red-800
-                                    @else bg-gray-100 text-gray-800
-                                    @endif">
-                                    @if($client->status == 'active') نشط
-                                    @elseif($client->status == 'inactive') غير نشط
-                                    @elseif($client->status == 'suspended') معلق
-                                    @else {{ $client->status }}
-                                    @endif
+                                    <?php if($client->status == 'active'): ?> bg-green-100 text-green-800
+                                    <?php elseif($client->status == 'inactive'): ?> bg-gray-100 text-gray-800
+                                    <?php elseif($client->status == 'suspended'): ?> bg-red-100 text-red-800
+                                    <?php else: ?> bg-gray-100 text-gray-800
+                                    <?php endif; ?>">
+                                    <?php if($client->status == 'active'): ?> نشط
+                                    <?php elseif($client->status == 'inactive'): ?> غير نشط
+                                    <?php elseif($client->status == 'suspended'): ?> معلق
+                                    <?php else: ?> <?php echo e($client->status); ?>
+
+                                    <?php endif; ?>
                                 </span>
                                 <div class="flex gap-1">
-                                    <a href="{{ route('clients.show', $client) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                                    <a href="<?php echo e(route('clients.show', $client)); ?>" class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
                                         <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                         عرض
                                     </a>
-                                    <a href="{{ route('clients.edit', $client) }}" class="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200">
+                                    <a href="<?php echo e(route('clients.edit', $client)); ?>" class="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
@@ -182,7 +185,7 @@
                             </div>
                         </td>
                     </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center">
@@ -191,7 +194,7 @@
                                 </svg>
                                 <h3 class="text-lg font-medium text-gray-900 mb-2">لا يوجد عملاء</h3>
                                 <p class="text-gray-500 mb-4">ابدأ بإضافة عميل جديد لقاعدة البيانات</p>
-                                <a href="{{ route('clients.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                                <a href="<?php echo e(route('clients.create')); ?>" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
                                     <svg class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
@@ -200,10 +203,11 @@
                             </div>
                         </td>
                     </tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\solvesta\resources\views/clients/index.blade.php ENDPATH**/ ?>

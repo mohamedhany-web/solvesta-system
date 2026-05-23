@@ -38,6 +38,27 @@ class Sale extends Model
         'updated_at' => 'datetime',
     ];
 
+    /**
+     * القيمة المعروضة (فعلية أو متوقعة) — للتوافق مع واجهات تستخدم amount.
+     */
+    public function getAmountAttribute(): float
+    {
+        return (float) ($this->actual_value ?? $this->estimated_value ?? 0);
+    }
+
+    public static function sumAmount(?callable $scope = null): float
+    {
+        $query = static::query();
+
+        if ($scope) {
+            $scope($query);
+        }
+
+        return (float) ($query
+            ->selectRaw('COALESCE(SUM(COALESCE(actual_value, estimated_value)), 0) as total')
+            ->value('total') ?? 0);
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

@@ -60,7 +60,7 @@ class ClientPortalActivityFeed
                 $items->push([
                     'at' => $d->created_at,
                     'label' => 'مستند مشترك: '.$d->title,
-                    'url' => route('client.documents.index'),
+                    'url' => route('client.documents'),
                     'kind' => 'document',
                 ]);
             });

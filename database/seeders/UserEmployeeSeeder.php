@@ -14,10 +14,10 @@ class UserEmployeeSeeder extends Seeder
     {
         // إنشاء Super Admin
         $superAdmin = User::firstOrCreate(
-            ['email' => 'admin@solvesta.com'],
+            ['email' => 'loransmogay@gmail.com'],
             [
                 'name' => 'Super Admin',
-                'email' => 'admin@solvesta.com',
+                'email' => 'loransmogay@gmail.com',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ]
@@ -31,7 +31,7 @@ class UserEmployeeSeeder extends Seeder
                 'employee_id' => 'EMP001',
                 'first_name' => 'Super',
                 'last_name' => 'Admin',
-                'email' => 'admin@solvesta.com',
+                'email' => 'loransmogay@gmail.com',
                 'phone' => '+966501234567',
                 'hire_date' => now()->subYears(2),
                 'salary' => 50000,
