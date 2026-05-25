@@ -1,5 +1,16 @@
 # نشر Solvesta (Laravel) — تجنب كسر التصميم
 
+## هل تحتاج `npm run build`؟
+
+| الجزء | يحتاج build؟ |
+|--------|----------------|
+| **الموقع العام** (Home, About, Services…) | **لا** — ملفات جاهزة: `public/css/cinematic-home.css` و `public/js/cinematic-home.js` |
+| **لوحة الإدارة** (Dashboard) | اختياري — `npm run build` يبني `resources/css/app.css` عبر Vite |
+
+`npm run build` **لن يصلح** الصفحة الرئيسية إذا كان التصميم مكسوراً بعد الرفع.
+
+---
+
 إذا ظهر الموقع **بدون ألوان وتنسيق** (نص فقط)، السبب غالباً أن ملفات CSS لا تُحمّل.
 
 ## 1) جذر الموقع (Document Root)

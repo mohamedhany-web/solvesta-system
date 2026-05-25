@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/cinematic-home.css') }}?v=3">
+@include('website.partials.cinematic-assets')
 @endpush
 
 @section('content')
@@ -331,5 +331,5 @@
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
-<script src="{{ asset('js/cinematic-home.js') }}?v=3" defer></script>
+@include('website.partials.cinematic-js')
 @endpush

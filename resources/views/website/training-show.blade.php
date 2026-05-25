@@ -7,7 +7,7 @@
 @endpush
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/cinematic-home.css') }}?v=3">
+@include('website.partials.cinematic-assets')
 @endpush
 
 @section('content')
