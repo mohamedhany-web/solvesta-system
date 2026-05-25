@@ -2,13 +2,6 @@
 
 @section('title', \App\Helpers\SettingsHelper::getCompanyName() . ' — ' . $training->title)
 
-@push('body-class')
- sv-cinematic-page
-@endpush
-
-@push('styles')
-@include('website.partials.cinematic-assets')
-@endpush
 
 @section('content')
 <div class="sv-os" dir="ltr">

@@ -33,9 +33,10 @@
         .btn-brand { background: linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 85%, #000) 100%); }
         .ring-brand:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 25%, transparent); }
     </style>
+    @include('website.partials.cinematic-inline-css')
     @stack('styles')
 </head>
-<body class="bg-white text-gray-900 font-sans overflow-x-hidden @stack('body-class')">
+<body class="bg-white text-gray-900 font-sans overflow-x-hidden sv-cinematic-page">
     {{-- ═══ NAVBAR ═══ --}}
     <header class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
