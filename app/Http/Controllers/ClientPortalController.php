@@ -91,6 +91,33 @@ class ClientPortalController extends Controller
             ->limit(8)
             ->get();
 
+        $recentProjects = Project::where('client_id', $client->id)
+            ->with('projectManager:id,name')
+            ->orderByDesc('updated_at')
+            ->limit(4)
+            ->get();
+
+        $activeProjectsCount = Project::where('client_id', $client->id)
+            ->whereIn('status', ['planning', 'in_progress'])
+            ->count();
+
+        $completedProjectsCount = Project::where('client_id', $client->id)
+            ->where('status', 'completed')
+            ->count();
+
+        $recentTickets = Ticket::where('client_id', $client->id)
+            ->orderByDesc('updated_at')
+            ->limit(4)
+            ->get(['id', 'ticket_number', 'subject', 'status', 'priority', 'updated_at']);
+
+        $latestServiceReport = ClientServiceReport::where('client_id', $client->id)
+            ->latest('created_at')
+            ->first(['id', 'title', 'created_at']);
+
+        $sharedDocumentsCount = ClientSharedDocument::where('client_id', $client->id)->count();
+
+        $totalOutstanding = (float) $invoicesUnpaidAmount + (float) $financialInvoicesUnpaidAmount;
+
         $clientAccount = $account;
 
         return view('client-portal.dashboard', compact(
@@ -114,6 +141,13 @@ class ClientPortalController extends Controller
             'financialDueSoon',
             'activityItems',
             'upcomingMeetings',
+            'recentProjects',
+            'activeProjectsCount',
+            'completedProjectsCount',
+            'recentTickets',
+            'latestServiceReport',
+            'sharedDocumentsCount',
+            'totalOutstanding',
         ));
     }
 

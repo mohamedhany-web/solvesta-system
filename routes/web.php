@@ -37,6 +37,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\LoginActivityController;
 use App\Http\Controllers\SystemMonitoringController;
 use App\Http\Controllers\TrainingController;
+use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\ClientServiceReportController;
@@ -151,8 +152,11 @@ Route::get('/academy/{training}', [WebsiteController::class, 'trainingShow'])->n
 Route::post('/academy/{training}/apply', [WebsiteController::class, 'trainingApply'])->name('website.training.apply');
 Route::get('/contact', [WebsiteController::class, 'contact'])->name('website.contact');
 Route::post('/contact', [WebsiteController::class, 'submitContact'])->name('website.contact.submit');
-Route::get('/case-studies', [WebsiteController::class, 'caseStudies'])->name('website.case-studies.index');
-Route::get('/case-studies/{slug}', [WebsiteController::class, 'caseStudyShow'])->name('website.case-studies.show');
+Route::get('/careers', [WebsiteController::class, 'careers'])->name('website.careers');
+Route::get('/careers/{slug}', [WebsiteController::class, 'careerShow'])->name('website.careers.show');
+Route::post('/careers/{slug}/apply', [WebsiteController::class, 'careerApply'])->name('website.careers.apply');
+Route::redirect('/case-studies', '/');
+Route::redirect('/case-studies/{slug}', '/');
 
 // =========================
 // Client Auth (تسجيل دخول العملاء)
@@ -541,6 +545,17 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::delete('training/{training}/participants/{participant}', [TrainingController::class, 'removeParticipant'])->name('training.remove-participant')->middleware('permission:edit-training');
     Route::get('training/{training}/applications', [TrainingController::class, 'applications'])->name('training.applications')->middleware('permission:view-training');
     Route::patch('training/applications/{application}/status', [TrainingController::class, 'updateApplicationStatus'])->name('training.applications.status')->middleware('permission:edit-training');
+
+    // Careers / Job postings
+    Route::get('job-postings', [JobPostingController::class, 'index'])->name('job-postings.index')->middleware('permission:view-jobs');
+    Route::get('job-postings/create', [JobPostingController::class, 'create'])->name('job-postings.create')->middleware('permission:create-jobs');
+    Route::post('job-postings', [JobPostingController::class, 'store'])->name('job-postings.store')->middleware('permission:create-jobs');
+    Route::get('job-postings/{jobPosting}', [JobPostingController::class, 'show'])->name('job-postings.show')->middleware('permission:view-jobs');
+    Route::get('job-postings/{jobPosting}/edit', [JobPostingController::class, 'edit'])->name('job-postings.edit')->middleware('permission:edit-jobs');
+    Route::put('job-postings/{jobPosting}', [JobPostingController::class, 'update'])->name('job-postings.update')->middleware('permission:edit-jobs');
+    Route::delete('job-postings/{jobPosting}', [JobPostingController::class, 'destroy'])->name('job-postings.destroy')->middleware('permission:delete-jobs');
+    Route::get('job-postings/{jobPosting}/applications', [JobPostingController::class, 'applications'])->name('job-postings.applications')->middleware('permission:view-jobs');
+    Route::patch('job-postings/applications/{application}/status', [JobPostingController::class, 'updateApplicationStatus'])->name('job-postings.applications.status')->middleware('permission:edit-jobs');
     
     // Meetings & Conferences
     Route::get('meetings', [MeetingController::class, 'index'])->name('meetings.index')->middleware('permission:view-meetings');

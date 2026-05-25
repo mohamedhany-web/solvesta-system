@@ -1,128 +1,157 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="h-full overflow-x-hidden">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
-    <title><?php echo e(\App\Helpers\SettingsHelper::getCompanyName()); ?> - بوابة العملاء</title>
+    <title><?php echo e(\App\Helpers\SettingsHelper::getCompanyName()); ?> — Client Portal</title>
 
-    <?php $faviconUrl = \App\Helpers\SettingsHelper::getFaviconUrl(); ?>
-    <link rel="icon" type="image/x-icon" href="<?php echo e($faviconUrl ?: '/favicon.ico'); ?>">
-    <link rel="shortcut icon" type="image/x-icon" href="<?php echo e($faviconUrl ?: '/favicon.ico'); ?>">
+    <?php
+        $faviconUrl = \App\Helpers\SettingsHelper::getFaviconUrl();
+        $logoUrl = \App\Helpers\SettingsHelper::getLogoUrl();
+        $companyName = \App\Helpers\SettingsHelper::getCompanyName();
+    ?>
 
+    <link rel="icon" href="<?php echo e($faviconUrl ?: '/favicon.ico'); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700;900&family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: { extend: { fontFamily: { tajawal: ['Tajawal','sans-serif'], cairo: ['Cairo','sans-serif'] } } }
-        }
-    </script>
-
-    <?php $themeColor = \App\Helpers\SettingsHelper::getThemeColor(); ?>
-    <style>
-        :root { --brand: <?php echo e($themeColor); ?>; }
-        .btn-brand { background: linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 85%, #000) 100%); }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?php echo e(asset('css/client-login.css')); ?>?v=2">
 </head>
-<body class="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-tajawal overflow-x-hidden">
-    <div class="w-full max-w-md">
-        <div class="text-center mb-8">
-            <?php
-                $logoUrl = \App\Helpers\SettingsHelper::getLogoUrl();
-                $companyName = \App\Helpers\SettingsHelper::getCompanyName();
-            ?>
-
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-6 shadow-lg"
-                 style="background: linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 85%, #000) 100%);">
-                <?php if($logoUrl): ?>
-                    <img src="<?php echo e($logoUrl); ?>" alt="Logo" class="w-full h-full object-contain rounded-xl">
-                <?php else: ?>
-                    <div class="text-white font-extrabold font-cairo text-3xl"><?php echo e(mb_substr($companyName,0,1)); ?></div>
-                <?php endif; ?>
-            </div>
-
-            <h1 class="text-2xl sm:text-3xl font-extrabold font-cairo text-gray-900 mb-2">بوابة العملاء</h1>
-            <p class="text-gray-600">لعملاء <?php echo e($companyName); ?> فقط</p>
-            <div class="w-20 h-1 bg-gray-200 rounded-full mx-auto mt-4"></div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-xl p-7 border border-gray-100">
-            <div class="text-center mb-7">
-                <h2 class="text-xl font-extrabold text-gray-900 font-cairo">تسجيل الدخول</h2>
-                <p class="mt-2 text-sm text-gray-500">أدخل بيانات حسابك للوصول إلى لوحتك</p>
-            </div>
-
-            <form method="POST" action="<?php echo e(route('client.login.submit')); ?>" class="space-y-5">
-                <?php echo csrf_field(); ?>
-
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-gray-700">البريد الإلكتروني</label>
-                    <input type="email" name="email" value="<?php echo e(old('email')); ?>" required
-                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition <?php $__errorArgs = ['email'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> border-red-500 bg-red-50 <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                           placeholder="example@company.com">
-                    <?php $__errorArgs = ['email'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><p class="text-sm text-red-600"><?php echo e($message); ?></p><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-gray-700">كلمة المرور</label>
-                    <input type="password" name="password" required
-                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition <?php $__errorArgs = ['password'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> border-red-500 bg-red-50 <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                           placeholder="••••••••">
-                    <?php $__errorArgs = ['password'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><p class="text-sm text-red-600"><?php echo e($message); ?></p><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                        <input type="checkbox" name="remember" class="rounded border-gray-300">
-                        تذكرني
-                    </label>
-                    <a href="<?php echo e(route('website.contact')); ?>" class="text-sm font-bold" style="color:var(--brand)">
-                        تواصل معنا
-                    </a>
-                </div>
-
-                <button type="submit" class="w-full text-white font-extrabold py-3.5 px-6 rounded-xl btn-brand shadow-lg hover:shadow-xl transition">
-                    دخول بوابة العملاء
-                </button>
-            </form>
-        </div>
-
-        <div class="text-center mt-7 text-xs text-gray-500">
-            <a href="<?php echo e(route('website.home')); ?>" class="hover:text-gray-700">العودة إلى موقع الشركة</a>
-        </div>
+<body class="sv-client-login-page">
+    <div class="sv-client-bg" aria-hidden="true">
+        <canvas id="sv-particles"></canvas>
+        <div class="sv-client-bg-grid"></div>
+        <div class="sv-client-glow sv-client-glow--b"></div>
+        <div class="sv-client-glow sv-client-glow--o"></div>
     </div>
+
+    <div class="sv-client-layout">
+        <section class="sv-client-intro">
+            <a href="<?php echo e(route('website.home')); ?>" class="sv-client-back">
+                ← Back to <?php echo e($companyName); ?>
+
+            </a>
+
+            <div class="sv-client-badge">
+                <span class="sv-client-badge-dot"></span>
+                Client Portal
+            </div>
+
+            <h1 class="sv-client-title">
+                We care about<br>
+                <span>your experience.</span>
+            </h1>
+
+            <p class="sv-client-lead">
+                A secure space for your projects, invoices, support tickets, and reports — built with the same standards we deliver to your business.
+            </p>
+
+            <div class="sv-client-features">
+                <div class="sv-client-feature">
+                    <div class="sv-client-feature-icon">📊</div>
+                    <div>
+                        <h3>Live project tracking</h3>
+                        <p>Milestones and delivery updates in one place.</p>
+                    </div>
+                </div>
+                <div class="sv-client-feature">
+                    <div class="sv-client-feature-icon">💳</div>
+                    <div>
+                        <h3>Transparent billing</h3>
+                        <p>Invoices and payment status — always clear.</p>
+                    </div>
+                </div>
+                <div class="sv-client-feature">
+                    <div class="sv-client-feature-icon">🎫</div>
+                    <div>
+                        <h3>Support with SLA</h3>
+                        <p>Structured tickets until every issue is closed.</p>
+                    </div>
+                </div>
+                <div class="sv-client-feature">
+                    <div class="sv-client-feature-icon">🔒</div>
+                    <div>
+                        <h3>Private & secure</h3>
+                        <p>Your data — isolated and access-controlled.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sv-client-form-side">
+            <div class="sv-client-card">
+                <div class="sv-client-card-head">
+                    <div class="sv-client-logo">
+                        <?php if($logoUrl): ?>
+                            <img src="<?php echo e($logoUrl); ?>" alt="<?php echo e($companyName); ?>">
+                        <?php else: ?>
+                            <div class="sv-client-logo-fallback"><?php echo e(mb_substr($companyName, 0, 1)); ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <h2>Welcome back</h2>
+                    <p class="sub">Sign in to your client dashboard</p>
+                </div>
+
+                <?php if($errors->any()): ?>
+                    <div class="sv-client-alert sv-client-alert--error">
+                        <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $err): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <p><?php echo e($err); ?></p>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </div>
+                <?php endif; ?>
+
+                <form method="POST" action="<?php echo e(route('client.login.submit')); ?>">
+                    <?php echo csrf_field(); ?>
+
+                    <div class="sv-client-field">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" value="<?php echo e(old('email')); ?>" required
+                               autocomplete="email" placeholder="you@company.com"
+                               class="<?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-error <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                    </div>
+
+                    <div class="sv-client-field">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required
+                               autocomplete="current-password" placeholder="Enter your password"
+                               class="<?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-error <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                    </div>
+
+                    <div class="sv-client-row">
+                        <label>
+                            <input type="checkbox" name="remember">
+                            Remember me
+                        </label>
+                        <a href="<?php echo e(route('website.contact')); ?>">Need help?</a>
+                    </div>
+
+                    <button type="submit" class="sv-client-submit">Enter Client Portal</button>
+                </form>
+
+                <p class="sv-client-foot">
+                    For <?php echo e($companyName); ?> clients only.<br>
+                    <a href="<?php echo e(route('website.home')); ?>">Return to website</a>
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <script src="<?php echo e(asset('js/client-login.js')); ?>?v=2" defer></script>
 </body>
 </html>
-
 <?php /**PATH C:\xampp\htdocs\solvesta\resources\views/client-auth/login.blade.php ENDPATH**/ ?>

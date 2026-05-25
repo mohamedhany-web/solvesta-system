@@ -210,6 +210,11 @@ class RoleHelper
             'create-training' => 'إنشاء برامج تدريبية',
             'edit-training' => 'تعديل برامج تدريبية',
             'delete-training' => 'حذف برامج تدريبية',
+
+            'view-jobs' => 'عرض الوظائف',
+            'create-jobs' => 'إنشاء وظائف',
+            'edit-jobs' => 'تعديل وظائف',
+            'delete-jobs' => 'حذف وظائف',
             
             // Meetings & Conferences
             'view-meetings' => 'عرض الاجتماعات',

@@ -1,143 +1,165 @@
 @extends('website.layout')
 
-@section('title', \App\Helpers\SettingsHelper::getCompanyName() . ' - عن الشركة')
+@section('title', \App\Helpers\SettingsHelper::getCompanyName() . ' — About')
+
+@push('body-class')
+ sv-cinematic-page
+@endpush
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/cinematic-home.css') }}?v=3">
+@endpush
 
 @section('content')
 @php
-  $tc = \App\Helpers\SettingsHelper::getThemeColor();
   $cn = \App\Helpers\SettingsHelper::getCompanyName();
+  $pillars = $pillars ?? [];
+  $capabilities = $capabilities ?? [];
+  $principles = $principles ?? [];
 @endphp
 
-{{-- Hero --}}
-<section class="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
-  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-    <div class="absolute -top-24 right-0 h-72 w-72 rounded-full blur-3xl opacity-15 translate-x-1/3" style="background: {{ $tc }}"></div>
-    <div class="absolute bottom-0 left-0 h-72 w-72 rounded-full blur-3xl opacity-10 -translate-x-1/3" style="background: {{ $tc }}"></div>
-  </div>
-
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-    <div class="max-w-3xl">
-      <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-bold text-gray-700 shadow-sm">
-        <span class="h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-        Software &amp; AI Solutions
-      </span>
-      <h1 class="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black font-cairo text-gray-900" style="line-height:1.2">
-        من نحن في {{ $cn }}؟
-      </h1>
-      <p class="mt-5 text-lg text-gray-600 leading-relaxed max-w-2xl">
-        نحن لا نبيع “نظامًا جاهزًا” — نحن نبني المؤسسة رقميًا: نحول التشغيل اليومي إلى إجراءات واضحة، صلاحيات دقيقة، بيانات قابلة للقياس، وتكاملات تربط الأقسام بالعميل.
-      </p>
-
-      <div class="mt-8 flex flex-col sm:flex-row gap-3">
-        <a href="{{ route('website.contact') }}" class="inline-flex items-center justify-center px-7 py-3.5 rounded-2xl text-white font-extrabold btn-brand shadow-lg hover:shadow-xl transition">
-          احجز جلسة
-        </a>
-        <a href="{{ route('website.case-studies.index') }}" class="inline-flex items-center justify-center px-7 py-3.5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 font-bold text-gray-800 transition">
-          استعرض نماذج الأعمال
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-{{-- What we do (strong positioning) --}}
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-    <div>
-      <h2 class="text-2xl sm:text-3xl font-black font-cairo text-gray-900">نبني منظومة التشغيل… وليس مجرد واجهة</h2>
-      <p class="mt-4 text-gray-600 leading-relaxed">
-        عملنا يبدأ من داخل الشركة: نحلل العمليات، نعيد تصميم الإجراءات، ثم نحولها إلى نظام يعمل على أرض الواقع.
-        النتيجة: وضوح مسؤوليات، سرعة قرار، تقارير لحظية، ودعم ما بعد البيع بمعايير مؤسسية.
-      </p>
-
-      <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="bg-white rounded-2xl border border-gray-200 p-6">
-          <div class="text-xs font-bold mb-2" style="color: {{ $tc }}">حوكمة وصلاحيات</div>
-          <div class="text-sm font-extrabold text-gray-900">أدوار + اعتمادات + سجل تدقيق</div>
-          <p class="mt-2 text-sm text-gray-600 leading-relaxed">صلاحيات دقيقة ومسارات قرار واضحة تقلل المخاطر وتزيد الانضباط.</p>
+<div class="sv-os" dir="ltr">
+  {{-- Hero --}}
+  <section class="sv-page-hero">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="sv-page-hero-inner">
+        <div class="sv-eyebrow sv-display mx-auto">
+          <span class="sv-eyebrow-dot"></span>
+          About {{ $cn }}
         </div>
-        <div class="bg-white rounded-2xl border border-gray-200 p-6">
-          <div class="text-xs font-bold mb-2" style="color: {{ $tc }}">بيانات وتقارير</div>
-          <div class="text-sm font-extrabold text-gray-900">KPIs لحظية قابلة للقياس</div>
-          <p class="mt-2 text-sm text-gray-600 leading-relaxed">لوحات مؤشرات تُظهر الحقيقة اليومية بدل التخمين.</p>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 p-6">
-          <div class="text-xs font-bold mb-2" style="color: {{ $tc }}">تكاملات وتشغيل</div>
-          <div class="text-sm font-extrabold text-gray-900">ربط الأقسام وإغلاق الحلقة</div>
-          <p class="mt-2 text-sm text-gray-600 leading-relaxed">مبيعات + مالية + دعم + بوابة عميل في مسار واحد.</p>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 p-6">
-          <div class="text-xs font-bold mb-2" style="color: {{ $tc }}">AI داخل التنفيذ</div>
-          <div class="text-sm font-extrabold text-gray-900">تصنيف + تنبؤ + تلخيص</div>
-          <p class="mt-2 text-sm text-gray-600 leading-relaxed">ذكاء اصطناعي يخدم القرار والتشغيل… وليس مجرد “ميزة”.</p>
+        <h1 class="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black sv-display text-gray-900 leading-tight">
+          We Don't Sell a Product.<br>
+          <span class="sv-neon-sweep">We Engineer Your Company.</span>
+        </h1>
+        <p class="mt-5 text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
+          {{ $cn }} is a strategic AI &amp; software partner. We turn daily operations into clear processes, precise permissions, measurable data, and integrations that connect every department to your clients.
+        </p>
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a href="{{ route('website.contact') }}" class="sv-btn sv-btn-primary w-full sm:w-auto">Book a Session</a>
+          <a href="{{ route('website.services') }}" class="sv-btn sv-btn-ghost w-full sm:w-auto">Explore Services</a>
         </div>
       </div>
     </div>
+  </section>
 
-    {{-- Contact card (matches home style) --}}
-    <div class="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
-      <div class="flex items-center justify-between gap-3">
-        <h3 class="text-xl font-extrabold text-gray-900">معلومات التواصل</h3>
-        <span class="text-xs font-extrabold px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50" style="color: {{ $tc }}">Enterprise</span>
-      </div>
+  {{-- Mission + capabilities --}}
+  <section class="sv-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-start">
+      <div>
+        <div class="sv-section-label sv-display">What We Build</div>
+        <h2 class="sv-section-title sv-display">An Operating System — Not Just a UI</h2>
+        <p class="mt-4 text-gray-600 leading-relaxed">
+          Our work starts inside your organization: we analyze how work actually flows, redesign procedures, then implement systems that teams use every day.
+          The outcome is clear ownership, faster decisions, live reporting, and post-delivery support with enterprise standards.
+        </p>
 
-      <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <div class="text-xs text-gray-500 mb-1">الاسم</div>
-          <div class="font-extrabold text-gray-900">{{ $cn }}</div>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <div class="text-xs text-gray-500 mb-1">البريد</div>
-          <div class="font-extrabold text-gray-900 break-words">{{ \App\Helpers\SettingsHelper::getCompanyEmail() }}</div>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <div class="text-xs text-gray-500 mb-1">الهاتف</div>
-          <div class="font-extrabold text-gray-900">{{ \App\Helpers\SettingsHelper::getCompanyPhone() }}</div>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <div class="text-xs text-gray-500 mb-1">العنوان</div>
-          <div class="font-extrabold text-gray-900">{{ \App\Helpers\SettingsHelper::getCompanyAddress() }}</div>
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          @foreach($capabilities as $cap)
+          <div class="sv-cap-card">
+            <div class="text-[11px] font-extrabold uppercase tracking-wide text-orange-500">{{ $cap['label'] }}</div>
+            <div class="mt-1 text-sm font-extrabold text-gray-900">{{ $cap['title'] }}</div>
+            <p class="mt-2 text-sm text-gray-600 leading-relaxed">{{ $cap['desc'] }}</p>
+          </div>
+          @endforeach
         </div>
       </div>
 
-      <div class="mt-6 flex flex-col sm:flex-row gap-3">
-        <a href="{{ route('website.contact') }}" class="inline-flex w-full items-center justify-center px-6 py-3 rounded-2xl text-white font-extrabold btn-brand shadow-md hover:shadow-lg transition">
-          تواصل معنا
-        </a>
-        <a href="{{ route('client.login') }}" class="inline-flex w-full items-center justify-center px-6 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 font-bold text-gray-800 transition">
-          بوابة العملاء
-        </a>
+      <div class="sv-contact-panel lg:sticky lg:top-24">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <h3 class="text-xl font-extrabold text-gray-900">Get in Touch</h3>
+          <span class="text-[10px] font-extrabold px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50 text-blue-700">Enterprise</span>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div class="sv-contact-field">
+            <div class="text-xs text-gray-500 mb-1">Company</div>
+            <div class="font-extrabold text-gray-900">{{ $cn }}</div>
+          </div>
+          <div class="sv-contact-field">
+            <div class="text-xs text-gray-500 mb-1">Email</div>
+            <div class="font-extrabold text-gray-900 break-all">{{ \App\Helpers\SettingsHelper::getCompanyEmail() }}</div>
+          </div>
+          <div class="sv-contact-field">
+            <div class="text-xs text-gray-500 mb-1">Phone</div>
+            <div class="font-extrabold text-gray-900">{{ \App\Helpers\SettingsHelper::getCompanyPhone() }}</div>
+          </div>
+          <div class="sv-contact-field sm:col-span-2">
+            <div class="text-xs text-gray-500 mb-1">Address</div>
+            <div class="font-extrabold text-gray-900">{{ \App\Helpers\SettingsHelper::getCompanyAddress() }}</div>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-col gap-3">
+          <a href="{{ route('website.contact') }}" class="sv-btn sv-btn-primary w-full">Contact Us</a>
+          <a href="{{ route('client.login') }}" class="sv-btn sv-btn-ghost w-full">Client Portal</a>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-{{-- Principles (strong + concise) --}}
-<section class="bg-gray-50 border-y border-gray-100">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-    <div class="text-center mb-14">
-      <h2 class="text-3xl sm:text-4xl font-black font-cairo text-gray-900">كيف نضمن النتائج؟</h2>
-      <p class="mt-4 text-gray-600 max-w-2xl mx-auto leading-relaxed">قيم تنفيذ واضحة تجعل النظام يعيش ويتوسع داخل الشركة.</p>
+  {{-- Pillars --}}
+  <section class="sv-section sv-section--soft">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <div class="sv-section-label sv-display">Why Partner With Us</div>
+        <h2 class="sv-section-title sv-display">A Digital Partner — Not a Vendor</h2>
+        <p class="sv-section-desc mx-auto mt-3">We stay with you through operations and growth: consulting, build, and support with clear SLAs.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        @foreach($pillars as $pillar)
+        <div class="sv-pillar">
+          <div class="mx-auto h-12 w-12 rounded-2xl flex items-center justify-center mb-4" style="background: linear-gradient(135deg, #eff6ff, #fff7ed)">
+            <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h3 class="text-lg font-extrabold text-gray-900">{{ $pillar['title'] }}</h3>
+          <p class="mt-2 text-sm text-gray-600 leading-relaxed">{{ $pillar['desc'] }}</p>
+        </div>
+        @endforeach
+      </div>
+    </div>
+  </section>
+
+  {{-- Principles --}}
+  <section class="sv-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <div class="sv-section-label sv-display">How We Deliver</div>
+      <h2 class="sv-section-title sv-display">How We Guarantee Results</h2>
+      <p class="sv-section-desc mx-auto mt-3">Clear execution values so the system lives and scales inside your company.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white rounded-2xl border border-gray-200 p-7 hover:shadow-lg transition">
-        <div class="text-xs font-bold mb-2" style="color: {{ $tc }}">تنفيذ مؤسسي</div>
-        <div class="text-lg font-extrabold text-gray-900">خارطة طريق + إطلاق مرحلي</div>
-        <p class="mt-2 text-sm text-gray-600 leading-relaxed">نُطلق بسرعة ثم نتوسع على مراحل… بدون تعطيل التشغيل.</p>
+      @foreach($principles as $p)
+      <div class="sv-svc-card">
+        <div class="text-[11px] font-extrabold uppercase tracking-wide text-orange-500">{{ $p['label'] }}</div>
+        <h3 class="mt-2 text-lg font-extrabold text-gray-900">{{ $p['title'] }}</h3>
+        <p class="mt-2 text-sm text-gray-600 leading-relaxed">{{ $p['desc'] }}</p>
       </div>
-      <div class="bg-white rounded-2xl border border-gray-200 p-7 hover:shadow-lg transition">
-        <div class="text-xs font-bold mb-2" style="color: {{ $tc }}">قياس واضح</div>
-        <div class="text-lg font-extrabold text-gray-900">KPIs + تقارير</div>
-        <p class="mt-2 text-sm text-gray-600 leading-relaxed">كل قرار ومخرجات التنفيذ قابلة للقياس والمتابعة.</p>
-      </div>
-      <div class="bg-white rounded-2xl border border-gray-200 p-7 hover:shadow-lg transition">
-        <div class="text-xs font-bold mb-2" style="color: {{ $tc }}">استمرارية</div>
-        <div class="text-lg font-extrabold text-gray-900">SLA + دعم ما بعد البيع</div>
-        <p class="mt-2 text-sm text-gray-600 leading-relaxed">تذاكر منظمة، تعيين للأقسام، وتقارير مهنية حتى الإغلاق.</p>
+      @endforeach
+    </div>
+  </section>
+
+  {{-- Vision --}}
+  <section class="sv-about">
+    <div class="sv-section-label sv-display mb-4">Our Vision</div>
+    <p class="sv-about-vision sv-display text-gray-800 max-w-3xl mx-auto">
+      We engineer systems that turn companies into
+      <span class="sv-about-glow-text">intelligent digital ecosystems.</span>
+    </p>
+    <p class="mt-6 text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
+      {{ $cn }} doesn't hand off a project and disappear. We remain your partner through operations and growth — from strategy to build to long-term support.
+    </p>
+  </section>
+
+  {{-- CTA --}}
+  <section class="sv-cta-compact">
+    <div class="max-w-3xl mx-auto text-center px-4 text-white">
+      <h2 class="text-2xl sm:text-3xl font-black sv-display">Ready to Rebuild How You Operate?</h2>
+      <p class="mt-4 text-blue-100 leading-relaxed">Book a free strategy session — no commitment required.</p>
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a href="{{ route('website.contact') }}" class="sv-btn sv-btn-primary w-full sm:w-auto" style="background:#fff;color:var(--sv-blue)">Start Now</a>
+        <a href="{{ route('website.services') }}" class="sv-btn sv-btn-ghost w-full sm:w-auto text-white border-white/40 hover:bg-white/15 hover:text-white">View Services</a>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+</div>
 @endsection
-

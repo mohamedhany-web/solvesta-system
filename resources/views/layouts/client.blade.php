@@ -26,6 +26,7 @@
         :root { --brand: {{ \App\Helpers\SettingsHelper::getThemeColor() }}; }
         .btn-brand { background: linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 85%, #000) 100%); }
     </style>
+    @stack('styles')
 </head>
 <body class="h-full bg-gray-50 text-gray-900 font-tajawal overflow-x-hidden">
 @php
@@ -243,6 +244,7 @@
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && open) closeDrawer(); });
     })();
 </script>
+@stack('scripts')
 </body>
 </html>
 

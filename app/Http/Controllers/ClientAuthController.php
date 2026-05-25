@@ -29,7 +29,7 @@ class ClientAuthController extends Controller
             if (!$account->is_active) {
                 Auth::guard('client')->logout();
                 throw ValidationException::withMessages([
-                    'email' => 'هذا الحساب غير مفعل',
+                    'email' => 'This account is not active. Please contact support.',
                 ]);
             }
 
@@ -37,7 +37,7 @@ class ClientAuthController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'email' => 'بيانات الدخول غير صحيحة',
+            'email' => 'These credentials do not match our records.',
         ]);
     }
 

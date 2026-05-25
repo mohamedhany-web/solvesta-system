@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="overflow-x-hidden">
+<html lang="en" dir="ltr" class="overflow-x-hidden">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,12 +12,12 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700;800;900&family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Cairo:wght@600;700;800&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            theme: { extend: { fontFamily: { tajawal: ['Tajawal','sans-serif'], cairo: ['Cairo','sans-serif'] } } }
+            theme: { extend: { fontFamily: { sans: ['Space Grotesk','system-ui','sans-serif'], cairo: ['Cairo','sans-serif'] } } }
         }
     </script>
 
@@ -33,8 +33,9 @@
         .btn-brand { background: linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 85%, #000) 100%); }
         .ring-brand:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 25%, transparent); }
     </style>
+    @stack('styles')
 </head>
-<body class="bg-white text-gray-900 font-tajawal overflow-x-hidden">
+<body class="bg-white text-gray-900 font-sans overflow-x-hidden @stack('body-class')">
     {{-- ═══ NAVBAR ═══ --}}
     <header class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
@@ -49,7 +50,7 @@
                         </div>
                     @endif
                 </div>
-                <div class="min-w-0 hidden sm:block">
+                <div class="min-w-0 block max-w-[140px] sm:max-w-none">
                     <div class="font-extrabold font-cairo text-gray-900 truncate text-sm">{{ $companyName }}</div>
                     <div class="text-[11px] text-gray-500 truncate">Software &amp; AI Solutions</div>
                 </div>
@@ -57,23 +58,23 @@
 
             {{-- Desktop nav --}}
             <nav class="hidden md:flex items-center gap-5 text-sm font-semibold text-gray-600">
-                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.home') ? 'text-gray-900' : '' }}" href="{{ route('website.home') }}">الرئيسية</a>
-                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.about') ? 'text-gray-900' : '' }}" href="{{ route('website.about') }}">عن الشركة</a>
-                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.services') ? 'text-gray-900' : '' }}" href="{{ route('website.services') }}">الخدمات</a>
-                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.training*') ? 'text-gray-900' : '' }}" href="{{ route('website.training') }}">التدريب</a>
-                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.case-studies.*') ? 'text-gray-900' : '' }}" href="{{ route('website.case-studies.index') }}">نماذج الأعمال</a>
-                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.pricing') ? 'text-gray-900' : '' }}" href="{{ route('website.pricing') }}">حلول الشركات</a>
-                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.contact') ? 'text-gray-900' : '' }}" href="{{ route('website.contact') }}">تواصل</a>
+                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.home') ? 'text-gray-900' : '' }}" href="{{ route('website.home') }}">Home</a>
+                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.about') ? 'text-gray-900' : '' }}" href="{{ route('website.about') }}">About</a>
+                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.services') ? 'text-gray-900' : '' }}" href="{{ route('website.services') }}">Services</a>
+                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.training*') ? 'text-gray-900' : '' }}" href="{{ route('website.training') }}">Training</a>
+                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.careers*') ? 'text-gray-900' : '' }}" href="{{ route('website.careers') }}">Careers</a>
+                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.pricing') ? 'text-gray-900' : '' }}" href="{{ route('website.pricing') }}">Enterprise</a>
+                <a class="hover:text-gray-900 transition {{ request()->routeIs('website.contact') ? 'text-gray-900' : '' }}" href="{{ route('website.contact') }}">Contact</a>
             </nav>
 
             {{-- Desktop CTA --}}
             <div class="hidden md:flex items-center gap-3 shrink-0">
-                <a href="{{ route('client.login') }}" class="inline-flex px-5 py-2.5 rounded-xl text-white text-sm font-extrabold btn-brand shadow-md hover:shadow-lg transition">بوابة العملاء</a>
+                <a href="{{ route('client.login') }}" class="inline-flex px-5 py-2.5 rounded-xl text-white text-sm font-extrabold btn-brand shadow-md hover:shadow-lg transition">Client Portal</a>
             </div>
 
             {{-- Mobile hamburger --}}
             <button type="button" class="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition shrink-0"
-                    aria-label="فتح القائمة" id="mobileMenuBtn">
+                    aria-label="Open menu" id="mobileMenuBtn">
                 <svg class="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
@@ -88,7 +89,7 @@
         {{-- Panel --}}
         <div id="mobilePanel" class="absolute top-0 right-0 h-full w-[82%] max-w-xs bg-white shadow-2xl pointer-events-auto flex flex-col"
              style="transform:translateX(100%); transition:transform .3s cubic-bezier(.32,.72,0,1)"
-             role="dialog" aria-modal="true" aria-label="قائمة الموقع">
+             role="dialog" aria-modal="true" aria-label="Site menu">
 
             {{-- Drawer header --}}
             <div class="h-16 px-4 flex items-center justify-between border-b border-gray-100 shrink-0">
@@ -107,7 +108,7 @@
                         <div class="text-[11px] text-gray-500 truncate">Software &amp; AI Solutions</div>
                     </div>
                 </div>
-                <button type="button" id="mobileCloseBtn" class="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition" aria-label="إغلاق">
+                <button type="button" id="mobileCloseBtn" class="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition" aria-label="Close menu">
                     <svg class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -119,13 +120,13 @@
                 <nav class="grid gap-1.5">
                     @php
                         $mobileLinks = [
-                            ['route'=>'website.home','label'=>'الرئيسية'],
-                            ['route'=>'website.about','label'=>'عن الشركة'],
-                            ['route'=>'website.services','label'=>'الخدمات'],
-                            ['route'=>'website.training','label'=>'التدريب'],
-                            ['route'=>'website.case-studies.index','label'=>'نماذج الأعمال'],
-                            ['route'=>'website.pricing','label'=>'حلول الشركات'],
-                            ['route'=>'website.contact','label'=>'تواصل'],
+                            ['route'=>'website.home','label'=>'Home'],
+                            ['route'=>'website.about','label'=>'About'],
+                            ['route'=>'website.services','label'=>'Services'],
+                            ['route'=>'website.training','label'=>'Training'],
+                            ['route'=>'website.careers','label'=>'Careers'],
+                            ['route'=>'website.pricing','label'=>'Enterprise'],
+                            ['route'=>'website.contact','label'=>'Contact'],
                         ];
                     @endphp
                     @foreach($mobileLinks as $link)
@@ -140,9 +141,9 @@
 
             {{-- Drawer footer --}}
             <div class="shrink-0 p-4 border-t border-gray-100">
-                <div class="text-xs text-gray-500 mb-3">عميل لدى الشركة؟ ادخل إلى بوابتك</div>
+                <div class="text-xs text-gray-500 mb-3">Already a client? Access your portal</div>
                 <a href="{{ route('client.login') }}" class="flex items-center justify-center w-full px-4 py-3 rounded-xl text-white text-sm font-extrabold btn-brand shadow-md hover:shadow-lg transition">
-                    بوابة العملاء
+                    Client Portal
                 </a>
             </div>
         </div>
@@ -166,44 +167,44 @@
                 <div class="md:col-span-2">
                     <div class="text-2xl font-extrabold font-cairo mb-3 text-gray-900">{{ $companyName }}</div>
                     <p class="text-gray-600 leading-relaxed">
-                        نبني حلولًا تشغيلية وبنى تحتية رقمية للشركات — من التشغيل الداخلي إلى بوابة العميل وخدمة ما بعد البيع — بتجربة عربية حديثة ومعايير B2B.
+                        We build operational software and digital infrastructure for enterprises — from internal systems to client portals and post-delivery support, with modern B2B standards.
                     </p>
                     <div class="mt-5 flex flex-col sm:flex-row gap-3">
                         <a href="{{ route('website.contact') }}"
                            class="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-gray-900 text-white font-extrabold hover:bg-black transition shadow-sm">
-                            احجز جلسة
+                            Book a Session
                         </a>
                         <a href="{{ route('client.login') }}"
                            class="inline-flex items-center justify-center px-5 py-3 rounded-2xl text-white font-extrabold btn-brand shadow-md hover:shadow-lg transition">
-                            بوابة العملاء
+                            Client Portal
                         </a>
                     </div>
                 </div>
 
                 <div>
-                    <div class="font-extrabold mb-3 text-gray-900">روابط</div>
+                    <div class="font-extrabold mb-3 text-gray-900">Links</div>
                     <div class="space-y-2 text-sm text-gray-600">
-                        <a class="block hover:text-gray-900 transition" href="{{ route('website.about') }}">عن الشركة</a>
-                        <a class="block hover:text-gray-900 transition" href="{{ route('website.services') }}">الخدمات</a>
-                        <a class="block hover:text-gray-900 transition" href="{{ route('website.training') }}">التدريب</a>
-                        <a class="block hover:text-gray-900 transition" href="{{ route('website.case-studies.index') }}">نماذج الأعمال</a>
-                        <a class="block hover:text-gray-900 transition" href="{{ route('website.pricing') }}">حلول الشركات</a>
-                        <a class="block hover:text-gray-900 transition" href="{{ route('website.contact') }}">تواصل</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.about') }}">About</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.services') }}">Services</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.training') }}">Training</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.careers') }}">Careers</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.pricing') }}">Enterprise</a>
+                        <a class="block hover:text-gray-900 transition" href="{{ route('website.contact') }}">Contact</a>
                     </div>
                 </div>
 
                 <div>
-                    <div class="font-extrabold mb-3 text-gray-900">بيانات التواصل</div>
+                    <div class="font-extrabold mb-3 text-gray-900">Contact</div>
                     <div class="space-y-2 text-sm text-gray-600">
-                        <div><span class="text-gray-500">هاتف:</span> {{ \App\Helpers\SettingsHelper::getCompanyPhone() }}</div>
-                        <div><span class="text-gray-500">بريد:</span> {{ \App\Helpers\SettingsHelper::getCompanyEmail() }}</div>
-                        <div><span class="text-gray-500">عنوان:</span> {{ \App\Helpers\SettingsHelper::getCompanyAddress() }}</div>
+                        <div><span class="text-gray-500">Phone:</span> {{ \App\Helpers\SettingsHelper::getCompanyPhone() }}</div>
+                        <div><span class="text-gray-500">Email:</span> {{ \App\Helpers\SettingsHelper::getCompanyEmail() }}</div>
+                        <div><span class="text-gray-500">Address:</span> {{ \App\Helpers\SettingsHelper::getCompanyAddress() }}</div>
                     </div>
                 </div>
             </div>
 
             <div class="border-t border-gray-200 mt-10 pt-6 text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div>© {{ date('Y') }} {{ $companyName }}. جميع الحقوق محفوظة.</div>
+                <div>© {{ date('Y') }} {{ $companyName }}. All rights reserved.</div>
                 <div class="text-gray-600">{{ \App\Helpers\SettingsHelper::getSystemName() }}</div>
             </div>
         </div>
@@ -249,6 +250,7 @@
             window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) closeDrawer(); });
         })();
     </script>
+    @stack('scripts')
 </body>
 </html>
 

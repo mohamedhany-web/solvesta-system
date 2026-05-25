@@ -84,6 +84,9 @@ class RolePermissionSeeder extends Seeder
             
             // إدارة التدريب والتطوير
             'view-training', 'create-training', 'edit-training', 'delete-training',
+
+            // التوظيف والوظائف
+            'view-jobs', 'create-jobs', 'edit-jobs', 'delete-jobs',
             
             // إدارة الاجتماعات والمؤتمرات
             'view-meetings', 'create-meetings', 'edit-meetings', 'delete-meetings',
@@ -125,6 +128,7 @@ class RolePermissionSeeder extends Seeder
             'view-leaves', 'create-leaves', 'edit-leaves', 'approve-leaves',
             'view-salaries', 'create-salaries', 'edit-salaries', 'approve-salaries',
             'view-training', 'create-training', 'edit-training', 'delete-training',
+            'view-jobs', 'create-jobs', 'edit-jobs', 'delete-jobs',
             'view-meetings', 'create-meetings', 'edit-meetings', 'delete-meetings',
             'view-assets',
             'view-invoices', 'create-invoices', 'edit-invoices',
@@ -174,6 +178,7 @@ class RolePermissionSeeder extends Seeder
             'view-reports', 'generate-reports',
             'view-dashboard',
             'view-training', 'create-training', 'edit-training', 'delete-training',
+            'view-jobs', 'create-jobs', 'edit-jobs', 'delete-jobs',
             'view-meetings', 'create-meetings', 'edit-meetings', 'delete-meetings',
             'view-assets'
         ]);

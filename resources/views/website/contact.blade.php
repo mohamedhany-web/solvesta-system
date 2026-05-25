@@ -1,142 +1,139 @@
 @extends('website.layout')
 
-@section('title', \App\Helpers\SettingsHelper::getCompanyName() . ' - تواصل')
+@section('title', \App\Helpers\SettingsHelper::getCompanyName() . ' — Contact')
+
+@push('body-class')
+ sv-cinematic-page
+@endpush
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/cinematic-home.css') }}?v=3">
+@endpush
 
 @section('content')
-@php
-  $tc = \App\Helpers\SettingsHelper::getThemeColor();
-  $cn = \App\Helpers\SettingsHelper::getCompanyName();
-@endphp
+@php $cn = \App\Helpers\SettingsHelper::getCompanyName(); @endphp
 
-<section class="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
-  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-    <div class="absolute -top-24 right-0 h-72 w-72 rounded-full blur-3xl opacity-15 translate-x-1/3" style="background: {{ $tc }}"></div>
-    <div class="absolute bottom-0 left-0 h-72 w-72 rounded-full blur-3xl opacity-10 -translate-x-1/3" style="background: {{ $tc }}"></div>
-  </div>
-
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-    <div class="max-w-3xl">
-      <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-bold text-gray-700 shadow-sm">
-        <span class="h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-        Contact & Consultation
-      </span>
-      <h1 class="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black font-cairo text-gray-900" style="line-height:1.2">
-        تواصل مع Solvesta
-      </h1>
-      <p class="mt-5 text-lg text-gray-600 leading-relaxed max-w-2xl">
-        اشرح لنا وضع شركتك أو التحدي التشغيلي — وسنقترح حلًا واضحًا بخارطة طريق وتنفيذ مرحلي.
-      </p>
-    </div>
-  </div>
-</section>
-
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-    <div class="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
-      <div class="flex items-center justify-between gap-3">
-        <h2 class="text-xl font-extrabold text-gray-900">نموذج التواصل</h2>
-        <span class="text-xs font-extrabold px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50" style="color: {{ $tc }}">Enterprise</span>
-      </div>
-
-      @if(session('success'))
-        <div class="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 text-sm font-bold">
-          {{ session('success') }}
+<div class="sv-os" dir="ltr">
+  <section class="sv-page-hero">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="sv-page-hero-inner">
+        <div class="sv-eyebrow sv-display mx-auto">
+          <span class="sv-eyebrow-dot"></span>
+          Contact &amp; Consultation
         </div>
-      @endif
+        <h1 class="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black sv-display text-gray-900 leading-tight">
+          Let's Talk About<br>
+          <span class="sv-neon-sweep">Your Next System</span>
+        </h1>
+        <p class="mt-5 text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
+          Tell us about your company or operational challenge — we'll propose a clear solution with a roadmap and phased delivery.
+        </p>
+      </div>
+    </div>
+  </section>
 
-      <form class="mt-6 space-y-4" action="{{ route('website.contact.submit') }}" method="POST">
-        @csrf
+  <section class="sv-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="form">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-start">
+      <div class="sv-form-panel" id="contact-form">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <h2 class="text-xl font-extrabold text-gray-900">Send a Request</h2>
+          <span class="text-[10px] font-extrabold px-3 py-1.5 rounded-full border border-blue-100 bg-blue-50 text-blue-700">Enterprise</span>
+        </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="sm:col-span-2">
-            <label class="block text-sm font-semibold text-gray-700 mb-2">نوع الطلب</label>
+        @if(session('success'))
+          <div class="sv-alert-success mt-5">{{ session('success') }}</div>
+        @endif
+
+        <form class="mt-6 space-y-4" action="{{ route('website.contact.submit') }}" method="POST">
+          @csrf
+
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Request type</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label class="flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50">
-                <input type="radio" name="type" value="contact" class="rounded border-gray-300" {{ old('type','consultation') === 'contact' ? 'checked' : '' }}>
-                <span class="text-sm font-bold text-gray-800">تواصل عام</span>
+              <label class="sv-radio-card">
+                <input type="radio" name="type" value="contact" class="rounded border-gray-300 text-blue-600" {{ old('type', 'consultation') === 'contact' ? 'checked' : '' }}>
+                <span class="text-sm font-bold text-gray-800">General contact</span>
               </label>
-              <label class="flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50">
-                <input type="radio" name="type" value="consultation" class="rounded border-gray-300" {{ old('type','consultation') === 'consultation' ? 'checked' : '' }}>
-                <span class="text-sm font-bold text-gray-800">حجز استشارة</span>
+              <label class="sv-radio-card">
+                <input type="radio" name="type" value="consultation" class="rounded border-gray-300 text-blue-600" {{ old('type', 'consultation') === 'consultation' ? 'checked' : '' }}>
+                <span class="text-sm font-bold text-gray-800">Book consultation</span>
               </label>
             </div>
             @error('type')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
           </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">الاسم</label>
-            <input type="text" name="name" value="{{ old('name') }}" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl ring-brand focus:border-transparent @error('name') border-red-500 bg-red-50 @enderror">
-            @error('name')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Name *</label>
+              <input type="text" name="name" value="{{ old('name') }}" required class="sv-form-input @error('name') is-error @enderror">
+              @error('name')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Company</label>
+              <input type="text" name="company" value="{{ old('company') }}" class="sv-form-input @error('company') is-error @enderror">
+              @error('company')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Email</label>
+              <input type="email" name="email" value="{{ old('email') }}" class="sv-form-input @error('email') is-error @enderror">
+              @error('email')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Phone</label>
+              <input type="text" name="phone" value="{{ old('phone') }}" class="sv-form-input @error('phone') is-error @enderror">
+              @error('phone')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
+            </div>
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">الشركة</label>
-            <input type="text" name="company" value="{{ old('company') }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl ring-brand focus:border-transparent @error('company') border-red-500 bg-red-50 @enderror">
-            @error('company')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
+            <label class="block text-sm font-bold text-gray-700 mb-2">Subject (optional)</label>
+            <input type="text" name="subject" value="{{ old('subject') }}" class="sv-form-input @error('subject') is-error @enderror">
+            @error('subject')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">البريد</label>
-            <input type="email" name="email" value="{{ old('email') }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl ring-brand focus:border-transparent @error('email') border-red-500 bg-red-50 @enderror">
-            @error('email')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
+            <label class="block text-sm font-bold text-gray-700 mb-2">Message *</label>
+            <textarea name="message" rows="6" required class="sv-form-textarea @error('message') is-error @enderror">{{ old('message') }}</textarea>
+            @error('message')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
           </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">الهاتف</label>
-            <input type="text" name="phone" value="{{ old('phone') }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl ring-brand focus:border-transparent @error('phone') border-red-500 bg-red-50 @enderror">
-            @error('phone')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">الموضوع (اختياري)</label>
-          <input type="text" name="subject" value="{{ old('subject') }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl ring-brand focus:border-transparent @error('subject') border-red-500 bg-red-50 @enderror">
-          @error('subject')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">الرسالة</label>
-          <textarea name="message" rows="6" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl ring-brand focus:border-transparent @error('message') border-red-500 bg-red-50 @enderror">{{ old('message') }}</textarea>
-          @error('message')<div class="mt-2 text-sm text-red-600">{{ $message }}</div>@enderror
-        </div>
-
-        <button class="w-full px-6 py-3.5 rounded-2xl text-white font-extrabold btn-brand shadow-md hover:shadow-lg transition">إرسال الطلب</button>
-        <p class="mt-3 text-xs text-gray-500">سيظهر الطلب داخل لوحة الأدمن في قسم الدعم الفني.</p>
-      </form>
-    </div>
-
-    <div class="space-y-6">
-      <div class="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
-        <h2 class="text-xl font-extrabold text-gray-900 mb-5">بيانات التواصل</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
-          <div class="bg-gray-50 rounded-2xl border border-gray-200 p-5">
-            <div class="text-xs text-gray-500 mb-1">الهاتف</div>
-            <div class="font-extrabold">{{ \App\Helpers\SettingsHelper::getCompanyPhone() ?: '—' }}</div>
-          </div>
-          <div class="bg-gray-50 rounded-2xl border border-gray-200 p-5">
-            <div class="text-xs text-gray-500 mb-1">البريد</div>
-            <div class="font-extrabold break-words">{{ \App\Helpers\SettingsHelper::getCompanyEmail() ?: '—' }}</div>
-          </div>
-          <div class="sm:col-span-2 bg-gray-50 rounded-2xl border border-gray-200 p-5">
-            <div class="text-xs text-gray-500 mb-1">العنوان</div>
-            <div class="font-extrabold">{{ \App\Helpers\SettingsHelper::getCompanyAddress() ?: '—' }}</div>
-          </div>
-        </div>
+          <button type="submit" class="sv-btn sv-btn-primary w-full">Submit Request</button>
+          <p class="text-xs text-gray-500 text-center">Your request appears in the admin support queue.</p>
+        </form>
       </div>
 
-      <div class="rounded-3xl bg-gray-950 p-8 text-white overflow-hidden relative">
-        <div class="absolute -top-16 right-0 h-56 w-56 rounded-full blur-3xl opacity-25" style="background: {{ $tc }}"></div>
-        <div class="relative">
-          <div class="text-sm font-extrabold" style="color: {{ $tc }}">لشركات B2B</div>
-          <h3 class="mt-2 text-2xl font-black font-cairo" style="line-height:1.25">جاهز نبدأ؟</h3>
-          <p class="mt-3 text-gray-300 leading-relaxed">احجز جلسة قصيرة لشرح احتياجك، وسنقترح نطاق التنفيذ والمرحلة الأولى.</p>
-          <a href="{{ route('website.contact') }}#form" class="mt-6 inline-flex w-full items-center justify-center px-6 py-3 rounded-2xl text-white font-extrabold btn-brand shadow-md hover:shadow-lg transition">
-            ابدأ الآن
-          </a>
+      <div class="space-y-6 lg:sticky lg:top-24">
+        <div class="sv-contact-panel">
+          <h2 class="text-xl font-extrabold text-gray-900 mb-5">Contact Details</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div class="sv-contact-field">
+              <div class="text-xs text-gray-500 mb-1">Phone</div>
+              <div class="font-extrabold text-gray-900">{{ \App\Helpers\SettingsHelper::getCompanyPhone() ?: '—' }}</div>
+            </div>
+            <div class="sv-contact-field">
+              <div class="text-xs text-gray-500 mb-1">Email</div>
+              <div class="font-extrabold text-gray-900 break-all">{{ \App\Helpers\SettingsHelper::getCompanyEmail() ?: '—' }}</div>
+            </div>
+            <div class="sv-contact-field sm:col-span-2">
+              <div class="text-xs text-gray-500 mb-1">Address</div>
+              <div class="font-extrabold text-gray-900">{{ \App\Helpers\SettingsHelper::getCompanyAddress() ?: '—' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sv-panel-dark">
+          <div class="text-sm font-extrabold text-orange-300">For B2B Teams</div>
+          <h3 class="mt-2 text-2xl font-black sv-display leading-tight">Ready to Start?</h3>
+          <p class="mt-3 text-blue-100 text-sm leading-relaxed">Book a short session to explain your needs — we'll propose scope and phase one.</p>
+          <a href="#contact-form" class="sv-btn sv-btn-primary mt-6 w-full" style="background:#fff;color:var(--sv-blue)">Start Now</a>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <a href="{{ route('website.services') }}" class="sv-btn sv-btn-ghost w-full text-center">View Services</a>
+          <a href="{{ route('website.pricing') }}" class="sv-btn sv-btn-ghost w-full text-center">Enterprise Solutions</a>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+</div>
 @endsection
-

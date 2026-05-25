@@ -1,235 +1,184 @@
 @extends('website.layout')
 
-@section('title', \App\Helpers\SettingsHelper::getCompanyName() . ' - حلول الشركات')
+@section('title', \App\Helpers\SettingsHelper::getCompanyName() . ' — Enterprise')
+
+@push('body-class')
+ sv-cinematic-page
+@endpush
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/cinematic-home.css') }}?v=3">
+@endpush
 
 @section('content')
 @php
-  $tc = \App\Helpers\SettingsHelper::getThemeColor();
   $cn = \App\Helpers\SettingsHelper::getCompanyName();
+  $tracks = $tracks ?? [];
+  $infrastructure = $infrastructure ?? [];
+  $deliverables = $deliverables ?? [];
+  $methodology = $methodology ?? [];
+  $examples = $examples ?? [];
 @endphp
 
-{{-- Hero --}}
-<section class="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
-  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-    <div class="absolute -top-24 right-0 h-72 w-72 rounded-full blur-3xl opacity-15 translate-x-1/3" style="background: {{ $tc }}"></div>
-    <div class="absolute bottom-0 left-0 h-72 w-72 rounded-full blur-3xl opacity-10 -translate-x-1/3" style="background: {{ $tc }}"></div>
-  </div>
-
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-    <div class="max-w-3xl">
-      <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-bold text-gray-700 shadow-sm">
-        <span class="h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-        Enterprise B2B
-      </span>
-      <h1 class="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black font-cairo text-gray-900" style="line-height:1.2">
-        حلول الشركات — بناء مؤسسة رقمية قابلة للتوسع
-      </h1>
-      <p class="mt-5 text-lg text-gray-600 leading-relaxed max-w-2xl">
-        في {{ $cn }} لا نبيع “باقة أسعار”. نحدد نطاقًا واضحًا ثم نبني منظومة تشغيل: إجراءات، صلاحيات، بيانات، تكاملات، ودعم ما بعد البيع — بنتائج قابلة للقياس.
-      </p>
-
-      <div class="mt-8 flex flex-col sm:flex-row gap-3">
-        <a href="{{ route('website.contact') }}" class="inline-flex items-center justify-center px-7 py-3.5 rounded-2xl text-white font-extrabold btn-brand shadow-lg hover:shadow-xl transition">
-          احجز جلسة
-        </a>
-        <a href="{{ route('website.case-studies.index') }}" class="inline-flex items-center justify-center px-7 py-3.5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 font-bold text-gray-800 transition">
-          نماذج الأعمال
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-{{-- Solution tracks --}}
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-  <div class="text-center mb-14">
-    <h2 class="text-3xl sm:text-4xl font-black font-cairo text-gray-900">مسارات الحلول</h2>
-    <p class="mt-4 text-gray-600 max-w-2xl mx-auto leading-relaxed">
-      نبدأ من “الأساسيات” التي تثبّت التشغيل والبيانات، ثم نضيف طبقات التكامل والأتمتة والذكاء الاصطناعي حسب الأولويات.
-    </p>
-  </div>
-
-  @php
-    $tracks = [
-      ['title'=>'منظومة تشغيل (ERP/CRM)','desc'=>'مشاريع + مهام + فرق + اعتمادات + تقارير تشغيلية.'],
-      ['title'=>'مالية وتحصيل','desc'=>'فواتير + دفعات + أرصدة + تقارير + متابعة متأخرات.'],
-      ['title'=>'بوابة العميل','desc'=>'وصول آمن لعميلك لمتابعة المشاريع والفواتير والدعم.'],
-      ['title'=>'ما بعد البيع (Support + SLA)','desc'=>'تذاكر منظمة، تعيين للأقسام، تقارير حتى الإغلاق.'],
-      ['title'=>'حوكمة وصلاحيات','desc'=>'RBAC + Audit + سياسات وصول ومسارات قرار.'],
-      ['title'=>'AI داخل النظام','desc'=>'تصنيف + تلخيص + تنبؤ + تنبيهات استباقية.'],
-    ];
-  @endphp
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    @foreach($tracks as $t)
-      <div class="bg-white rounded-2xl border border-gray-200 p-7 hover:shadow-xl hover:border-gray-300 transition-all">
-        <div class="h-12 w-12 rounded-xl flex items-center justify-center mb-5" style="background: color-mix(in srgb, {{ $tc }} 12%, transparent)">
-          <div class="h-2.5 w-2.5 rounded-full" style="background: {{ $tc }}"></div>
+<div class="sv-os" dir="ltr">
+  <section class="sv-page-hero">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="sv-page-hero-inner">
+        <div class="sv-eyebrow sv-display mx-auto">
+          <span class="sv-eyebrow-dot"></span>
+          Enterprise B2B
         </div>
-        <h3 class="text-lg font-extrabold text-gray-900 mb-2">{{ $t['title'] }}</h3>
-        <p class="text-sm text-gray-600 leading-relaxed">{{ $t['desc'] }}</p>
-      </div>
-    @endforeach
-  </div>
-</section>
-
-{{-- Infrastructure blueprint --}}
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-    <div class="bg-white rounded-3xl border border-gray-200 p-8">
-      <h2 class="text-2xl font-black font-cairo text-gray-900 mb-3">كيف نبني البنية التحتية التكنولوجية؟</h2>
-      <p class="text-gray-600 leading-relaxed">
-        البنية ليست “سيرفر فقط”. هي مزيج من <span class="font-bold text-gray-900">الهوية والصلاحيات</span> + <span class="font-bold text-gray-900">نموذج بيانات</span> +
-        <span class="font-bold text-gray-900">تكاملات</span> + <span class="font-bold text-gray-900">تشغيل ومراقبة</span> + <span class="font-bold text-gray-900">حوكمة</span>.
-        هدفنا: نظام يعيش سنوات، يتوسع مع الشركة، ويعطي الإدارة رؤية تشغيلية دقيقة.
-      </p>
-
-      <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-        <div class="rounded-2xl border border-gray-200 p-5">
-          <div class="font-extrabold text-gray-900 mb-1">Identity &amp; Access</div>
-          <div class="text-gray-600">RBAC، صلاحيات دقيقة، سجل تدقيق (Audit).</div>
-        </div>
-        <div class="rounded-2xl border border-gray-200 p-5">
-          <div class="font-extrabold text-gray-900 mb-1">Data Model</div>
-          <div class="text-gray-600">تعريف “مصدر الحقيقة” للعميل/المشروع/الفاتورة/التذكرة.</div>
-        </div>
-        <div class="rounded-2xl border border-gray-200 p-5">
-          <div class="font-extrabold text-gray-900 mb-1">Integrations</div>
-          <div class="text-gray-600">APIs + Webhooks + ربط WhatsApp/Email/ERP/CRM.</div>
-        </div>
-        <div class="rounded-2xl border border-gray-200 p-5">
-          <div class="font-extrabold text-gray-900 mb-1">Operations</div>
-          <div class="text-gray-600">Monitoring، نسخ احتياطي، سياسات نشر وتحديث.</div>
+        <h1 class="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black sv-display text-gray-900 leading-tight">
+          Scalable Digital<br>
+          <span class="sv-neon-sweep">Enterprise Systems</span>
+        </h1>
+        <p class="mt-5 text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
+          At {{ $cn }} we don't sell a price package. We define a clear scope, then build an operating system: processes, permissions, data, integrations, and post-delivery support — with measurable outcomes.
+        </p>
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a href="{{ route('website.contact') }}" class="sv-btn sv-btn-primary w-full sm:w-auto">Book a Session</a>
+          <a href="{{ route('website.services') }}" class="sv-btn sv-btn-ghost w-full sm:w-auto">View Services</a>
         </div>
       </div>
     </div>
+  </section>
 
-    <div class="rounded-3xl border border-gray-200 bg-gray-50 p-8">
-      <h3 class="text-xl font-black font-cairo text-gray-900 mb-4">مخرجات واضحة (Deliverables) من أول أسبوع</h3>
-      <div class="space-y-3 text-sm text-gray-700 leading-relaxed">
-        <div class="flex items-start gap-2">
-          <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-          <div><span class="font-bold">خارطة نظم (System Map):</span> ما الذي نُبقيه؟ ما الذي ندمجه؟ وما الذي نبنيه؟</div>
-        </div>
-        <div class="flex items-start gap-2">
-          <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-          <div><span class="font-bold">نموذج بيانات مُبسّط:</span> تعريف الكيانات الأساسية وعلاقاتها (Client/Project/Invoice/Ticket).</div>
-        </div>
-        <div class="flex items-start gap-2">
-          <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-          <div><span class="font-bold">صلاحيات وسياسات:</span> من يرى ماذا؟ ومن يعتمد ماذا؟ مع مسارات قرار واقعية.</div>
-        </div>
-        <div class="flex items-start gap-2">
-          <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-          <div><span class="font-bold">لوحة KPIs أولية:</span> مؤشرات تشغيل/مالية/دعم لتبدأ القياس مبكرًا.</div>
-        </div>
-      </div>
+  <section class="sv-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-10">
+      <div class="sv-section-label sv-display">Solution Tracks</div>
+      <h2 class="sv-section-title sv-display">What We Build for Enterprises</h2>
+      <p class="sv-section-desc mx-auto mt-3">Start with foundations that stabilize operations and data, then add integration, automation, and AI by priority.</p>
     </div>
-  </div>
-</section>
-
-{{-- Delivery model --}}
-<section class="bg-gray-50 border-y border-gray-100">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-      <div class="bg-white rounded-3xl border border-gray-200 p-8">
-        <h2 class="text-2xl font-black font-cairo text-gray-900 mb-4">منهجية التنفيذ</h2>
-        <div class="space-y-3 text-sm text-gray-700 leading-relaxed">
-          <div class="flex items-start gap-2">
-            <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-            <div><span class="font-bold">اكتشاف وتشخيص:</span> مقابلات سريعة + تحليل الإجراءات + تحديد الاختناقات (وقت/تكلفة/مخاطر).</div>
-          </div>
-          <div class="flex items-start gap-2">
-            <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-            <div><span class="font-bold">تصميم معماري وتشغيلي:</span> Domain Model + RBAC + مواصفات تكامل + خطة بيانات (ترحيل/تنظيف).</div>
-          </div>
-          <div class="flex items-start gap-2">
-            <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-            <div><span class="font-bold">تنفيذ وإطلاق مرحلي:</span> MVP مُستخدم فعليًا ثم توسعة في دورات (Sprints) مع تدريب وقياس.</div>
-          </div>
-          <div class="flex items-start gap-2">
-            <span class="mt-1 h-2 w-2 rounded-full" style="background: {{ $tc }}"></span>
-            <div><span class="font-bold">تشغيل وتحسين:</span> Monitoring + SLA + تقارير دورية للإدارة + تحسينات على أساس البيانات.</div>
-          </div>
+    <div class="sv-services-grid">
+      @foreach($tracks as $i => $t)
+      <div class="sv-module-card">
+        <div class="sv-svc-icon {{ $i % 2 ? 'sv-svc-icon--orange' : '' }}">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         </div>
+        <h3 class="font-extrabold text-gray-900">{{ $t['title'] }}</h3>
+        <p class="mt-2 text-sm text-gray-600 leading-relaxed">{{ $t['desc'] }}</p>
       </div>
+      @endforeach
+    </div>
+  </section>
 
-      <div class="rounded-3xl border border-gray-200 bg-gray-950 p-8 text-white relative overflow-hidden">
-        <div class="absolute -top-16 right-0 h-56 w-56 rounded-full blur-3xl opacity-25" style="background: {{ $tc }}"></div>
-        <div class="relative">
-          <h2 class="text-2xl font-black font-cairo mb-4">نتعهد بالاستمرارية</h2>
-          <p class="text-gray-200 leading-relaxed">
-            دعم ما بعد البيع ليس “إضافة” — هو جزء من البناء. تذاكر منظمة، تعيين للأقسام، تقارير، ومؤشرات SLA.
+  <section class="sv-section sv-section--soft">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="sv-form-panel">
+          <div class="sv-section-label sv-display">Technology Foundation</div>
+          <h2 class="sv-section-title sv-display text-2xl">How We Build Infrastructure</h2>
+          <p class="mt-4 text-gray-600 leading-relaxed text-sm">
+            Infrastructure isn't "just a server." It's <strong class="text-gray-900">identity &amp; access</strong> + <strong class="text-gray-900">data model</strong> +
+            <strong class="text-gray-900">integrations</strong> + <strong class="text-gray-900">operations &amp; monitoring</strong> + <strong class="text-gray-900">governance</strong>.
+            A system that lasts years, scales with your company, and gives leadership accurate operational visibility.
           </p>
-          <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <div class="text-sm font-extrabold">SLA واضح</div>
-              <div class="mt-1 text-sm text-gray-300">وقت استجابة + تتبع حالة</div>
+          <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @foreach($infrastructure as $item)
+            <div class="sv-contact-field">
+              <div class="font-extrabold text-gray-900 text-sm">{{ $item['title'] }}</div>
+              <p class="mt-1 text-xs text-gray-600 leading-relaxed">{{ $item['desc'] }}</p>
             </div>
-            <div class="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <div class="text-sm font-extrabold">تقارير مهنية</div>
-              <div class="mt-1 text-sm text-gray-300">حتى إغلاق التذكرة</div>
-            </div>
+            @endforeach
           </div>
-          <div class="mt-8 flex flex-col sm:flex-row gap-3">
-            <a href="{{ route('website.contact') }}" class="inline-flex w-full justify-center px-6 py-3 rounded-2xl text-white font-extrabold btn-brand shadow-md hover:shadow-lg transition">
-              اطلب جلسة تعريف
-            </a>
-            <a href="{{ route('website.services') }}" class="inline-flex w-full justify-center px-6 py-3 rounded-2xl border border-white/20 bg-white/10 hover:bg-white/15 font-bold transition">
-              استعرض الخدمات
-            </a>
-          </div>
-          <p class="mt-4 text-xs text-gray-400">التنفيذ والتكلفة حسب نطاق شركتك واحتياجاتها.</p>
+        </div>
+        <div class="sv-contact-panel">
+          <h3 class="text-xl font-extrabold text-gray-900">Week-One Deliverables</h3>
+          <p class="mt-2 text-sm text-gray-600">Clear outputs from the first week of engagement.</p>
+          <ul class="mt-5 space-y-3 text-sm text-gray-700">
+            @foreach($deliverables as $d)
+            <li class="flex items-start gap-2">
+              <span class="mt-1.5 h-2 w-2 rounded-full shrink-0" style="background:var(--sv-orange)"></span>
+              <span><strong class="text-gray-900">{{ $d['bold'] }}:</strong> {{ $d['text'] }}</span>
+            </li>
+            @endforeach
+          </ul>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-{{-- Practical examples --}}
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-  <div class="text-center mb-14">
-    <h2 class="text-3xl sm:text-4xl font-black font-cairo text-gray-900">أمثلة عملية لحلول الشركات</h2>
-    <p class="mt-4 text-gray-600 max-w-2xl mx-auto leading-relaxed">أفكار جاهزة تُنفّذ كمنظومة—ليست “صفحات” فقط.</p>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    @php
-      $examples = [
-        ['t'=>'مسارات اعتمادات','d'=>'اعتماد مشتريات/مصروفات/تغييرات نطاق المشروع مع سجل قرار واضح.'],
-        ['t'=>'بوابة عميل B2B','d'=>'متابعة التقدم + التقارير + الفواتير + فتح تذكرة خلال ثوانٍ مع SLA.'],
-        ['t'=>'إغلاق الفجوة بين التشغيل والمالية','d'=>'ربط المشروع بالمصروفات والتحصيل لقراءة الربحية لحظيًا.'],
-        ['t'=>'تكاملات تنبيهات حرجة','d'=>'WhatsApp/Email للإنذارات والاعتمادات وتحديثات الحالة.'],
-        ['t'=>'حوكمة وأمان','d'=>'RBAC، Audit، سياسات وصول حسب القسم/المشروع، مع تقارير امتثال.'],
-        ['t'=>'AI للقرارات السريعة','d'=>'تلخيص تحديثات الفريق، تصنيف التذاكر، تنبيه استباقي للتأخير.'],
-      ];
-    @endphp
-
-    @foreach($examples as $e)
-      <div class="bg-white rounded-2xl border border-gray-200 p-7 hover:shadow-xl hover:border-gray-300 transition-all">
-        <div class="text-lg font-extrabold text-gray-900 mb-2">{{ $e['t'] }}</div>
-        <div class="text-sm text-gray-600 leading-relaxed">{{ $e['d'] }}</div>
+  <section class="sv-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="sv-form-panel">
+        <div class="sv-section-label sv-display">Delivery Model</div>
+        <h2 class="sv-section-title sv-display text-2xl">How We Execute</h2>
+        <ul class="mt-5 space-y-3 text-sm text-gray-700">
+          @foreach($methodology as $m)
+          <li class="flex items-start gap-2">
+            <span class="mt-1.5 h-2 w-2 rounded-full shrink-0" style="background:var(--sv-blue)"></span>
+            <span><strong class="text-gray-900">{{ $m['bold'] }}</strong> {{ $m['text'] }}</span>
+          </li>
+          @endforeach
+        </ul>
       </div>
-    @endforeach
-  </div>
-</section>
+      <div class="sv-panel-dark flex flex-col justify-between">
+        <div>
+          <h2 class="text-2xl font-black sv-display">We Commit to Continuity</h2>
+          <p class="mt-3 text-blue-100 text-sm leading-relaxed">
+            Post-delivery support isn't an add-on — it's part of the build. Structured tickets, department assignment, reporting, and SLA metrics.
+          </p>
+          <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="rounded-xl border border-white/15 bg-white/5 p-4">
+              <div class="text-sm font-extrabold">Clear SLA</div>
+              <div class="mt-1 text-xs text-blue-100">Response time + status tracking</div>
+            </div>
+            <div class="rounded-xl border border-white/15 bg-white/5 p-4">
+              <div class="text-sm font-extrabold">Professional Reports</div>
+              <div class="mt-1 text-xs text-blue-100">Through ticket closure</div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-8 flex flex-col sm:flex-row gap-3">
+          <a href="{{ route('website.contact') }}" class="sv-btn sv-btn-primary w-full sm:w-auto" style="background:#fff;color:var(--sv-blue)">Book Intro Session</a>
+          <a href="{{ route('website.services') }}" class="sv-btn sv-btn-ghost w-full sm:w-auto text-white border-white/40 hover:bg-white/15 hover:text-white">Services</a>
+        </div>
+        <p class="mt-4 text-xs text-blue-200/80">Scope and cost depend on your company size and needs.</p>
+      </div>
+    </div>
+  </section>
 
-{{-- Quick guidance cards --}}
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-white rounded-2xl border border-gray-200 p-7">
-      <div class="text-sm font-extrabold text-gray-900 mb-2">مناسب لـ</div>
-      <div class="text-sm text-gray-600 leading-relaxed">الشركات التي تريد تحويل التشغيل إلى منظومة قابلة للقياس: مشاريع + مالية + دعم + حوكمة.</div>
+  <section class="sv-section sv-section--soft">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-10">
+        <div class="sv-section-label sv-display">Use Cases</div>
+        <h2 class="sv-section-title sv-display">Practical Enterprise Solutions</h2>
+        <p class="sv-section-desc mx-auto mt-3">Ready-to-implement systems — not pages alone.</p>
+      </div>
+      <div class="sv-services-grid">
+        @foreach($examples as $e)
+        <div class="sv-svc-card">
+          <h3 class="font-extrabold text-gray-900">{{ $e['t'] }}</h3>
+          <p class="mt-2 text-sm text-gray-600 leading-relaxed">{{ $e['d'] }}</p>
+        </div>
+        @endforeach
+      </div>
     </div>
-    <div class="bg-white rounded-2xl border border-gray-200 p-7">
-      <div class="text-sm font-extrabold text-gray-900 mb-2">النتيجة</div>
-      <div class="text-sm text-gray-600 leading-relaxed">رؤية للإدارة، مسارات قرار واضحة، وتقليل العمل اليدوي مع تكاملات وتنبيهات.</div>
+  </section>
+
+  <section class="sv-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="sv-pillar text-left">
+        <div class="text-sm font-extrabold text-gray-900 mb-2">Best for</div>
+        <p class="text-sm text-gray-600 leading-relaxed">Companies turning operations into a measurable system: projects, finance, support, and governance.</p>
+      </div>
+      <div class="sv-pillar text-left">
+        <div class="text-sm font-extrabold text-gray-900 mb-2">Outcome</div>
+        <p class="text-sm text-gray-600 leading-relaxed">Leadership visibility, clear decision paths, less manual work with integrations and alerts.</p>
+      </div>
+      <div class="sv-pillar text-left">
+        <div class="text-sm font-extrabold text-gray-900 mb-2">Next step</div>
+        <p class="text-sm text-gray-600 leading-relaxed">Intro session + scope definition + phased roadmap with clear deliverables per stage.</p>
+      </div>
     </div>
-    <div class="bg-white rounded-2xl border border-gray-200 p-7">
-      <div class="text-sm font-extrabold text-gray-900 mb-2">الخطوة التالية</div>
-      <div class="text-sm text-gray-600 leading-relaxed">جلسة تعريف + تحديد نطاق + خارطة طريق تنفيذ مرحلي بمخرجات واضحة لكل مرحلة.</div>
+  </section>
+
+  <section class="sv-cta-compact">
+    <div class="max-w-3xl mx-auto text-center px-4 text-white">
+      <h2 class="text-2xl sm:text-3xl font-black sv-display">Ready to Scope Your Enterprise Build?</h2>
+      <p class="mt-4 text-blue-100 leading-relaxed">Let's map phase one with measurable deliverables.</p>
+      <a href="{{ route('website.contact') }}" class="sv-btn sv-btn-primary mt-8 w-full sm:w-auto" style="background:#fff;color:var(--sv-blue)">Contact Us</a>
     </div>
-  </div>
-</section>
+  </section>
+</div>
 @endsection
-
