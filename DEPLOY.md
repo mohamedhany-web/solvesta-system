@@ -45,9 +45,12 @@ php artisan view:clear
 تأكد من رفع:
 
 - `public/css/cinematic-home.css`
-- `public/css/client-login.css`
+- `public/css/client-login.css` (مطلوب على القرص — يُدمج داخل HTML)
 - `public/js/cinematic-home.js`
-- `public/js/client-login.js`
+- `public/js/client-login.js` (مطلوب على القرص — يُدمج داخل HTML)
+- `resources/views/client-auth/login.blade.php`
+- `resources/views/client-auth/partials/client-login-inline-css.blade.php`
+- `resources/views/client-auth/partials/client-login-inline-js.blade.php`
 - `public/index.php`
 - `public/.htaccess`
 

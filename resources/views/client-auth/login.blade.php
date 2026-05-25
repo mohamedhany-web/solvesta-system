@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/client-login.css') }}?v=2">
+    @include('client-auth.partials.client-login-inline-css')
 </head>
 <body class="sv-client-login-page">
     <div class="sv-client-bg" aria-hidden="true">
@@ -136,6 +136,6 @@
         </section>
     </div>
 
-    <script src="{{ asset('js/client-login.js') }}?v=2" defer></script>
+    @include('client-auth.partials.client-login-inline-js')
 </body>
 </html>
