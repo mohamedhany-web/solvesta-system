@@ -19,6 +19,13 @@ class BlockSuspiciousActivity
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
+    /** حقول نصية طويلة — لا تُفحص بأنماط SQL/XSS (تسبب حظراً خاطئاً لتذاكر الدعم) */
+    protected array $safeTextFieldKeys = [
+        'description', 'subject', 'message', 'body', 'content', 'notes',
+        'comment', 'details', 'summary', 'problem_description', 'steps',
+        'expected_result', 'actual_result',
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
         $ip = $request->ip();
@@ -28,11 +35,15 @@ class BlockSuspiciousActivity
         if ($this->isIpBlocked($ip)) {
             Log::warning('Blocked IP attempted access', [
                 'ip' => $ip,
-                'route' => $request->route()->getName(),
+                'route' => $request->route()?->getName(),
                 'url' => $request->fullUrl(),
             ]);
 
             abort(429, 'تم حظر عنوان IP الخاص بك مؤقتاً. يرجى المحاولة لاحقاً.');
+        }
+
+        if ($this->shouldSkipSecurityScan($request)) {
+            return $next($request);
         }
 
         // Detect suspicious patterns
@@ -93,6 +104,36 @@ class BlockSuspiciousActivity
     }
 
     /**
+     * عملاء/موظفون مسجّلون — نماذج شرعية (تذاكر، ملاحظات) لا تُعامل كهجمات.
+     */
+    protected function shouldSkipSecurityScan(Request $request): bool
+    {
+        if ($request->user('client') && $request->routeIs('client.*')) {
+            return true;
+        }
+
+        if ($request->user() && in_array($request->method(), ['POST', 'PUT', 'PATCH'], true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Inputs to scan (excludes long free-text fields).
+     */
+    protected function inputsForSecurityScan(Request $request): array
+    {
+        $inputs = $request->all();
+
+        foreach ($this->safeTextFieldKeys as $key) {
+            unset($inputs[$key]);
+        }
+
+        return $inputs;
+    }
+
+    /**
      * Check if IP is blocked.
      */
     protected function isIpBlocked(string $ip): bool
@@ -122,7 +163,7 @@ class BlockSuspiciousActivity
     protected function detectSuspiciousActivity(Request $request): void
     {
         $ip = $request->ip();
-        $route = $request->route()->getName();
+        $route = $request->route()?->getName();
 
         // Track failed authentication attempts
         if ($route === 'login' && $request->isMethod('post')) {
@@ -157,21 +198,11 @@ class BlockSuspiciousActivity
         ];
 
         $allInputs = array_merge(
-            $request->all(),
+            $this->inputsForSecurityScan($request),
             ['url' => $request->fullUrl()]
         );
 
-        foreach ($allInputs as $value) {
-            if (is_string($value)) {
-                foreach ($patterns as $pattern) {
-                    if (preg_match($pattern, $value)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        return $this->matchesAnyPattern($allInputs, $patterns);
     }
 
     /**
@@ -193,14 +224,21 @@ class BlockSuspiciousActivity
             '/data:text\/html/i',
         ];
 
-        $allInputs = $request->all();
+        return $this->matchesAnyPattern($this->inputsForSecurityScan($request), $patterns);
+    }
 
-        foreach ($allInputs as $value) {
-            if (is_string($value)) {
-                foreach ($patterns as $pattern) {
-                    if (preg_match($pattern, $value)) {
-                        return true;
-                    }
+    /**
+     * @param  array<int, string>  $patterns
+     */
+    protected function matchesAnyPattern(array $inputs, array $patterns): bool
+    {
+        foreach ($inputs as $value) {
+            if (! is_string($value)) {
+                continue;
+            }
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, $value)) {
+                    return true;
                 }
             }
         }
@@ -244,21 +282,11 @@ class BlockSuspiciousActivity
         ];
 
         $allInputs = array_merge(
-            $request->all(),
+            $this->inputsForSecurityScan($request),
             ['url' => $request->fullUrl(), 'path' => $request->path()]
         );
 
-        foreach ($allInputs as $value) {
-            if (is_string($value)) {
-                foreach ($patterns as $pattern) {
-                    if (preg_match($pattern, $value)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        return $this->matchesAnyPattern($allInputs, $patterns);
     }
 
     /**
@@ -280,19 +308,7 @@ class BlockSuspiciousActivity
             '/popen\s*\(/i',
         ];
 
-        $allInputs = $request->all();
-
-        foreach ($allInputs as $value) {
-            if (is_string($value)) {
-                foreach ($patterns as $pattern) {
-                    if (preg_match($pattern, $value)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        return $this->matchesAnyPattern($this->inputsForSecurityScan($request), $patterns);
     }
 
     /**

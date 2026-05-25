@@ -28,5 +28,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'انتهت صلاحية الصفحة. حدّث الصفحة وحاول مرة أخرى.'], 419);
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'انتهت صلاحية الصفحة (جلسة منتهية). حدّث الصفحة ثم أعد الإرسال.');
+        });
     })->create();

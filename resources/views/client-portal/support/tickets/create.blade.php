@@ -57,10 +57,25 @@
             </div>
 
             <div class="flex items-center justify-end gap-3">
-                <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-semibold">إرسال</button>
+                <button type="submit" id="ticketSubmitBtn" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed">إرسال</button>
             </div>
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+(function () {
+    const form = document.querySelector('form[action*="tickets"]');
+    const btn = document.getElementById('ticketSubmitBtn');
+    if (!form || !btn) return;
+    form.addEventListener('submit', function () {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.textContent = 'جاري الإرسال…';
+    });
+})();
+</script>
+@endpush
 @endsection
 
