@@ -7,7 +7,9 @@ use App\Models\Invoice;
 use App\Models\Client;
 use App\Models\Project;
 use Carbon\Carbon;
+use App\Models\Wallet;
 use App\Services\Accounting\AccountingPostingService;
+use App\Services\WalletService;
 use Illuminate\Support\Facades\DB;
 
 class InvoiceController extends Controller
@@ -181,9 +183,65 @@ class InvoiceController extends Controller
      */
     public function show(Invoice $invoice)
     {
-        $invoice->load(['client', 'project', 'contract', 'sale']);
-        
-        return view('invoices.show', compact('invoice'));
+        $invoice->load([
+            'client',
+            'project',
+            'contract',
+            'sale',
+            'payments.wallet',
+            'walletTransactions.wallet',
+        ]);
+
+        $wallets = Wallet::where('is_active', true)->orderBy('name')->get();
+
+        return view('invoices.show', compact('invoice', 'wallets'));
+    }
+
+    public function print(Invoice $invoice)
+    {
+        $invoice->load(['client', 'project', 'contract', 'payments.wallet']);
+
+        return view('invoices.print', [
+            'invoice' => $invoice,
+            'backUrl' => route('invoices.show', $invoice),
+        ]);
+    }
+
+    public function recordPayment(Request $request, Invoice $invoice, WalletService $walletService)
+    {
+        if (in_array($invoice->status, ['paid', 'cancelled'], true) || $invoice->balance_due <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن تسجيل دفعة على فاتورة مدفوعة أو ملغاة',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'wallet_id' => 'required|exists:wallets,id',
+            'amount' => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+            'payment_method' => 'required|in:cash,bank_transfer,check,credit_card,online',
+            'reference_number' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $payment = $walletService->recordProjectInvoicePayment($invoice, $validated);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        $invoice->refresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تسجيل الدفعة بنجاح',
+            'payment_id' => $payment->id,
+            'invoice_status' => $invoice->status,
+            'balance_due' => $invoice->balance_due,
+            'paid_amount' => $invoice->paid_amount,
+        ]);
     }
 
     /**

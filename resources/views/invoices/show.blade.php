@@ -16,17 +16,16 @@
                     <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                     العودة
                 </a>
-                @if(request()->routeIs('financial-invoices.*') && !in_array($invoice->status, ['paid', 'cancelled']) && ($invoice->balance_due ?? 0) > 0)
+                @php
+                    $canPay = !in_array($invoice->status, ['paid', 'cancelled']) && ($invoice->balance_due ?? 0) > 0;
+                @endphp
+                @if($canPay && (request()->routeIs('financial-invoices.*') || request()->routeIs('invoices.*')))
                 <button type="button" onclick="openPaymentModal()" class="bg-green-600 text-white px-5 py-2.5 rounded-lg hover:bg-green-700 text-sm font-semibold inline-flex items-center">
                     تسجيل دفعة
                 </button>
-                @elseif($invoice->status !== 'paid' && !request()->routeIs('financial-invoices.*'))
-                <button type="button" onclick="markAsPaid({{ $invoice->id }}, 'invoices')" class="bg-green-600 text-white px-5 py-2.5 rounded-lg hover:bg-green-700 text-sm font-semibold">
-                    تحديد كمدفوع
-                </button>
                 @endif
-                <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.print', $invoice) : '#' }}"
-                   @if(request()->routeIs('financial-invoices.*')) target="_blank" @else onclick="printInvoice(); return false;" @endif
+                <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.print', $invoice) : route('invoices.print', $invoice) }}"
+                   target="_blank"
                    class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 text-sm font-semibold inline-flex items-center">
                     <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     طباعة / PDF
@@ -38,7 +37,7 @@
     @include('invoices._document', ['invoice' => $invoice])
 </div>
 
-@if(request()->routeIs('financial-invoices.*'))
+@if(request()->routeIs('financial-invoices.*') || request()->routeIs('invoices.*'))
 @php
     $paid = (float) ($invoice->paid_amount ?? 0);
     $due = (float) ($invoice->balance_due ?? 0);
@@ -104,33 +103,6 @@ document.addEventListener('DOMContentLoaded', () => showNotification(@json(sessi
 @endif
 
 <script class="no-print">
-function printInvoice() {
-    window.open('{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.print', $invoice) : '#' }}', '_blank');
-}
-
-function markAsPaid(invoiceId, basePath) {
-    basePath = basePath || 'invoices';
-    if (!confirm('هل أنت متأكد من تحديد هذه الفاتورة كمدفوعة؟')) return;
-    fetch(`/${basePath}/${invoiceId}/mark-as-paid`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-    })
-    .then(r => r.headers.get('content-type')?.includes('json') ? r.json() : { success: true })
-    .then(data => {
-        if (data.success) {
-            showNotification('تم تحديث حالة الفاتورة', 'success');
-            setTimeout(() => window.location.reload(), 800);
-        } else {
-            showNotification(data.message || 'حدث خطأ', 'error');
-        }
-    })
-    .catch(() => showNotification('حدث خطأ في الاتصال', 'error'));
-}
-
 function showNotification(message, type) {
     const el = document.createElement('div');
     el.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg text-white font-medium ' + (type === 'success' ? 'bg-green-600' : 'bg-red-600');

@@ -11,6 +11,7 @@ class Payment extends Model
         'payment_number',
         'payment_type',
         'invoice_id',
+        'project_invoice_id',
         'employee_id',
         'client_id',
         'payment_date',
@@ -32,8 +33,12 @@ class Payment extends Model
 
     public function invoice(): BelongsTo
     {
-        // Use FinancialInvoice since migration points to financial_invoices table
-        return $this->belongsTo(\App\Models\FinancialInvoice::class, 'invoice_id');
+        return $this->belongsTo(FinancialInvoice::class, 'invoice_id');
+    }
+
+    public function projectInvoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class, 'project_invoice_id');
     }
 
     public function employee(): BelongsTo

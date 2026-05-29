@@ -216,11 +216,13 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center gap-2">
+                                @php
+                                    $invBalance = (float) ($invoice->balance_due ?? $invoice->balance_amount ?? 0);
+                                    $invCanPay = !in_array($invoice->status, ['paid', 'cancelled']) && $invBalance > 0;
+                                @endphp
                                 <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.show', $invoice) : route('invoices.show', $invoice) }}" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded-lg hover:bg-blue-100 transition-colors duration-200">عرض</a>
-                                @if(request()->routeIs('financial-invoices.*') && !in_array($invoice->status, ['paid', 'cancelled']) && ($invoice->balance_due ?? 0) > 0)
-                                <a href="{{ route('financial-invoices.show', $invoice) }}?pay=1" class="text-green-600 hover:text-green-800 bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 font-semibold">دفعة</a>
-                                @elseif($invoice->status !== 'paid')
-                                <button onclick="markAsPaid({{ $invoice->id }})" class="text-green-600 hover:text-green-800 bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 transition-colors duration-200">تحديد كمدفوع</button>
+                                @if($invCanPay)
+                                <a href="{{ (request()->routeIs('financial-invoices.*') ? route('financial-invoices.show', $invoice) : route('invoices.show', $invoice)) }}?pay=1" class="text-green-600 hover:text-green-800 bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 font-semibold">دفعة</a>
                                 @endif
                                 @if($invoice->status === 'draft')
                                 <button onclick="deleteInvoice({{ $invoice->id }})" class="text-red-600 hover:text-red-800 bg-red-50 px-3 py-1 rounded-lg hover:bg-red-100 transition-colors duration-200">حذف</button>

@@ -13,7 +13,7 @@
 
     $paid = (float) ($invoice->paid_amount ?? 0);
     $total = (float) ($invoice->total_amount ?? 0);
-    $balanceDue = (float) ($invoice->balance_due ?? max(0, $total - $paid));
+    $balanceDue = (float) ($invoice->balance_due ?? $invoice->balance_amount ?? max(0, $total - $paid));
 
     $statusLabel = match ($invoice->status) {
         'draft' => 'مسودة', 'sent' => 'مرسلة', 'viewed' => 'مشاهدة', 'paid' => 'مدفوعة',

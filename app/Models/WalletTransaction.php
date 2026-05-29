@@ -18,6 +18,7 @@ class WalletTransaction extends Model
         'source_type',
         'source_id',
         'financial_invoice_id',
+        'project_invoice_id',
         'payment_id',
         'description',
         'transaction_date',
@@ -38,6 +39,11 @@ class WalletTransaction extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(FinancialInvoice::class, 'financial_invoice_id');
+    }
+
+    public function projectInvoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class, 'project_invoice_id');
     }
 
     public function payment(): BelongsTo

@@ -1,12 +1,14 @@
 @php
     $balanceDue = (float) ($invoice->balance_due ?? max(0, ($invoice->total_amount ?? 0) - ($invoice->paid_amount ?? 0)));
     $isFinancial = request()->routeIs('financial-invoices.*');
+    $isProject = request()->routeIs('invoices.*');
+    $canPay = ($isFinancial || $isProject) && $balanceDue > 0;
     $paymentUrl = $isFinancial
         ? route('financial-invoices.payments.store', $invoice)
-        : null;
+        : ($isProject ? route('invoices.payments.store', $invoice) : null);
 @endphp
 
-@if($isFinancial && $balanceDue > 0 && ($wallets ?? collect())->isNotEmpty())
+@if($canPay && ($wallets ?? collect())->isNotEmpty())
 <div id="paymentModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div class="px-6 py-4 border-b flex items-center justify-between">
@@ -115,7 +117,7 @@ document.getElementById('invoicePaymentForm')?.addEventListener('submit', functi
 document.addEventListener('DOMContentLoaded', openPaymentModal);
 @endif
 </script>
-@elseif($isFinancial && ($wallets ?? collect())->isEmpty())
+@elseif($canPay && ($wallets ?? collect())->isEmpty())
 <p class="no-print text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
     لا توجد محافظ مالية. <a href="{{ route('accounting.wallets.index') }}" class="font-bold underline">أنشئ محفظة</a> لتسجيل الدفعات.
 </p>

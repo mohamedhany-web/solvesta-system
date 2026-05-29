@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
@@ -79,6 +80,21 @@ class Invoice extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'project_invoice_id');
+    }
+
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class, 'project_invoice_id');
+    }
+
+    public function getBalanceDueAttribute(): float
+    {
+        return (float) ($this->balance_amount ?? max(0, (float) $this->total_amount - (float) $this->paid_amount));
     }
 
     // Scopes

@@ -512,6 +512,8 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('invoices/create', [InvoiceController::class, 'create'])->name('invoices.create')->middleware('permission:create-invoices');
     Route::post('invoices', [InvoiceController::class, 'store'])->name('invoices.store')->middleware('permission:create-invoices');
     Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show')->middleware('permission:view-invoices');
+    Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print')->middleware('permission:view-invoices');
+    Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments.store')->middleware('permission:edit-invoices');
     Route::get('invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit')->middleware('permission:edit-invoices');
     Route::put('invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update')->middleware('permission:edit-invoices');
     Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy')->middleware('permission:delete-invoices');

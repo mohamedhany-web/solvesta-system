@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\FinancialInvoice;
+use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
@@ -70,6 +71,74 @@ class WalletService
             } else {
                 $invoice->status = 'partial';
                 $invoice->payment_status = 'partial';
+            }
+
+            $invoice->save();
+
+            return $payment->load('wallet');
+        });
+    }
+
+    public function recordProjectInvoicePayment(Invoice $invoice, array $data): Payment
+    {
+        return DB::transaction(function () use ($invoice, $data) {
+            $wallet = Wallet::where('id', $data['wallet_id'])->where('is_active', true)->lockForUpdate()->firstOrFail();
+
+            $amount = round((float) $data['amount'], 2);
+            if ($amount <= 0) {
+                throw new \InvalidArgumentException('مبلغ الدفعة يجب أن يكون أكبر من صفر.');
+            }
+
+            $balanceDue = round((float) ($invoice->balance_amount ?? max(0, (float) $invoice->total_amount - (float) $invoice->paid_amount)), 2);
+            if ($amount > $balanceDue + 0.01) {
+                throw new \InvalidArgumentException('مبلغ الدفعة أكبر من المتبقي على الفاتورة.');
+            }
+
+            $payment = Payment::create([
+                'payment_number' => $this->generatePaymentNumber(),
+                'payment_type' => 'invoice',
+                'payment_date' => $data['payment_date'] ?? now()->toDateString(),
+                'amount' => $amount,
+                'payment_method' => $data['payment_method'] ?? 'cash',
+                'reference_number' => $data['reference_number'] ?? null,
+                'invoice_id' => null,
+                'project_invoice_id' => $invoice->id,
+                'client_id' => $invoice->client_id,
+                'wallet_id' => $wallet->id,
+                'description' => $data['description'] ?? ('تحصيل فاتورة مشروع '.$invoice->invoice_number),
+                'notes' => $data['notes'] ?? null,
+                'status' => 'completed',
+                'created_by' => auth()->id(),
+            ]);
+
+            $wallet->current_balance = round((float) $wallet->current_balance + $amount, 2);
+            $wallet->save();
+
+            WalletTransaction::create([
+                'wallet_id' => $wallet->id,
+                'direction' => 'in',
+                'amount' => $amount,
+                'balance_after' => $wallet->current_balance,
+                'reference' => $payment->payment_number,
+                'category' => 'invoice_payment',
+                'source_type' => Payment::class,
+                'source_id' => $payment->id,
+                'project_invoice_id' => $invoice->id,
+                'payment_id' => $payment->id,
+                'description' => $payment->description,
+                'transaction_date' => $payment->payment_date,
+                'created_by' => auth()->id(),
+            ]);
+
+            $invoice->paid_amount = round((float) $invoice->paid_amount + $amount, 2);
+            $invoice->balance_amount = round((float) $invoice->total_amount - (float) $invoice->paid_amount, 2);
+
+            if ($invoice->balance_amount <= 0.01) {
+                $invoice->balance_amount = 0;
+                $invoice->status = 'paid';
+                $invoice->paid_date = now();
+            } elseif ($invoice->status !== 'cancelled') {
+                $invoice->status = 'partial';
             }
 
             $invoice->save();
