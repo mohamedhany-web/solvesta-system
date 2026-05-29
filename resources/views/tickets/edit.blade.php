@@ -54,6 +54,15 @@
                     </div>
 
                     <div>
+                        <label for="project_id" class="block text-sm font-medium text-gray-700 mb-2">المشروع</label>
+                        <select name="project_id" id="project_id"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 @error('project_id') border-red-500 @enderror">
+                            <option value="">— بدون مشروع / عام —</option>
+                        </select>
+                        @error('project_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
                         <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-2">المكلف</label>
                         <select name="assigned_to" id="assigned_to"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
@@ -115,5 +124,6 @@
         </form>
     </div>
 </div>
+@include('tickets._project-select-script', ['projects' => $projects, 'selectedProjectId' => old('project_id', $ticket->project_id)])
 @endsection
 

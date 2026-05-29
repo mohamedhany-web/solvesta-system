@@ -14,6 +14,8 @@ class FinancialInvoice extends Model
         'invoice_number',
         'invoice_type',
         'client_id',
+        'contract_id',
+        'client_service_id',
         'project_id',
         'invoice_date',
         'due_date',
@@ -63,6 +65,16 @@ class FinancialInvoice extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function contract(): BelongsTo
+    {
+        return $this->belongsTo(Contract::class);
+    }
+
+    public function clientService(): BelongsTo
+    {
+        return $this->belongsTo(ClientService::class);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -71,6 +83,11 @@ class FinancialInvoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'invoice_id');
+    }
+
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class, 'financial_invoice_id');
     }
 
     public function createdBy(): BelongsTo

@@ -41,6 +41,14 @@
                     <span class="text-sm text-gray-900">{{ $ticket->client->name ?? 'غير محدد' }}</span>
                 </div>
                 <div class="flex justify-between py-2">
+                    <span class="text-sm font-medium text-gray-500">المشروع</span>
+                    @if($ticket->project)
+                        <a href="{{ route('projects.show', $ticket->project) }}" class="text-sm text-blue-600 font-semibold hover:underline">{{ $ticket->project->name }}</a>
+                    @else
+                        <span class="text-sm text-gray-500">غير مرتبط بمشروع</span>
+                    @endif
+                </div>
+                <div class="flex justify-between py-2">
                     <span class="text-sm font-medium text-gray-500">الحالة</span>
                     <span class="text-sm text-gray-900">{{ $ticket->status_name }}</span>
                 </div>

@@ -19,6 +19,11 @@
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">لوحة التحكم المالية</h1>
                 <p class="text-gray-600">نظرة شاملة على الوضع المالي للشركة - {{ \Carbon\Carbon::now()->locale('ar')->translatedFormat('F Y') }}</p>
+                @if($hasLedger ?? false)
+                    <p class="text-xs text-green-700 mt-1 font-semibold">الأرقام محسوبة من القيود المحاسبية المعتمدة/المرحّلة</p>
+                @else
+                    <p class="text-xs text-amber-700 mt-1 font-semibold">لا توجد قيود بعد — تُعرض بيانات الفواتير والمصروفات والمدفوعات الفعلية</p>
+                @endif
             </div>
             <div class="flex items-center gap-3">
                 <a href="{{ route('accounting.reports.index') }}" class="bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all duration-200 flex items-center shadow-sm">
@@ -105,8 +110,8 @@
                         </div>
                         <p class="text-sm font-semibold text-blue-900">التدفق النقدي</p>
                     </div>
-                    <p class="text-2xl font-bold text-blue-900 mb-1">{{ number_format($totalAssets - $totalLiabilities) }}</p>
-                    <p class="text-xs font-medium text-blue-700">الرصيد المتاح - ج.م</p>
+                    <p class="text-2xl font-bold text-blue-900 mb-1">{{ number_format($cashBalance ?? 0) }}</p>
+                    <p class="text-xs font-medium text-blue-700">نقدية وبنوك (من القيود) - ج.م</p>
                 </div>
             </div>
         </div>
@@ -173,11 +178,31 @@
                 </div>
                 <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
                     <span class="text-sm font-semibold text-blue-900">صافي أداء الشهر</span>
-                    <span class="text-lg font-bold {{ ($monthlyRevenue - $monthlyExpenses) >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                        {{ number_format($monthlyRevenue - $monthlyExpenses) }} ج.م
+                    <span class="text-lg font-bold {{ ($monthlyNet ?? ($monthlyRevenue - $monthlyExpenses)) >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                        {{ number_format($monthlyNet ?? ($monthlyRevenue - $monthlyExpenses)) }} ج.م
                     </span>
                 </div>
             </div>
+            @if(isset($monthlyTrend) && $monthlyTrend->isNotEmpty())
+            <div class="mt-6 pt-4 border-t border-gray-200">
+                <p class="text-sm font-bold text-gray-800 mb-3">اتجاه آخر 6 أشهر (إيرادات vs مصروفات)</p>
+                <div class="space-y-2">
+                    @foreach($monthlyTrend as $row)
+                    @php $max = max($row['revenue'], $row['expenses'], 1); @endphp
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>{{ $row['label'] }}</span>
+                            <span>{{ number_format($row['revenue'] - $row['expenses']) }} ج.م صافي</span>
+                        </div>
+                        <div class="flex h-2 rounded-full overflow-hidden bg-gray-100">
+                            <div class="bg-green-500" style="width: {{ ($row['revenue'] / $max) * 50 }}%"></div>
+                            <div class="bg-red-500" style="width: {{ ($row['expenses'] / $max) * 50 }}%"></div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
         </div>
 
         <!-- Pending Items -->
@@ -227,6 +252,28 @@
         </div>
     </div>
 
+    <!-- Real counters -->
+    @if(isset($stats))
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
+            <p class="text-2xl font-bold text-gray-900">{{ $stats['accounts_count'] }}</p>
+            <p class="text-xs text-gray-600 mt-1">حساب نشط</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
+            <p class="text-2xl font-bold text-gray-900">{{ $stats['journal_entries_count'] }}</p>
+            <p class="text-xs text-gray-600 mt-1">قيد محاسبي</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
+            <p class="text-2xl font-bold text-amber-600">{{ $stats['unpaid_invoices_count'] }}</p>
+            <p class="text-xs text-gray-600 mt-1">فاتورة غير مسددة</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
+            <p class="text-2xl font-bold text-red-600">{{ $stats['pending_payments_count'] }}</p>
+            <p class="text-xs text-gray-600 mt-1">دفعة معلقة</p>
+        </div>
+    </div>
+    @endif
+
     <!-- Quick Links -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Chart of Accounts -->
@@ -234,7 +281,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1">
                     <p class="text-sm font-bold text-white mb-2">دليل الحسابات</p>
-                    <p class="text-2xl font-bold text-white">إدارة</p>
+                    <p class="text-2xl font-bold text-white">{{ $stats['accounts_count'] ?? 0 }}</p>
                 </div>
                 <div class="p-3 bg-white bg-opacity-20 rounded-xl group-hover:bg-opacity-30 transition-all duration-200">
                     <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -249,7 +296,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1">
                     <p class="text-sm font-bold text-white mb-2">القيود المحاسبية</p>
-                    <p class="text-2xl font-bold text-white">عرض</p>
+                    <p class="text-2xl font-bold text-white">{{ $stats['journal_entries_count'] ?? 0 }}</p>
                 </div>
                 <div class="p-3 bg-white bg-opacity-20 rounded-xl group-hover:bg-opacity-30 transition-all duration-200">
                     <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

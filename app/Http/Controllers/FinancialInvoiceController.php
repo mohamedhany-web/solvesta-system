@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\FinancialInvoice as Invoice;
 use App\Models\Client;
 use App\Models\Project;
-use Carbon\Carbon;
+use App\Models\Wallet;
+use App\Services\WalletService;
+use Illuminate\Http\Request;
 
 class FinancialInvoiceController extends Controller
 {
@@ -18,13 +19,13 @@ class FinancialInvoiceController extends Controller
         // إحصائيات الفواتير
         $totalInvoices = Invoice::count();
         $paidInvoices = Invoice::where('status', 'paid')->count();
-        $pendingInvoices = Invoice::whereIn('status', ['sent', 'viewed', 'draft'])->count();
+        $pendingInvoices = Invoice::whereIn('status', ['sent', 'viewed', 'draft', 'partial'])->count();
         $overdueInvoices = Invoice::overdue()->count();
         
         // إجمالي الإيرادات
         $totalRevenue = Invoice::where('status', 'paid')->sum('total_amount');
         $monthlyRevenue = Invoice::currentMonth()->where('status', 'paid')->sum('total_amount');
-        $pendingAmount = Invoice::whereIn('status', ['sent', 'viewed'])->sum('balance_due');
+        $pendingAmount = Invoice::whereIn('status', ['sent', 'viewed', 'partial'])->sum('balance_due');
         
         // الفواتير
         $invoices = Invoice::with(['client', 'project', 'createdBy'])
@@ -100,7 +101,8 @@ class FinancialInvoiceController extends Controller
             'total_amount' => $totalAmount,
             'paid_amount' => 0,
             'balance_due' => $totalAmount,
-            'status' => 'draft',
+            'status' => 'sent',
+            'payment_status' => 'unpaid',
             'notes' => $validated['notes'],
             'created_by' => auth()->id(),
         ]);
@@ -127,9 +129,68 @@ class FinancialInvoiceController extends Controller
      */
     public function show(Invoice $financialInvoice)
     {
-        $financialInvoice->load(['client', 'project', 'createdBy', 'items']);
-        
-        return view('invoices.show', ['invoice' => $financialInvoice]);
+        $financialInvoice->load([
+            'client',
+            'project',
+            'createdBy',
+            'items',
+            'payments.wallet',
+            'walletTransactions.wallet',
+        ]);
+
+        $wallets = Wallet::where('is_active', true)->orderBy('name')->get();
+
+        return view('invoices.show', [
+            'invoice' => $financialInvoice,
+            'wallets' => $wallets,
+        ]);
+    }
+
+    public function print(Invoice $financialInvoice)
+    {
+        $financialInvoice->load(['client', 'project', 'items', 'payments.wallet']);
+
+        return view('invoices.print', [
+            'invoice' => $financialInvoice,
+            'backUrl' => route('financial-invoices.show', $financialInvoice),
+        ]);
+    }
+
+    public function recordPayment(Request $request, Invoice $financialInvoice, WalletService $walletService)
+    {
+        if (in_array($financialInvoice->status, ['paid', 'cancelled'], true) || (float) $financialInvoice->balance_due <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن تسجيل دفعة على فاتورة مدفوعة أو ملغاة',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'wallet_id' => 'required|exists:wallets,id',
+            'amount' => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+            'payment_method' => 'required|in:cash,bank_transfer,check,credit_card,online',
+            'reference_number' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $payment = $walletService->recordInvoicePayment($financialInvoice, $validated);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        $financialInvoice->refresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تسجيل الدفعة بنجاح',
+            'payment_id' => $payment->id,
+            'invoice_status' => $financialInvoice->status,
+            'balance_due' => $financialInvoice->balance_due,
+            'paid_amount' => $financialInvoice->paid_amount,
+        ]);
     }
 
     /**

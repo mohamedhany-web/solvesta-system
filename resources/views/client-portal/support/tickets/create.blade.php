@@ -25,6 +25,19 @@
                 @error('subject') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
+            @if($projects->isNotEmpty())
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">المشروع</label>
+                <select name="project_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 @error('project_id') border-red-500 @enderror">
+                    <option value="">— عام / غير مرتبط بمشروع —</option>
+                    @foreach($projects as $project)
+                        <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>{{ $project->name }}</option>
+                    @endforeach
+                </select>
+                @error('project_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">الفئة</label>

@@ -30,7 +30,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'asset',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'النقدية المتاحة في الخزينة',
-                'balance' => 50000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -39,7 +39,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'asset',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'الودائع البنكية والحسابات الجارية',
-                'balance' => 150000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -48,7 +48,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'asset',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'المبالغ المستحقة على العملاء',
-                'balance' => 75000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -57,7 +57,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'asset',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'البضائع والمخزون المتاح للبيع',
-                'balance' => 100000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -75,7 +75,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'asset',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'المعدات والآلات',
-                'balance' => 200000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -84,7 +84,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'asset',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'المباني والمكاتب',
-                'balance' => 500000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -93,7 +93,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'asset',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'المركبات والسيارات',
-                'balance' => 80000,
+                'balance' => 0,
                 'is_active' => true,
             ],
 
@@ -113,7 +113,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'liability',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'المبالغ المستحقة للموردين',
-                'balance' => 45000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -122,7 +122,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'liability',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'الرواتب والاستحقاقات المستحقة للموظفين',
-                'balance' => 25000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -131,7 +131,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'liability',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'الضرائب والرسوم المستحقة',
-                'balance' => 15000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -149,7 +149,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'liability',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'القروض البنكية طويلة الأجل',
-                'balance' => 300000,
+                'balance' => 0,
                 'is_active' => true,
             ],
 
@@ -169,7 +169,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'equity',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'رأس المال المدفوع',
-                'balance' => 500000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -178,7 +178,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'equity',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'الأرباح المحتجزة من السنوات السابقة',
-                'balance' => 85000,
+                'balance' => 0,
                 'is_active' => true,
             ],
 
@@ -198,7 +198,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'revenue',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'إيرادات مبيعات المنتجات والخدمات',
-                'balance' => 350000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -207,7 +207,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'revenue',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'إيرادات تقديم الخدمات',
-                'balance' => 120000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -216,7 +216,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'revenue',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'إيرادات أخرى متنوعة',
-                'balance' => 15000,
+                'balance' => 0,
                 'is_active' => true,
             ],
 
@@ -236,7 +236,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'expense',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'رواتب وأجور الموظفين',
-                'balance' => 180000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -245,7 +245,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'expense',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'إيجار المكاتب والمباني',
-                'balance' => 24000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -254,7 +254,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'expense',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'فواتير الكهرباء والمياه',
-                'balance' => 12000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -263,7 +263,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'expense',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'مصروفات التسويق والإعلان',
-                'balance' => 15000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -272,7 +272,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'expense',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'مصروفات النقل والشحن',
-                'balance' => 8000,
+                'balance' => 0,
                 'is_active' => true,
             ],
             [
@@ -281,7 +281,7 @@ class ChartOfAccountsSeeder extends Seeder
                 'type' => 'expense',
                 'parent_id' => null, // سيتم تحديثه لاحقاً
                 'description' => 'مصروفات أخرى متنوعة',
-                'balance' => 6000,
+                'balance' => 0,
                 'is_active' => true,
             ],
         ];

@@ -34,6 +34,7 @@
             <div class="bg-white rounded-xl border border-gray-200 p-6 text-sm">
                 <h3 class="font-bold text-gray-900 mb-3">معلومات</h3>
                 <dl class="space-y-2 text-gray-700">
+                    <div class="flex justify-between gap-2"><dt>المشروع</dt><dd class="font-medium">{{ $ticket->project?->name ?? '— عام —' }}</dd></div>
                     <div class="flex justify-between gap-2"><dt>التصنيف</dt><dd class="font-medium">{{ $ticket->category_name }}</dd></div>
                     <div class="flex justify-between gap-2"><dt>مسند إلى</dt><dd class="font-medium">{{ optional($ticket->assignedTo)->name ?? '—' }}</dd></div>
                     <div class="flex justify-between gap-2"><dt>تاريخ الإنشاء</dt><dd class="font-medium">{{ $ticket->created_at->format('Y/m/d H:i') }}</dd></div>

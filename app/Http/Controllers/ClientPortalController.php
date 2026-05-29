@@ -8,6 +8,7 @@ use App\Models\ClientNotification;
 use App\Models\ClientServiceReport;
 use App\Models\ClientSharedDocument;
 use App\Models\ClientWebsiteIssue;
+use App\Models\ClientService;
 use App\Models\FinancialInvoice;
 use App\Models\Invoice;
 use App\Models\Project;
@@ -174,6 +175,22 @@ class ClientPortalController extends Controller
         $financialInvoices = FinancialInvoice::where('client_id', $client->id)->orderBy('created_at', 'desc')->paginate(10, ['*'], 'fin_invoices_page');
 
         return view('client-portal.invoices', compact('client', 'invoices', 'financialInvoices'));
+    }
+
+    public function services(Request $request)
+    {
+        $account = $request->user('client');
+        $client = $account?->client;
+        if (! $client) {
+            abort(403, 'لا يوجد عميل مرتبط بهذا الحساب');
+        }
+
+        $services = ClientService::where('client_id', $client->id)
+            ->with(['contract', 'financialInvoices' => fn ($q) => $q->orderByDesc('invoice_date')->limit(6)])
+            ->orderByDesc('id')
+            ->get();
+
+        return view('client-portal.services', compact('client', 'services'));
     }
 
     public function serviceReports(Request $request)

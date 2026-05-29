@@ -97,6 +97,20 @@
                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            placeholder="رقم المرجع أو الشيك">
                 </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">المحفظة المستلمة <span class="text-gray-400 font-normal">(عند ربط فاتورة)</span></label>
+                    <select name="wallet_id" id="wallet_id"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">— اختر المحفظة —</option>
+                        @foreach($wallets as $wallet)
+                            <option value="{{ $wallet->id }}">{{ $wallet->name }} ({{ $wallet->type_name }}) — {{ number_format($wallet->current_balance, 2) }} ج.م</option>
+                        @endforeach
+                    </select>
+                    @if($wallets->isEmpty())
+                        <p class="mt-1 text-sm text-amber-600">أنشئ محفظة من <a href="{{ route('accounting.wallets.index') }}" class="underline font-semibold">المحافظ والمعاملات</a></p>
+                    @endif
+                </div>
             </div>
         </div>
 

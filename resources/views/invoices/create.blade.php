@@ -87,13 +87,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                     </div>
-                    بنود الفاتورة
+                    بنود الخدمات
                 </h3>
                 <button type="button" onclick="addInvoiceItem()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center text-sm">
                     <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    إضافة بند
+                    إضافة خدمة
                 </button>
             </div>
             
@@ -180,26 +180,20 @@ function addInvoiceItem() {
     const itemHtml = `
         <div class="invoice-item border border-gray-200 rounded-lg p-4 bg-gray-50" data-item="${itemCounter}">
             <div class="flex items-start gap-4">
-                <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">الوصف <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">وصف الخدمة <span class="text-red-500">*</span></label>
                         <input type="text" name="items[${itemCounter}][description]" required 
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                               placeholder="وصف البند">
+                               placeholder="مثال: تطوير واجهة المستخدم — مرحلة أولى">
                     </div>
-                    
+                    <input type="hidden" name="items[${itemCounter}][quantity]" value="1" class="item-quantity">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">الكمية <span class="text-red-500">*</span></label>
-                        <input type="number" name="items[${itemCounter}][quantity]" value="1" min="0" step="0.01" required 
-                               class="item-quantity w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                               onchange="calculateTotals()">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">السعر <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">المبلغ (ج.م) <span class="text-red-500">*</span></label>
                         <input type="number" name="items[${itemCounter}][unit_price]" value="0" min="0" step="0.01" required 
                                class="item-price w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                               onchange="calculateTotals()">
+                               onchange="calculateTotals()" oninput="calculateTotals()"
+                               placeholder="0.00">
                     </div>
                 </div>
                 
@@ -236,9 +230,8 @@ function calculateTotals() {
     
     // Calculate subtotal from all items
     document.querySelectorAll('.invoice-item').forEach(item => {
-        const quantity = parseFloat(item.querySelector('.item-quantity').value) || 0;
         const price = parseFloat(item.querySelector('.item-price').value) || 0;
-        subtotal += quantity * price;
+        subtotal += price;
     });
     
     // Get tax rate and discount

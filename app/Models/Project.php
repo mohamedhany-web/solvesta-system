@@ -101,6 +101,11 @@ class Project extends Model
         return $this->hasMany(Bug::class);
     }
 
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
     /**
      * Get team members users.
      */

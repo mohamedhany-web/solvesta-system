@@ -18,6 +18,7 @@ class Payment extends Model
         'payment_method',
         'reference_number',
         'bank_account_id',
+        'wallet_id',
         'description',
         'notes',
         'status',
@@ -48,6 +49,11 @@ class Payment extends Model
     public function bankAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'bank_account_id');
+    }
+
+    public function wallet(): BelongsTo
+    {
+        return $this->belongsTo(Wallet::class);
     }
 
     public function creator(): BelongsTo

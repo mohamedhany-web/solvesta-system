@@ -77,6 +77,10 @@
                 المشاريع
             </a>
             @if($cPortal && $cPortal->canAccessBilling())
+            <a href="{{ route('client.services') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.services') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
+                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                خدماتي واشتراكاتي
+            </a>
             <a href="{{ route('client.invoices') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.invoices') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
                 <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
                 الفواتير
@@ -187,6 +191,7 @@
             <a href="{{ route('client.notifications') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.notifications*') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">الإشعارات</a>
             <a href="{{ route('client.projects') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.projects') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">المشاريع</a>
             @if($cPortal && $cPortal->canAccessBilling())
+            <a href="{{ route('client.services') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.services') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">خدماتي واشتراكاتي</a>
             <a href="{{ route('client.invoices') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.invoices') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">الفواتير</a>
             @endif
             <a href="{{ route('client.service-reports') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.service-reports', 'client.service-reports.download') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">تقارير الخدمة</a>

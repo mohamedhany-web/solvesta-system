@@ -50,7 +50,7 @@
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-green-700 mb-1">الأصول</p>
-                    <p class="text-2xl font-bold text-green-900">{{ $accounts['asset']->count() ?? 0 }}</p>
+                    <p class="text-2xl font-bold text-green-900">{{ ($accounts['asset'] ?? collect())->count() }}</p>
                 </div>
             </div>
         </div>
@@ -64,7 +64,7 @@
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-orange-700 mb-1">الخصوم</p>
-                    <p class="text-2xl font-bold text-orange-900">{{ $accounts['liability']->count() ?? 0 }}</p>
+                    <p class="text-2xl font-bold text-orange-900">{{ ($accounts['liability'] ?? collect())->count() }}</p>
                 </div>
             </div>
         </div>
@@ -78,7 +78,7 @@
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-blue-700 mb-1">حقوق الملكية</p>
-                    <p class="text-2xl font-bold text-blue-900">{{ $accounts['equity']->count() ?? 0 }}</p>
+                    <p class="text-2xl font-bold text-blue-900">{{ ($accounts['equity'] ?? collect())->count() }}</p>
                 </div>
             </div>
         </div>
@@ -92,7 +92,7 @@
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-purple-700 mb-1">الإيرادات</p>
-                    <p class="text-2xl font-bold text-purple-900">{{ $accounts['revenue']->count() ?? 0 }}</p>
+                    <p class="text-2xl font-bold text-purple-900">{{ ($accounts['revenue'] ?? collect())->count() }}</p>
                 </div>
             </div>
         </div>
@@ -106,7 +106,7 @@
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-red-700 mb-1">المصروفات</p>
-                    <p class="text-2xl font-bold text-red-900">{{ $accounts['expense']->count() ?? 0 }}</p>
+                    <p class="text-2xl font-bold text-red-900">{{ ($accounts['expense'] ?? collect())->count() }}</p>
                 </div>
             </div>
         </div>
@@ -153,12 +153,12 @@
                 </h3>
                 <div class="flex items-center gap-2">
                     <span class="text-sm text-gray-600">عدد الحسابات:</span>
-                    <span class="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-900">{{ $accounts[$type]->count() ?? 0 }}</span>
+                    <span class="bg-white px-3 py-1 rounded-full text-sm font-bold text-gray-900">{{ ($accounts[$type] ?? collect())->count() }}</span>
                 </div>
             </div>
         </div>
         
-        @if(isset($accounts[$type]) && $accounts[$type]->count() > 0)
+        @if(($accounts[$type] ?? collect())->isNotEmpty())
         <div class="overflow-x-auto">
             <table class="w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-gray-50 to-gray-100">

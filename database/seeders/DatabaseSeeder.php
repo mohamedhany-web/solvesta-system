@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             UserEmployeeSeeder::class,
             ClientSeeder::class,
             ChartOfAccountsSeeder::class,
+            WalletSeeder::class,
             UserPermissionSeeder::class,
             SystemSettingsSeeder::class,
             ProjectSeeder::class,

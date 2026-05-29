@@ -25,9 +25,11 @@ use App\Http\Controllers\QAController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\DesignController;
 use App\Http\Controllers\AccountingController;
+use App\Http\Controllers\ClientServiceController;
 use App\Http\Controllers\JournalEntryController;
 use App\Http\Controllers\FinancialReportController;
 use App\Http\Controllers\FinancialInvoiceController;
+use App\Http\Controllers\WalletController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\SystemSettingsController;
@@ -426,6 +428,16 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::prefix('accounting')->name('accounting.')->middleware('permission:view-finance')->group(function () {
         // لوحة التحكم المالية
         Route::get('/', [AccountingController::class, 'index'])->name('index');
+        Route::get('/guide', [AccountingController::class, 'guide'])->name('guide');
+
+        Route::get('/client-services', [ClientServiceController::class, 'index'])->name('client-services.index');
+        Route::get('/client-services/create', [ClientServiceController::class, 'create'])->name('client-services.create')->middleware('permission:create-finance');
+        Route::post('/client-services', [ClientServiceController::class, 'store'])->name('client-services.store')->middleware('permission:create-finance');
+        Route::get('/client-services/{clientService}', [ClientServiceController::class, 'show'])->name('client-services.show');
+        Route::get('/client-services/{clientService}/edit', [ClientServiceController::class, 'edit'])->name('client-services.edit')->middleware('permission:edit-finance');
+        Route::put('/client-services/{clientService}', [ClientServiceController::class, 'update'])->name('client-services.update')->middleware('permission:edit-finance');
+        Route::delete('/client-services/{clientService}', [ClientServiceController::class, 'destroy'])->name('client-services.destroy')->middleware('permission:delete-finance');
+        Route::post('/client-services/{clientService}/generate-invoice', [ClientServiceController::class, 'generateInvoice'])->name('client-services.generate-invoice')->middleware('permission:edit-finance');
         
         // إدارة الحسابات
         Route::get('/accounts', [AccountingController::class, 'accounts'])->name('accounts');
@@ -435,6 +447,14 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
         Route::delete('/accounts/{account}', [AccountingController::class, 'deleteAccount'])->name('accounts.delete')->middleware('permission:edit-finance');
         
         // القيود المحاسبية
+        Route::get('/wallets', [WalletController::class, 'index'])->name('wallets.index');
+        Route::post('/wallets', [WalletController::class, 'store'])->name('wallets.store')->middleware('permission:edit-finance');
+        Route::get('/wallets/{wallet}/edit', [WalletController::class, 'edit'])->name('wallets.edit')->middleware('permission:edit-finance');
+        Route::put('/wallets/{wallet}', [WalletController::class, 'update'])->name('wallets.update')->middleware('permission:edit-finance');
+        Route::delete('/wallets/{wallet}', [WalletController::class, 'destroy'])->name('wallets.destroy')->middleware('permission:delete-finance');
+        Route::get('/wallets/{wallet}', [WalletController::class, 'show'])->name('wallets.show');
+        Route::post('/wallets/{wallet}/transactions', [WalletController::class, 'storeTransaction'])->name('wallets.transactions.store')->middleware('permission:edit-finance');
+
         Route::get('/journal-entries', [JournalEntryController::class, 'index'])->name('journal-entries');
         Route::get('/journal-entries/create', [JournalEntryController::class, 'create'])->name('journal-entries.create')->middleware('permission:edit-finance');
         Route::post('/journal-entries', [JournalEntryController::class, 'store'])->name('journal-entries.store')->middleware('permission:edit-finance');
@@ -460,10 +480,12 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('financial-invoices/create', [FinancialInvoiceController::class, 'create'])->name('financial-invoices.create')->middleware('permission:create-finance');
     Route::post('financial-invoices', [FinancialInvoiceController::class, 'store'])->name('financial-invoices.store')->middleware('permission:create-finance');
     Route::get('financial-invoices/{financialInvoice}', [FinancialInvoiceController::class, 'show'])->name('financial-invoices.show')->middleware('permission:view-finance');
+    Route::get('financial-invoices/{financialInvoice}/print', [FinancialInvoiceController::class, 'print'])->name('financial-invoices.print')->middleware('permission:view-finance');
     Route::get('financial-invoices/{financialInvoice}/edit', [FinancialInvoiceController::class, 'edit'])->name('financial-invoices.edit')->middleware('permission:edit-finance');
     Route::put('financial-invoices/{financialInvoice}', [FinancialInvoiceController::class, 'update'])->name('financial-invoices.update')->middleware('permission:edit-finance');
     Route::delete('financial-invoices/{financialInvoice}', [FinancialInvoiceController::class, 'destroy'])->name('financial-invoices.destroy')->middleware('permission:delete-finance');
     Route::post('financial-invoices/{invoice}/mark-as-sent', [FinancialInvoiceController::class, 'markAsSent'])->name('financial-invoices.mark-as-sent')->middleware('permission:edit-finance');
+    Route::post('financial-invoices/{financialInvoice}/payments', [FinancialInvoiceController::class, 'recordPayment'])->name('financial-invoices.payments.store')->middleware('permission:edit-finance');
     Route::post('financial-invoices/{invoice}/mark-as-paid', [FinancialInvoiceController::class, 'markAsPaid'])->name('financial-invoices.mark-as-paid')->middleware('permission:edit-finance');
     
     // Payments
@@ -598,6 +620,7 @@ Route::prefix('client')->name('client.')->middleware('auth:client')->group(funct
 
     Route::middleware('client.section:billing')->group(function () {
         Route::get('/invoices', [ClientPortalController::class, 'invoices'])->name('invoices');
+        Route::get('/services', [ClientPortalController::class, 'services'])->name('services');
     });
 
     Route::middleware('client.section:technical_requests')->group(function () {

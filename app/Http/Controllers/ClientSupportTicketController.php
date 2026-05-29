@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClientPortalFeedback;
+use App\Models\Project;
 use App\Models\Ticket;
 use App\Services\ClientPortalAdminAlertService;
 use Illuminate\Http\Request;
@@ -15,12 +16,20 @@ class ClientSupportTicketController extends Controller
         $client = $account?->client;
         if (!$client) abort(403, 'لا يوجد عميل مرتبط بهذا الحساب');
 
-        $tickets = Ticket::with(['assignedTo'])
+        $projects = Project::query()
             ->where('client_id', $client->id)
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->with(['tickets' => fn ($q) => $q->with('assignedTo')->orderByDesc('updated_at')])
+            ->whereHas('tickets', fn ($q) => $q->where('client_id', $client->id))
+            ->orderBy('name')
+            ->get();
 
-        return view('client-portal.support.tickets.index', compact('client', 'tickets'));
+        $unassignedTickets = Ticket::with('assignedTo')
+            ->where('client_id', $client->id)
+            ->whereNull('project_id')
+            ->orderByDesc('updated_at')
+            ->get();
+
+        return view('client-portal.support.tickets.index', compact('client', 'projects', 'unassignedTickets'));
     }
 
     public function create(Request $request)
@@ -29,7 +38,9 @@ class ClientSupportTicketController extends Controller
         $client = $account?->client;
         if (!$client) abort(403, 'لا يوجد عميل مرتبط بهذا الحساب');
 
-        return view('client-portal.support.tickets.create', compact('client'));
+        $projects = Project::where('client_id', $client->id)->orderBy('name')->get(['id', 'name']);
+
+        return view('client-portal.support.tickets.create', compact('client', 'projects'));
     }
 
     public function store(Request $request)
@@ -41,9 +52,19 @@ class ClientSupportTicketController extends Controller
         $validated = $request->validate([
             'subject' => 'required|string|max:255',
             'description' => 'required|string',
+            'project_id' => 'nullable|exists:projects,id',
             'priority' => 'required|in:low,medium,high,critical',
             'category' => 'required|in:technical,billing,general,bug_report,feature_request',
         ]);
+
+        if (! empty($validated['project_id'])) {
+            $ownsProject = Project::where('id', $validated['project_id'])
+                ->where('client_id', $client->id)
+                ->exists();
+            if (! $ownsProject) {
+                return back()->withErrors(['project_id' => 'المشروع المحدد غير صالح.'])->withInput();
+            }
+        }
 
         $validated['ticket_number'] = 'TKT-' . time();
         $validated['created_by'] = null;
@@ -63,7 +84,7 @@ class ClientSupportTicketController extends Controller
         if ((int) $ticket->client_id !== (int) $client->id) {
             abort(403);
         }
-        $ticket->load(['assignedTo']);
+        $ticket->load(['assignedTo', 'project']);
         $existingFeedback = ClientPortalFeedback::where('client_id', $client->id)
             ->where('feedbackable_type', Ticket::class)
             ->where('feedbackable_id', $ticket->id)

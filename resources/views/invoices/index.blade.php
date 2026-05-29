@@ -104,6 +104,7 @@
                     <option value="sent">مرسل</option>
                     <option value="viewed">تم المشاهدة</option>
                     <option value="paid">مدفوع</option>
+                    <option value="partial">مدفوع جزئياً</option>
                     <option value="overdue">متأخر</option>
                     <option value="cancelled">ملغي</option>
                 </select>
@@ -182,6 +183,7 @@
                             @php
                                 $statusColor = match($invoice->status) {
                                     'paid' => 'bg-green-100 text-green-800',
+                                    'partial' => 'bg-amber-100 text-amber-800',
                                     'sent' => 'bg-blue-100 text-blue-800',
                                     'viewed' => 'bg-yellow-100 text-yellow-800',
                                     'overdue' => 'bg-red-100 text-red-800',
@@ -193,6 +195,7 @@
                                     'sent' => 'مرسل',
                                     'viewed' => 'تم المشاهدة',
                                     'paid' => 'مدفوع',
+                                    'partial' => 'مدفوع جزئياً',
                                     'overdue' => 'متأخر',
                                     'cancelled' => 'ملغي',
                                     default => $invoice->status
@@ -214,7 +217,9 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center gap-2">
                                 <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.show', $invoice) : route('invoices.show', $invoice) }}" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded-lg hover:bg-blue-100 transition-colors duration-200">عرض</a>
-                                @if($invoice->status !== 'paid')
+                                @if(request()->routeIs('financial-invoices.*') && !in_array($invoice->status, ['paid', 'cancelled']) && ($invoice->balance_due ?? 0) > 0)
+                                <a href="{{ route('financial-invoices.show', $invoice) }}?pay=1" class="text-green-600 hover:text-green-800 bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 font-semibold">دفعة</a>
+                                @elseif($invoice->status !== 'paid')
                                 <button onclick="markAsPaid({{ $invoice->id }})" class="text-green-600 hover:text-green-800 bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 transition-colors duration-200">تحديد كمدفوع</button>
                                 @endif
                                 @if($invoice->status === 'draft')

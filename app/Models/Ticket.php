@@ -15,6 +15,7 @@ class Ticket extends Model
         'subject',
         'description',
         'client_id',
+        'project_id',
         'assigned_to',
         'created_by',
         'priority',
@@ -40,6 +41,11 @@ class Ticket extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     /**

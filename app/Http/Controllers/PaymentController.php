@@ -9,7 +9,9 @@ use App\Models\FinancialInvoice;
 use App\Models\Client;
 use App\Models\Employee;
 use Carbon\Carbon;
+use App\Models\Wallet;
 use App\Services\Accounting\AccountingPostingService;
+use App\Services\WalletService;
 
 class PaymentController extends Controller
 {
@@ -91,9 +93,10 @@ class PaymentController extends Controller
             ->where('is_active', true)
             ->orderBy('code')
             ->get();
+        $wallets = Wallet::where('is_active', true)->orderBy('name')->get();
         $paymentNumber = $this->generatePaymentNumber();
         
-        return view('payments.create', compact('clients', 'employees', 'invoices', 'accounts', 'paymentNumber'));
+        return view('payments.create', compact('clients', 'employees', 'invoices', 'accounts', 'wallets', 'paymentNumber'));
     }
 
     /**
@@ -122,6 +125,7 @@ class PaymentController extends Controller
                 'client_id' => 'nullable|exists:clients,id',
                 'employee_id' => 'nullable|exists:employees,id',
                 'bank_account_id' => 'nullable|exists:accounts,id',
+                'wallet_id' => 'nullable|exists:wallets,id',
                 'description' => 'required|string',
                 'notes' => 'nullable|string',
             ], [
@@ -162,6 +166,12 @@ class PaymentController extends Controller
             $employeeId = (!empty($validated['employee_id'])) ? (int)$validated['employee_id'] : null;
             $bankAccountId = (!empty($validated['bank_account_id'])) ? (int)$validated['bank_account_id'] : null;
             
+            if (! empty($validated['wallet_id']) && $invoiceId) {
+                $invoice = FinancialInvoice::findOrFail($invoiceId);
+                $payment = app(WalletService::class)->recordInvoicePayment($invoice, array_merge($validated, [
+                    'wallet_id' => (int) $validated['wallet_id'],
+                ]));
+            } else {
             $payment = Payment::create([
                 'payment_number' => $this->generatePaymentNumber(),
                 'payment_type' => $validated['payment_type'],
@@ -173,13 +183,13 @@ class PaymentController extends Controller
                 'client_id' => $clientId,
                 'employee_id' => $employeeId,
                 'bank_account_id' => $bankAccountId,
+                'wallet_id' => ! empty($validated['wallet_id']) ? (int) $validated['wallet_id'] : null,
                 'description' => $validated['description'],
                 'notes' => !empty($validated['notes']) ? $validated['notes'] : null,
                 'status' => 'completed',
                 'created_by' => auth()->id(),
             ]);
             
-            // تحديث حالة الفاتورة إذا كان الدفع مرتبط بفاتورة
             if ($payment->invoice_id) {
                 $invoice = FinancialInvoice::find($payment->invoice_id);
                 if ($invoice) {
@@ -196,11 +206,9 @@ class PaymentController extends Controller
                     
                     $invoice->save();
 
-                    // ترحيل قيد التحصيل المرتبط بفاتورة
                     try {
                         app(AccountingPostingService::class)->postInvoicePaid($invoice, (float) $payment->amount);
                     } catch (\Throwable $e) {
-                        // يمكن لاحقاً تسجيل الخطأ
                     }
                 }
             } else if ($payment->payment_type === 'invoice' && $payment->client_id) {
@@ -208,8 +216,8 @@ class PaymentController extends Controller
                 try {
                     app(AccountingPostingService::class)->postIncomingPayment(null, (float) $payment->amount, 'PAYMENT-IN-' . $payment->payment_number);
                 } catch (\Throwable $e) {
-                    // يمكن لاحقاً تسجيل الخطأ
                 }
+            }
             }
             
             return response()->json([
