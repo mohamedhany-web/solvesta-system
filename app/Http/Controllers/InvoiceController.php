@@ -261,7 +261,7 @@ class InvoiceController extends Controller
     public function update(Request $request, Invoice $invoice)
     {
         $validated = $request->validate([
-            'status' => 'sometimes|in:draft,sent,viewed,paid,overdue,cancelled',
+            'status' => 'sometimes|in:draft,sent,viewed,partial,paid,overdue,cancelled',
             'payment_method' => 'nullable|string',
             'payment_date' => 'nullable|date',
             'paid_amount' => 'nullable|numeric|min:0',
