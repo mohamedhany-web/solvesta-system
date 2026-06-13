@@ -14,6 +14,7 @@ use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Ticket;
 use App\Services\ClientPortalActivityFeed;
+use App\Services\ClientPortalDashboardAnalytics;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -121,6 +122,8 @@ class ClientPortalController extends Controller
 
         $clientAccount = $account;
 
+        $chartData = app(ClientPortalDashboardAnalytics::class)->build($client, $account);
+
         return view('client-portal.dashboard', compact(
             'client',
             'clientAccount',
@@ -149,6 +152,7 @@ class ClientPortalController extends Controller
             'latestServiceReport',
             'sharedDocumentsCount',
             'totalOutstanding',
+            'chartData',
         ));
     }
 

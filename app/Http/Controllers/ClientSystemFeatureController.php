@@ -48,7 +48,7 @@ class ClientSystemFeatureController extends Controller
         $validated = $request->validate([
             'project_id' => 'nullable|exists:client_system_projects,id',
             'new_project_name' => 'nullable|string|max:255',
-            'type' => 'required|in:feature,bug,improvement',
+            'type' => 'required|in:feature,improvement',
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:15000',
             'priority' => 'nullable|in:low,medium,high,urgent',

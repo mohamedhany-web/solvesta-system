@@ -7,7 +7,7 @@
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-3xl font-bold text-gray-900 mb-2">ميزات وتحسينات النظام</h1>
-            <p class="text-gray-600">اطلب ميزة جديدة أو أبلغ عن مشكلة — تُنظَّم طلباتك ضمن مشاريع نظامك مع سجل توثيقي لكل طلب.</p>
+            <p class="text-gray-600">اطلب ميزة جديدة أو اقترح تحسيناً — تُنظَّم طلباتك ضمن مشاريع نظامك مع سجل توثيقي لكل طلب.</p>
         </div>
         <a href="{{ route('client.system-features.create') }}" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 shrink-0">+ طلب جديد</a>
     </div>

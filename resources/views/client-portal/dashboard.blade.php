@@ -176,6 +176,112 @@
         @endif
     </div>
 
+    {{-- تحليلات وإحصائيات --}}
+    <section class="mb-8" aria-labelledby="client-analytics-heading">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
+            <div>
+                <h2 id="client-analytics-heading" class="text-xl sm:text-2xl font-bold text-gray-900">تحليلات وإحصائيات</h2>
+                <p class="text-sm text-gray-600 mt-1">نظرة تحليلية على نشاطك وخدماتك خلال آخر 6 أشهر</p>
+            </div>
+            <div class="flex flex-wrap gap-2 text-xs sm:text-sm">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 text-blue-800 px-3 py-1.5 font-semibold border border-blue-100">
+                    نسبة حل التذاكر: <strong>{{ $chartData['kpis']['ticketResolutionRate'] }}%</strong>
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-800 px-3 py-1.5 font-semibold border border-emerald-100">
+                    مشاريع نشطة: <strong>{{ $chartData['kpis']['activeProjects'] }}</strong>
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 text-amber-800 px-3 py-1.5 font-semibold border border-amber-100">
+                    تذاكر مفتوحة: <strong>{{ $chartData['kpis']['openTickets'] }}</strong>
+                </span>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between gap-4 mb-5">
+                <h3 class="text-lg font-bold text-gray-900">النشاط الشهري</h3>
+                <p class="text-xs text-gray-500">تذاكر · تقارير · @if($clientAccount->canAccessTechnicalRequests())بلاغات · اجتماعات · ميزات @endif</p>
+            </div>
+            <div class="h-72 sm:h-80">
+                <canvas id="clientActivityChart" aria-label="مخطط النشاط الشهري"></canvas>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-base font-bold text-gray-900 mb-4">توزيع تذاكر الدعم</h3>
+                <div class="h-56">
+                    <canvas id="clientTicketsChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-base font-bold text-gray-900 mb-4">حالة المشاريع</h3>
+                <div class="h-56">
+                    <canvas id="clientProjectsChart"></canvas>
+                </div>
+            </div>
+            @if($clientAccount->canAccessTechnicalRequests() && $chartData['technical'])
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-base font-bold text-gray-900 mb-4">بلاغات الموقع</h3>
+                <div class="h-56">
+                    <canvas id="clientWebsiteIssuesChart"></canvas>
+                </div>
+            </div>
+            @endif
+        </div>
+
+        @if($clientAccount->canAccessTechnicalRequests() && $chartData['technical'])
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-base font-bold text-gray-900 mb-4">طلبات الاجتماع</h3>
+                <div class="h-56">
+                    <canvas id="clientMeetingsChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-base font-bold text-gray-900 mb-4">ميزات وتحسينات النظام</h3>
+                <div class="h-56">
+                    <canvas id="clientFeaturesChart"></canvas>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if($clientAccount->canAccessBilling() && $chartData['billing'])
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+            <div class="xl:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                    <h3 class="text-lg font-bold text-gray-900">الفواتير الشهرية</h3>
+                    <div class="flex flex-wrap gap-3 text-xs font-semibold text-gray-600">
+                        <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-blue-500"></span> عادية (صادرة)</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-violet-500"></span> مالية (صادرة)</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-emerald-500"></span> محصّل</span>
+                    </div>
+                </div>
+                <div class="h-72">
+                    <canvas id="clientBillingChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-base font-bold text-gray-900 mb-2">حالة الفواتير</h3>
+                <p class="text-xs text-gray-500 mb-4">عادية + مالية مجمّعة</p>
+                <div class="h-52">
+                    <canvas id="clientPaymentChart"></canvas>
+                </div>
+                <div class="mt-4 grid grid-cols-2 gap-3 text-center text-xs">
+                    <div class="rounded-lg bg-red-50 border border-red-100 p-3">
+                        <p class="text-red-700 font-semibold">متبقي (عادية)</p>
+                        <p class="text-lg font-bold text-red-900 mt-1">{{ number_format($chartData['billing']['outstanding']['regular']) }}</p>
+                    </div>
+                    <div class="rounded-lg bg-purple-50 border border-purple-100 p-3">
+                        <p class="text-purple-700 font-semibold">متبقي (مالية)</p>
+                        <p class="text-lg font-bold text-purple-900 mt-1">{{ number_format($chartData['billing']['outstanding']['financial']) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+    </section>
+
     @if($clientAccount->canAccessBilling() && ($invoicesDueSoon->isNotEmpty() || $financialDueSoon->isNotEmpty()))
         <div class="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 class="text-lg font-bold text-gray-900 mb-4">فواتير باستحقاق خلال 7 أيام</h2>
@@ -266,4 +372,225 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const chartData = @json($chartData);
+    const rtl = true;
+
+    Chart.defaults.font.family = 'Tajawal, ui-sans-serif, system-ui, sans-serif';
+    Chart.defaults.plugins.legend.rtl = rtl;
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+    const baseOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { padding: 16, boxWidth: 10, font: { size: 11 } }
+            },
+            tooltip: {
+                rtl: rtl,
+                titleAlign: 'right',
+                bodyAlign: 'right',
+                padding: 12,
+                cornerRadius: 8
+            }
+        }
+    };
+
+    function doughnutConfig(payload) {
+        return {
+            type: 'doughnut',
+            data: {
+                labels: payload.labels,
+                datasets: [{
+                    data: payload.data,
+                    backgroundColor: payload.colors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                ...baseOptions,
+                cutout: '62%',
+                plugins: {
+                    ...baseOptions.plugins,
+                    legend: {
+                        ...baseOptions.plugins.legend,
+                        display: !payload.empty
+                    }
+                }
+            }
+        };
+    }
+
+    const activityDatasets = [
+        {
+            label: 'تذاكر الدعم',
+            data: chartData.activity.tickets,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.12)',
+            tension: 0.35,
+            fill: true,
+            borderWidth: 2
+        },
+        {
+            label: 'تقارير الخدمة',
+            data: chartData.activity.serviceReports,
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.08)',
+            tension: 0.35,
+            fill: true,
+            borderWidth: 2
+        }
+    ];
+
+    if (chartData.activity.websiteIssues) {
+        activityDatasets.push({
+            label: 'بلاغات الموقع',
+            data: chartData.activity.websiteIssues,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.08)',
+            tension: 0.35,
+            fill: true,
+            borderWidth: 2
+        });
+    }
+    if (chartData.activity.meetings) {
+        activityDatasets.push({
+            label: 'طلبات اجتماع',
+            data: chartData.activity.meetings,
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.08)',
+            tension: 0.35,
+            fill: true,
+            borderWidth: 2
+        });
+    }
+    if (chartData.activity.features) {
+        activityDatasets.push({
+            label: 'ميزات وتحسينات',
+            data: chartData.activity.features,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+            tension: 0.35,
+            fill: true,
+            borderWidth: 2
+        });
+    }
+
+    const activityEl = document.getElementById('clientActivityChart');
+    if (activityEl) {
+        new Chart(activityEl, {
+            type: 'line',
+            data: { labels: chartData.months, datasets: activityDatasets },
+            options: {
+                ...baseOptions,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, precision: 0 },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    const ticketsEl = document.getElementById('clientTicketsChart');
+    if (ticketsEl) new Chart(ticketsEl, doughnutConfig(chartData.ticketsByStatus));
+
+    const projectsEl = document.getElementById('clientProjectsChart');
+    if (projectsEl) new Chart(projectsEl, doughnutConfig(chartData.projectsByStatus));
+
+    if (chartData.technical) {
+        const issuesEl = document.getElementById('clientWebsiteIssuesChart');
+        if (issuesEl) new Chart(issuesEl, doughnutConfig(chartData.technical.websiteIssues));
+
+        const meetingsEl = document.getElementById('clientMeetingsChart');
+        if (meetingsEl) new Chart(meetingsEl, doughnutConfig(chartData.technical.meetings));
+
+        const featuresEl = document.getElementById('clientFeaturesChart');
+        if (featuresEl) new Chart(featuresEl, doughnutConfig(chartData.technical.features));
+    }
+
+    if (chartData.billing) {
+        const billingEl = document.getElementById('clientBillingChart');
+        if (billingEl) {
+            const paidCombined = chartData.billing.monthlyPaid.regular.map((v, i) =>
+                v + chartData.billing.monthlyPaid.financial[i]
+            );
+            new Chart(billingEl, {
+                type: 'bar',
+                data: {
+                    labels: chartData.months,
+                    datasets: [
+                        {
+                            label: 'فواتير عادية',
+                            data: chartData.billing.monthlyIssued.regular,
+                            backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                            borderRadius: 6,
+                            stack: 'issued'
+                        },
+                        {
+                            label: 'فواتير مالية',
+                            data: chartData.billing.monthlyIssued.financial,
+                            backgroundColor: 'rgba(139, 92, 246, 0.85)',
+                            borderRadius: 6,
+                            stack: 'issued'
+                        },
+                        {
+                            label: 'محصّل',
+                            data: paidCombined,
+                            type: 'line',
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: false,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    ...baseOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: {
+                                callback: (v) => new Intl.NumberFormat('ar-EG').format(v)
+                            }
+                        },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        ...baseOptions.plugins,
+                        tooltip: {
+                            ...baseOptions.plugins.tooltip,
+                            callbacks: {
+                                label: (ctx) => {
+                                    const val = ctx.parsed.y ?? ctx.parsed;
+                                    return ctx.dataset.label + ': ' + new Intl.NumberFormat('ar-EG').format(val);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const paymentEl = document.getElementById('clientPaymentChart');
+        if (paymentEl) new Chart(paymentEl, doughnutConfig(chartData.billing.paymentOverview));
+    }
+});
+</script>
+@endpush
 

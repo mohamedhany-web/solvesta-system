@@ -131,6 +131,86 @@
             letter-spacing: 0.5px;
             margin: 16px 0 8px 0;
         }
+
+        /* بوابة العميل — عناصر المنيو بلون أبيض (السايدبار يبقى داكن) */
+        .client-portal-sidebar .sidebar-link {
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .client-portal-sidebar .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .client-portal-sidebar .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            box-shadow: none;
+            border-right: 3px solid rgba(255, 255, 255, 0.85);
+            font-weight: 600;
+        }
+
+        .client-portal-sidebar .sidebar-section-title {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .client-portal-sidebar .sidebar-link svg {
+            color: inherit;
+        }
+
+        /* شريط علوي بوابة العميل — ارتفاع ثابت */
+        .client-portal-topbar {
+            height: 4rem;
+            min-height: 4rem;
+            max-height: 4rem;
+            flex-shrink: 0;
+        }
+
+        .client-portal-topbar .client-topbar-inner {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .client-portal-topbar .client-topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            height: 100%;
+            flex-shrink: 0;
+        }
+
+        .client-portal-topbar details > summary {
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .client-portal-topbar .client-topbar-dropdown {
+            position: absolute;
+            inset-inline-end: 0;
+            top: calc(100% + 6px);
+            z-index: 9999;
+        }
+
+        .client-portal-topbar details[open] > summary .topbar-chevron {
+            transform: rotate(180deg);
+        }
+
+        .client-portal-topbar .topbar-chevron {
+            transition: transform 0.2s ease;
+        }
+
+        .client-portal-topbar .mobile-menu-btn {
+            height: 2.5rem;
+            width: 2.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
         
         /* Mobile Responsive Sidebar */
         @media (max-width: 768px) {
@@ -228,7 +308,7 @@
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
         
         <!-- Sidebar -->
-        <div class="w-72 sidebar-bg border-l border-slate-700 shadow-xl flex flex-col" id="sidebar" style="background-color: <?php echo e(\App\Helpers\SettingsHelper::getSidebarColor()); ?>">
+        <div class="w-72 sidebar-bg border-l border-slate-700 shadow-xl flex flex-col <?php echo e($isClientGuard ? 'client-portal-sidebar' : ''); ?>" id="sidebar" style="background-color: <?php echo e(\App\Helpers\SettingsHelper::getSidebarColor()); ?>">
             <!-- Logo -->
             <div class="p-6 border-b border-slate-700 bg-slate-800 shadow-sm">
                 <div class="flex items-center">
@@ -337,6 +417,13 @@
                                 المستندات المشتركة
                             </a>
                             <?php if($cPortal && $cPortal->canAccessTechnicalRequests()): ?>
+                            <a href="<?php echo e(route('client.system-features.index')); ?>"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('client.system-features.*') ? 'active' : ''); ?>">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                                ميزات وتحسينات النظام
+                            </a>
                             <a href="<?php echo e(route('client.website-issues.index')); ?>"
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('client.website-issues.*') ? 'active' : ''); ?>">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -364,14 +451,14 @@
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-1.414-1.414a2 2 0 00-2.828 0L7 11.343V15h3.657l7.707-7.707a2 2 0 000-2.828z" />
                                 </svg>
-                                ما بعد البيع
+                                تذاكر الدعم
                             </a>
                             <a href="<?php echo e(route('client.help')); ?>"
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('client.help') ? 'active' : ''); ?>">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                المساعدة
+                                شرح البورتال
                             </a>
                         </div>
                         <?php endif; ?>
@@ -767,6 +854,14 @@
                                 تذاكر الدعم
                             </a>
 
+                            <a href="<?php echo e(route('client-system-projects.index')); ?>"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('client-system-projects.*', 'client-system-features.*') ? 'active' : ''); ?>">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                                مشاريع أنظمة العملاء
+                            </a>
+
                             <a href="<?php echo e(route('client-website-issues.index')); ?>"
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('client-website-issues.*') ? 'active' : ''); ?>">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -946,9 +1041,9 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden main-content-mobile">
             <!-- Top Header -->
-            <header class="bg-white shadow-md border-b border-gray-200 overflow-visible sticky top-0 z-30">
-                <div class="px-3 sm:px-5 lg:px-6 py-3 sm:py-4 header-container">
-                    <div class="flex items-center justify-between gap-3 sm:gap-4">
+            <header class="bg-white shadow-md border-b border-gray-200 overflow-visible sticky top-0 z-30 <?php echo e($isClientGuard ? 'client-portal-topbar' : ''); ?>">
+                <div class="px-3 sm:px-5 lg:px-6 <?php echo e($isClientGuard ? 'client-topbar-inner' : 'py-3 sm:py-4'); ?> header-container">
+                    <div class="flex items-center justify-between gap-3 sm:gap-4 w-full">
                         <!-- Left Side - Menu Button & Title -->
                         <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                             <!-- Mobile Menu Button -->
@@ -963,40 +1058,37 @@
                             </button>
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-3 sm:gap-4">
-                                    <h2 class="text-lg sm:text-xl font-bold text-gray-900 truncate font-tajawal"><?php echo $__env->yieldContent('page-title', 'لوحة التحكم'); ?></h2>
+                                    <h2 class="text-lg sm:text-xl font-bold text-gray-900 truncate font-tajawal leading-tight"><?php echo $__env->yieldContent('page-title', 'لوحة التحكم'); ?></h2>
+                                    <?php if (! ($isClientGuard)): ?>
                                     <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 text-xs text-gray-600">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                         <span id="current-date"><?php echo e(now()->format('Y/m/d')); ?></span>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
-                                <?php if($isClientGuard): ?>
-                                    <p class="text-xs text-gray-500 mt-1 hidden sm:block font-tajawal">
-                                        بوابة العميل — <?php echo e(\App\Helpers\SettingsHelper::getCompanyName()); ?>
-
-                                    </p>
-                                <?php else: ?>
+                                <?php if (! ($isClientGuard)): ?>
                                     <p class="text-xs text-gray-500 mt-1 hidden sm:block font-tajawal">مرحباً بك في نظام <?php echo e(\App\Helpers\SettingsHelper::getSystemName()); ?></p>
                                 <?php endif; ?>
                             </div>
                         </div>
                         
                         <!-- Right Side - Actions -->
-                        <div class="flex items-center gap-2 sm:gap-3">
+                        <div class="flex items-center gap-2 sm:gap-3 <?php echo e($isClientGuard ? 'client-topbar-actions' : ''); ?>">
                             <?php if($isClientGuard): ?>
                                 <?php $cHdr = $clientAccount; ?>
                                 <details class="relative z-50 group/client-actions">
-                                    <summary class="flex items-center gap-2 cursor-pointer select-none list-none rounded-xl border border-gray-200 bg-white px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-extrabold text-gray-800 shadow-sm hover:bg-gray-50 transition max-w-[10.5rem] sm:max-w-none [&::-webkit-details-marker]:hidden">
+                                    <summary class="flex items-center gap-2 cursor-pointer select-none list-none rounded-xl border border-gray-200 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-extrabold text-gray-800 shadow-sm hover:bg-gray-50 transition max-w-[10.5rem] sm:max-w-none h-10 [&::-webkit-details-marker]:hidden">
                                         <svg class="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                         </svg>
                                         <span class="truncate">طلب جديد</span>
-                                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-gray-500 mr-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <svg class="topbar-chevron w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-gray-500 mr-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </summary>
-                                    <div class="absolute end-0 top-[calc(100%+6px)] w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-gray-200 bg-white py-1 shadow-xl text-sm font-semibold text-gray-800 overflow-hidden">
+                                    <div class="client-topbar-dropdown w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-gray-200 bg-white py-1 shadow-xl text-sm font-semibold text-gray-800 overflow-hidden">
                                         <a href="<?php echo e(route('client.support.tickets.create')); ?>"
                                            class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-100">
                                             <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white shrink-0" style="background: linear-gradient(135deg, <?php echo e(\App\Helpers\SettingsHelper::getThemeColor()); ?> 0%, <?php echo e(\App\Helpers\SettingsHelper::getThemeColor()); ?>cc 100%);">
@@ -1075,6 +1167,60 @@
                             <?php endif; ?>
 
                             <!-- User Profile Dropdown -->
+                            <?php if($isClientGuard): ?>
+                            <details class="relative z-50 group/client-account user-dropdown-container">
+                                <summary class="user-dropdown-trigger flex items-center gap-2 cursor-pointer select-none list-none rounded-xl border border-gray-200 bg-white px-2 sm:px-3 h-10 transition-all duration-200 hover:bg-gray-50 hover:shadow-sm [&::-webkit-details-marker]:hidden">
+                                    <div class="text-right hidden sm:block min-w-0">
+                                        <div class="text-xs font-bold text-gray-900 truncate max-w-24 font-tajawal leading-tight"><?php echo e($displayName); ?></div>
+                                        <div class="text-[10px] text-gray-500 truncate max-w-24 font-tajawal leading-tight"><?php echo e($displayRole); ?></div>
+                                    </div>
+                                    <div class="h-8 w-8 rounded-lg flex items-center justify-center shadow-sm border border-gray-100 flex-shrink-0"
+                                         style="background: linear-gradient(135deg, <?php echo e(\App\Helpers\SettingsHelper::getThemeColor()); ?> 0%, <?php echo e(\App\Helpers\SettingsHelper::getThemeColor()); ?>dd 100%);">
+                                        <span class="text-xs font-bold text-white"><?php echo e(substr($displayName, 0, 1)); ?></span>
+                                    </div>
+                                    <svg class="topbar-chevron w-3.5 h-3.5 hidden sm:block shrink-0 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </summary>
+                                <div class="client-topbar-dropdown w-[min(16rem,calc(100vw-2rem))] sm:w-64 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+                                    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/60">
+                                        <div class="flex items-center gap-3">
+                                            <div class="h-10 w-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0"
+                                                 style="background: linear-gradient(135deg, <?php echo e(\App\Helpers\SettingsHelper::getThemeColor()); ?> 0%, <?php echo e(\App\Helpers\SettingsHelper::getThemeColor()); ?>dd 100%);">
+                                                <span class="text-sm font-bold text-white"><?php echo e(substr($displayName, 0, 1)); ?></span>
+                                            </div>
+                                            <div class="min-w-0 flex-1 text-right">
+                                                <div class="text-sm font-semibold text-gray-900 truncate font-tajawal"><?php echo e($displayName); ?></div>
+                                                <div class="text-xs text-gray-500 truncate"><?php echo e($displayEmail); ?></div>
+                                                <div class="text-xs font-medium" style="color: <?php echo e(\App\Helpers\SettingsHelper::getThemeColor()); ?>"><?php echo e($displayRole); ?></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="py-1 text-sm font-semibold text-gray-800">
+                                        <a href="<?php echo e(route('client.dashboard')); ?>" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
+                                            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                            <span>لوحة العميل</span>
+                                        </a>
+                                        <a href="<?php echo e(route('client.notifications')); ?>" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
+                                            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                            <span>الإشعارات</span>
+                                        </a>
+                                        <a href="<?php echo e(route('client.help')); ?>" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
+                                            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            <span>شرح البورتال</span>
+                                        </a>
+                                        <div class="border-t border-gray-100 my-1"></div>
+                                        <form method="POST" action="<?php echo e(route('client.logout')); ?>">
+                                            <?php echo csrf_field(); ?>
+                                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-red-600 hover:bg-red-50 transition">
+                                                <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                                <span>تسجيل الخروج</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </details>
+                            <?php else: ?>
                             <div class="relative overflow-visible user-dropdown-container">
                                 <button onclick="toggleUserDropdown()" 
                                         class="flex items-center gap-2.5 sm:gap-3 rounded-xl p-2 sm:p-2.5 transition-all duration-200 hover:shadow-md group"
@@ -1107,7 +1253,7 @@
                                 </button>
                                             
                                 <!-- Dropdown Menu -->
-                                <div id="userDropdown" class="absolute top-full left-0 mt-2 w-56 sm:w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] hidden user-dropdown">
+                                <div id="userDropdown" class="absolute top-full end-0 mt-2 w-56 sm:w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] hidden user-dropdown">
                                                 <div class="py-2">
                                                     <!-- Profile Header -->
                                                     <div class="px-4 py-3 border-b border-gray-100">
@@ -1195,8 +1341,8 @@
                                                         </form>
                                                     </div>
                                 </div>
-                                </div>
                             </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -1204,7 +1350,7 @@
             
             <!-- Page Content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-                <div class="<?php echo e(request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.create', 'users.edit') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') || request()->routeIs('client-service-reports.*') || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*') || request()->routeIs('client-website-issues.*') || request()->routeIs('client-meeting-requests.*') || request()->routeIs('projects.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6'); ?>">
+                <div class="<?php echo e(request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.create', 'users.edit') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') || request()->routeIs('client-service-reports.*') || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*', 'client.system-features.*') || request()->routeIs('client-website-issues.*') || request()->routeIs('client-meeting-requests.*') || request()->routeIs('client-system-projects.*') || request()->routeIs('client-system-features.*') || request()->routeIs('projects.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6'); ?>">
                     <?php if(session('success')): ?>
                         <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded-r-lg shadow-sm">
                             <?php echo e(session('success')); ?>
@@ -1249,6 +1395,17 @@
                     document.addEventListener('DOMContentLoaded', function() {
                         // Load saved timer state
                         loadTimerState();
+
+                        document.querySelectorAll('.client-topbar-actions details').forEach(function(details) {
+                            details.addEventListener('toggle', function() {
+                                if (!details.open) return;
+                                document.querySelectorAll('.client-topbar-actions details').forEach(function(other) {
+                                    if (other !== details) {
+                                        other.open = false;
+                                    }
+                                });
+                            });
+                        });
                         
                         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
                         const sidebar = document.getElementById('sidebar');
@@ -1787,22 +1944,23 @@
 
                     function toggleUserDropdown() {
                         const dropdown = document.getElementById('userDropdown');
-                        const isHidden = dropdown.classList.contains('hidden');
-                        
+                        if (!dropdown) return;
+
+                        const wasHidden = dropdown.classList.contains('hidden');
                         dropdown.classList.toggle('hidden');
-                        
-                        if (!isHidden) {
-                            // Position dropdown to stay within viewport
+
+                        if (wasHidden) {
                             positionDropdown(dropdown);
                         }
-                        
-                        // Close dropdown when clicking outside
-                        document.addEventListener('click', function(event) {
-                            if (!event.target.closest('.relative')) {
-                                dropdown.classList.add('hidden');
-                            }
-                        });
                     }
+
+                    document.addEventListener('click', function(event) {
+                        const dropdown = document.getElementById('userDropdown');
+                        if (!dropdown || dropdown.classList.contains('hidden')) return;
+                        if (!event.target.closest('.user-dropdown-container')) {
+                            dropdown.classList.add('hidden');
+                        }
+                    });
 
                     function positionDropdown(dropdown) {
                         const rect = dropdown.getBoundingClientRect();
@@ -1811,11 +1969,11 @@
                         
                         // Check if dropdown goes beyond right edge
                         if (rect.right > viewportWidth) {
-                            dropdown.classList.remove('left-0');
-                            dropdown.classList.add('right-0');
+                            dropdown.classList.remove('end-0');
+                            dropdown.classList.add('start-0');
                         } else {
-                            dropdown.classList.remove('right-0');
-                            dropdown.classList.add('left-0');
+                            dropdown.classList.remove('start-0');
+                            dropdown.classList.add('end-0');
                         }
                         
                         // Check if dropdown goes beyond bottom edge
