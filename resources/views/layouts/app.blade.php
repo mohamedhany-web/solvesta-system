@@ -337,6 +337,13 @@
                                 المستندات المشتركة
                             </a>
                             @if($cPortal && $cPortal->canAccessTechnicalRequests())
+                            <a href="{{ route('client.system-features.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.system-features.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                                ميزات وتحسينات النظام
+                            </a>
                             <a href="{{ route('client.website-issues.index') }}"
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client.website-issues.*') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -765,6 +772,14 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                                 </svg>
                                 تذاكر الدعم
+                            </a>
+
+                            <a href="{{ route('client-system-projects.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client-system-projects.*', 'client-system-features.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                                مشاريع أنظمة العملاء
                             </a>
 
                             <a href="{{ route('client-website-issues.index') }}"
@@ -1203,7 +1218,7 @@
             
             <!-- Page Content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-                <div class="{{ request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.create', 'users.edit') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') || request()->routeIs('client-service-reports.*') || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*') || request()->routeIs('client-website-issues.*') || request()->routeIs('client-meeting-requests.*') || request()->routeIs('projects.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6' }}">
+                <div class="{{ request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.create', 'users.edit') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') || request()->routeIs('client-service-reports.*') || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*', 'client.system-features.*') || request()->routeIs('client-website-issues.*') || request()->routeIs('client-meeting-requests.*') || request()->routeIs('client-system-projects.*') || request()->routeIs('client-system-features.*') || request()->routeIs('projects.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6' }}">
                     @if(session('success'))
                         <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded-r-lg shadow-sm">
                             {{ session('success') }}

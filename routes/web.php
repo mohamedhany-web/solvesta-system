@@ -46,6 +46,7 @@ use App\Http\Controllers\ClientServiceReportController;
 use App\Http\Controllers\ClientSupportTicketController;
 use App\Http\Controllers\ClientWebsiteIssueController;
 use App\Http\Controllers\ClientMeetingRequestController;
+use App\Http\Controllers\ClientSystemFeatureController;
 use App\Http\Controllers\ClientAuthController;
 use App\Http\Controllers\Admin\ClientAccountController;
 use App\Http\Controllers\Admin\ClientWebsiteIssueController as AdminClientWebsiteIssueController;
@@ -423,6 +424,16 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('client-meeting-requests', [AdminClientMeetingRequestController::class, 'index'])->name('client-meeting-requests.index')->middleware('permission:view-tickets');
     Route::get('client-meeting-requests/{meetingRequest}', [AdminClientMeetingRequestController::class, 'show'])->name('client-meeting-requests.show')->middleware('permission:view-tickets');
     Route::put('client-meeting-requests/{meetingRequest}', [AdminClientMeetingRequestController::class, 'update'])->name('client-meeting-requests.update')->middleware('permission:edit-tickets');
+
+    Route::get('client-system-projects', [\App\Http\Controllers\Admin\ClientSystemProjectController::class, 'index'])->name('client-system-projects.index')->middleware('permission:view-tickets');
+    Route::get('client-system-projects/create', [\App\Http\Controllers\Admin\ClientSystemProjectController::class, 'create'])->name('client-system-projects.create')->middleware('permission:edit-tickets');
+    Route::post('client-system-projects', [\App\Http\Controllers\Admin\ClientSystemProjectController::class, 'store'])->name('client-system-projects.store')->middleware('permission:edit-tickets');
+    Route::get('client-system-projects/{clientSystemProject}', [\App\Http\Controllers\Admin\ClientSystemProjectController::class, 'show'])->name('client-system-projects.show')->middleware('permission:view-tickets');
+    Route::put('client-system-projects/{clientSystemProject}', [\App\Http\Controllers\Admin\ClientSystemProjectController::class, 'update'])->name('client-system-projects.update')->middleware('permission:edit-tickets');
+    Route::get('client-system-features/{clientSystemFeature}', [\App\Http\Controllers\Admin\ClientSystemFeatureController::class, 'show'])->name('client-system-features.show')->middleware('permission:view-tickets');
+    Route::put('client-system-features/{clientSystemFeature}', [\App\Http\Controllers\Admin\ClientSystemFeatureController::class, 'update'])->name('client-system-features.update')->middleware('permission:edit-tickets');
+    Route::post('client-system-features/{clientSystemFeature}/updates', [\App\Http\Controllers\Admin\ClientSystemFeatureController::class, 'storeUpdate'])->name('client-system-features.updates.store')->middleware('permission:edit-tickets');
+    Route::delete('client-system-feature-updates/{clientSystemFeatureUpdate}', [\App\Http\Controllers\Admin\ClientSystemFeatureController::class, 'destroyUpdate'])->name('client-system-feature-updates.destroy')->middleware('permission:edit-tickets');
     
     // Finance & Accounting
     Route::prefix('accounting')->name('accounting.')->middleware('permission:view-finance')->group(function () {
@@ -641,6 +652,13 @@ Route::prefix('client')->name('client.')->middleware('auth:client')->group(funct
             Route::post('/', [ClientMeetingRequestController::class, 'store'])->name('store');
             Route::post('/{meetingRequest}/feedback', [ClientMeetingRequestController::class, 'storeFeedback'])->name('feedback');
             Route::get('/{meetingRequest}', [ClientMeetingRequestController::class, 'show'])->name('show');
+        });
+
+        Route::prefix('system-features')->name('system-features.')->group(function () {
+            Route::get('/', [ClientSystemFeatureController::class, 'index'])->name('index');
+            Route::get('/create', [ClientSystemFeatureController::class, 'create'])->name('create');
+            Route::post('/', [ClientSystemFeatureController::class, 'store'])->name('store');
+            Route::get('/{systemFeature}', [ClientSystemFeatureController::class, 'show'])->name('show');
         });
     });
 

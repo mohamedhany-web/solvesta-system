@@ -95,6 +95,10 @@
                 المستندات المشتركة
             </a>
             @if($cPortal && $cPortal->canAccessTechnicalRequests())
+            <a href="{{ route('client.system-features.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.system-features.*') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
+                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-violet-500"></span>
+                ميزات وتحسينات النظام
+            </a>
             <a href="{{ route('client.website-issues.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition {{ request()->routeIs('client.website-issues.*') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700' }}">
                 <span class="inline-flex h-2.5 w-2.5 rounded-full bg-orange-500"></span>
                 بلاغات الموقع
@@ -197,6 +201,7 @@
             <a href="{{ route('client.service-reports') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.service-reports', 'client.service-reports.download') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">تقارير الخدمة</a>
             <a href="{{ route('client.documents') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.documents*') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">المستندات المشتركة</a>
             @if($cPortal && $cPortal->canAccessTechnicalRequests())
+            <a href="{{ route('client.system-features.index') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.system-features.*') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">ميزات وتحسينات النظام</a>
             <a href="{{ route('client.website-issues.index') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.website-issues.*') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">بلاغات الموقع</a>
             <a href="{{ route('client.meeting-requests.index') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.meeting-requests.*') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">طلبات الاجتماعات</a>
             <a href="{{ route('client.calendar') }}" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 {{ request()->routeIs('client.calendar') ? 'ring-2 ring-black/5 text-gray-900' : '' }}">التقويم</a>

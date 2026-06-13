@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Client;
 use App\Models\ClientAccount;
 use App\Models\ClientMeetingRequest;
+use App\Models\ClientSystemFeature;
 use App\Models\ClientWebsiteIssue;
 use App\Models\Notification;
 use App\Models\Ticket;
@@ -91,6 +92,37 @@ class ClientPortalAdminAlertService
                     'المرجع' => e($meetingRequest->reference_code),
                     'العنوان' => e($meetingRequest->title),
                     'الموعد المفضل' => optional($meetingRequest->preferred_at)->format('Y-m-d H:i'),
+                ],
+                $adminUrl
+            )
+        );
+    }
+
+    public function notifySystemFeatureCreated(Client $client, ClientAccount $account, ClientSystemFeature $feature): void
+    {
+        $feature->loadMissing('project');
+        $title = 'طلب ميزة/تطوير جديد من العميل';
+        $message = $client->name.' — '.$feature->title.' ('.$feature->reference_code.')';
+        $adminUrl = url(route('client-system-features.show', $feature, false));
+
+        $this->notifyStaff($title, $message, 'client_new_system_feature', [
+            'feature_id' => $feature->id,
+            'project_id' => $feature->client_system_project_id,
+            'client_id' => $client->id,
+            'url' => $adminUrl,
+        ]);
+
+        $this->sendAlertMail(
+            $title,
+            $this->buildBody(
+                'طلب تطوير / ميزة جديدة',
+                [
+                    'العميل' => $client->name,
+                    'الحساب' => e($account->name).' ('.e($account->email).')',
+                    'المشروع' => e($feature->project?->name ?? '—'),
+                    'المرجع' => e($feature->reference_code),
+                    'النوع' => e($feature->type_label),
+                    'العنوان' => e($feature->title),
                 ],
                 $adminUrl
             )

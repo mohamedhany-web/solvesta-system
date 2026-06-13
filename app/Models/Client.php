@@ -84,4 +84,9 @@ class Client extends Model
     {
         return $this->hasMany(ClientMeetingRequest::class)->orderByDesc('created_at');
     }
+
+    public function systemProjects(): HasMany
+    {
+        return $this->hasMany(ClientSystemProject::class)->orderByDesc('updated_at');
+    }
 }
