@@ -29,6 +29,9 @@
 @endphp
 
 <div class="w-full">
+    @if(session('success'))
+        <div class="mb-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-tajawal">{{ session('success') }}</div>
+    @endif
     {{-- رأس الصفحة (نفس أسلوب المهام / قائمة المشاريع) --}}
     <div class="mb-6 sm:mb-8">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -127,6 +130,10 @@
         </div>
         @endcan
     </div>
+
+    @include('projects.partials.pmo-panel')
+
+    @include('projects.partials.finance-panel')
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         <div class="lg:col-span-2 space-y-6">
@@ -292,7 +299,8 @@
                     @can('create-tasks')
                         <a href="{{ route('tasks.create', ['project_id' => $project->id]) }}" class="flex items-center justify-center w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-gray-800 text-sm font-semibold hover:bg-gray-50">إضافة مهمة</a>
                     @endcan
-                    <a href="{{ route('tasks.index', ['project_id' => $project->id]) }}" class="flex items-center justify-center w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-gray-800 text-sm font-semibold hover:bg-gray-50">عرض المهام</a>
+                    <a href="{{ route('pmo.index') }}" class="flex items-center justify-center w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-gray-800 text-sm font-semibold hover:bg-gray-50">لوحة PMO</a>
+                    <a href="{{ route('daily-reports.create') }}" class="flex items-center justify-center w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-gray-800 text-sm font-semibold hover:bg-gray-50">تقرير يومي</a>
                 </div>
             </div>
 

@@ -211,6 +211,286 @@
             justify-content: center;
             padding: 0;
         }
+
+        /* شريط علوي لوحة الموظفين — منظم بارتفاع ثابت */
+        .app-topbar {
+            height: 3.75rem;
+            min-height: 3.75rem;
+            max-height: 3.75rem;
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        }
+
+        .app-topbar .app-topbar-inner {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding-inline: 1rem;
+        }
+
+        @media (min-width: 1024px) {
+            .app-topbar .app-topbar-inner {
+                padding-inline: 1.25rem;
+            }
+        }
+
+        .app-topbar-start {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .app-topbar-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            min-width: 0;
+        }
+
+        .app-topbar-title {
+            font-size: 1.0625rem;
+            font-weight: 700;
+            color: #111827;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+        }
+
+        @media (min-width: 640px) {
+            .app-topbar-title {
+                font-size: 1.125rem;
+            }
+        }
+
+        .app-topbar-meta {
+            display: none;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: 0.5rem;
+            background: #f9fafb;
+            border: 1px solid #f3f4f6;
+            font-size: 0.6875rem;
+            color: #6b7280;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .app-topbar-meta {
+                display: inline-flex;
+            }
+        }
+
+        .app-topbar-end {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .app-topbar-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.1875rem;
+            border-radius: 0.75rem;
+            background: #f9fafb;
+            border: 1px solid #f3f4f6;
+        }
+
+        .app-topbar-icon-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 0.5rem;
+            color: var(--topbar-theme, #2563eb);
+            background: transparent;
+            transition: background 0.15s ease, color 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .app-topbar-icon-btn:hover {
+            background: rgba(37, 99, 235, 0.08);
+        }
+
+        .app-topbar-icon-btn svg {
+            width: 1.125rem;
+            height: 1.125rem;
+        }
+
+        .app-topbar-badge {
+            position: absolute;
+            top: -0.125rem;
+            inset-inline-end: -0.125rem;
+            min-width: 1.125rem;
+            height: 1.125rem;
+            padding: 0 0.25rem;
+            border-radius: 9999px;
+            font-size: 0.625rem;
+            font-weight: 700;
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid #fff;
+        }
+
+        .app-topbar-badge.is-visible {
+            display: flex;
+        }
+
+        .app-topbar-badge--red { background: #ef4444; }
+        .app-topbar-badge--blue { background: #3b82f6; }
+
+        .app-topbar-divider {
+            width: 1px;
+            height: 1.5rem;
+            background: #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .app-topbar-timer {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            height: 2.25rem;
+            padding: 0 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 1px 2px rgba(5, 150, 105, 0.25);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 640px) {
+            .app-topbar-timer {
+                display: inline-flex;
+            }
+        }
+
+        .app-topbar-timer:hover {
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+        }
+
+        .app-topbar-timer svg {
+            width: 1rem;
+            height: 1rem;
+            flex-shrink: 0;
+        }
+
+        .app-topbar-timer-time {
+            font-family: ui-monospace, monospace;
+            font-size: 0.75rem;
+            opacity: 0.95;
+        }
+
+        .app-topbar-user {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            height: 2.5rem;
+            padding: 0.25rem 0.5rem 0.25rem 0.375rem;
+            border-radius: 0.625rem;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .app-topbar-user:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        }
+
+        .app-topbar-user-info {
+            display: none;
+            flex-direction: column;
+            align-items: flex-end;
+            min-width: 0;
+            max-width: 7rem;
+            line-height: 1.2;
+        }
+
+        @media (min-width: 768px) {
+            .app-topbar-user-info {
+                display: flex;
+            }
+        }
+
+        .app-topbar-user-name {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #111827;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .app-topbar-user-role {
+            font-size: 0.625rem;
+            color: #6b7280;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .app-topbar-avatar {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.5rem;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1px solid #e5e7eb;
+        }
+
+        .app-topbar-avatar--fallback {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .app-topbar-chevron {
+            width: 0.875rem;
+            height: 0.875rem;
+            color: #9ca3af;
+            flex-shrink: 0;
+            display: none;
+        }
+
+        @media (min-width: 640px) {
+            .app-topbar-chevron {
+                display: block;
+            }
+        }
+
+        .app-topbar .mobile-menu-btn {
+            width: 2.25rem;
+            height: 2.25rem;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            flex-shrink: 0;
+        }
         
         /* Mobile Responsive Sidebar */
         @media (max-width: 768px) {
@@ -365,6 +645,22 @@
                             </svg>
                             لوحة التحكم
                         </a>
+                        @if(Auth::user()?->hasRole(['super_admin', 'admin']))
+                        <a href="{{ route('executive.dashboard') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('executive.dashboard') ? 'active' : '' }}">
+                            <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            لوحة CEO
+                        </a>
+                        <a href="{{ route('executive.finance') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('executive.finance') ? 'active' : '' }}">
+                            <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                            تقارير مالية CEO
+                        </a>
+                        @endif
                         @endif
 
                         {{-- Client Portal (for client role) --}}
@@ -595,6 +891,20 @@
                                 </svg>
                                 الموظفين
                             </a>
+                            <a href="{{ route('kpi.index') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('kpi.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                KPI الموظفين
+                            </a>
+                            <a href="{{ route('hr.warnings.index') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('hr.warnings.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                تحذيرات HR
+                            </a>
                             @endcan
                             
                             @can('view-attendance')
@@ -642,9 +952,23 @@
                                 </svg>
                                 المشاريع
                             </a>
+                            <a href="{{ route('pmo.index') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('pmo.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                                </svg>
+                                PMO (التنفيذ)
+                            </a>
                             @endif
                             
                             @if($webUser && ($webUser->can('view-own-tasks') || $webUser->can('view-all-tasks')))
+                            <a href="{{ route('daily-reports.index') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('daily-reports.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                التقارير اليومية
+                            </a>
                             <a href="{{ route('tasks.index') }}" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('tasks.*') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -753,12 +1077,33 @@
                             </a>
                             
                             @can('view-sales')
+                            <a href="{{ route('leads.index') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('leads.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                </svg>
+                                Leads (تطوير الأعمال)
+                            </a>
+                            <a href="{{ route('bd.index') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('bd.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                BD — شركاء وفرص
+                            </a>
                             <a href="{{ route('sales.index') }}" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('sales.*') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                 </svg>
                                 المبيعات
+                            </a>
+                            <a href="{{ route('pre-sales.index') }}" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('pre-sales.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Pre-Sales (تقدير وعروض)
                             </a>
                             @endcan
                             
@@ -855,11 +1200,11 @@
                             </a>
 
                             <a href="{{ route('client-system-projects.index') }}"
-                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client-system-projects.*', 'client-system-features.*') ? 'active' : '' }}">
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('client-system-projects.*', 'client-system-features.show', 'client-system-features.update', 'client-system-features.updates.*') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                                 </svg>
-                                مشاريع أنظمة العملاء
+                                ميزات وتحسينات العملاء
                             </a>
 
                             <a href="{{ route('client-website-issues.index') }}"
@@ -1041,41 +1386,40 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden main-content-mobile">
             <!-- Top Header -->
-            <header class="bg-white shadow-md border-b border-gray-200 overflow-visible sticky top-0 z-30 {{ $isClientGuard ? 'client-portal-topbar' : '' }}">
-                <div class="px-3 sm:px-5 lg:px-6 {{ $isClientGuard ? 'client-topbar-inner' : 'py-3 sm:py-4' }} header-container">
-                    <div class="flex items-center justify-between gap-3 sm:gap-4 w-full">
-                        <!-- Left Side - Menu Button & Title -->
-                        <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                            <!-- Mobile Menu Button -->
-                            <button class="mobile-menu-btn p-2 rounded-lg transition-all duration-200 flex-shrink-0 hover:bg-gray-100" 
+            <header class="bg-white border-b border-gray-200 overflow-visible sticky top-0 z-30 {{ $isClientGuard ? 'client-portal-topbar' : 'app-topbar' }}" @unless($isClientGuard) style="--topbar-theme: {{ \App\Helpers\SettingsHelper::getThemeColor() }};" @endunless>
+                <div class="{{ $isClientGuard ? 'px-3 sm:px-5 lg:px-6 client-topbar-inner' : 'app-topbar-inner header-container' }}">
+                    <div class="flex items-center justify-between gap-3 w-full {{ $isClientGuard ? '' : 'h-full' }}">
+                        <!-- Left: Menu + Title -->
+                        <div class="{{ $isClientGuard ? 'flex items-center gap-3 sm:gap-4 flex-1 min-w-0' : 'app-topbar-start' }}">
+                            <button class="mobile-menu-btn transition-colors duration-200 flex-shrink-0 hover:bg-gray-100 {{ $isClientGuard ? '' : '' }}"
                                     style="color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}"
                                     id="mobileMenuBtn"
-                                    onmouseover="this.style.backgroundColor='{{ \App\Helpers\SettingsHelper::getThemeColor() }}10'"
-                                    onmouseout="this.style.backgroundColor='transparent'">
-                                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    aria-label="فتح القائمة">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                                 </svg>
                             </button>
                             <div class="min-w-0 flex-1">
+                                @if($isClientGuard)
                                 <div class="flex items-center gap-3 sm:gap-4">
                                     <h2 class="text-lg sm:text-xl font-bold text-gray-900 truncate font-tajawal leading-tight">@yield('page-title', 'لوحة التحكم')</h2>
-                                    @unless($isClientGuard)
-                                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 text-xs text-gray-600">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                </div>
+                                @else
+                                <div class="app-topbar-title-wrap">
+                                    <h2 class="app-topbar-title font-tajawal">@yield('page-title', 'لوحة التحكم')</h2>
+                                    <span class="app-topbar-meta font-tajawal">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                         <span id="current-date">{{ now()->format('Y/m/d') }}</span>
-                                    </div>
-                                    @endunless
+                                    </span>
                                 </div>
-                                @unless($isClientGuard)
-                                    <p class="text-xs text-gray-500 mt-1 hidden sm:block font-tajawal">مرحباً بك في نظام {{ \App\Helpers\SettingsHelper::getSystemName() }}</p>
-                                @endunless
+                                @endif
                             </div>
                         </div>
-                        
-                        <!-- Right Side - Actions -->
-                        <div class="flex items-center gap-2 sm:gap-3 {{ $isClientGuard ? 'client-topbar-actions' : '' }}">
+
+                        <!-- Right: Actions -->
+                        <div class="{{ $isClientGuard ? 'flex items-center gap-2 sm:gap-3 client-topbar-actions' : 'app-topbar-end' }}">
                             @if($isClientGuard)
                                 @php $cHdr = $clientAccount; @endphp
                                 <details class="relative z-50 group/client-actions">
@@ -1114,232 +1458,176 @@
                                         @endif
                                     </div>
                                 </details>
+
+                                <details class="relative z-50 group/client-account user-dropdown-container">
+                                    <summary class="user-dropdown-trigger flex items-center gap-2 cursor-pointer select-none list-none rounded-xl border border-gray-200 bg-white px-2 sm:px-3 h-10 transition-all duration-200 hover:bg-gray-50 hover:shadow-sm [&::-webkit-details-marker]:hidden">
+                                        <div class="text-right hidden sm:block min-w-0">
+                                            <div class="text-xs font-bold text-gray-900 truncate max-w-24 font-tajawal leading-tight">{{ $displayName }}</div>
+                                            <div class="text-[10px] text-gray-500 truncate max-w-24 font-tajawal leading-tight">{{ $displayRole }}</div>
+                                        </div>
+                                        <div class="h-8 w-8 rounded-lg flex items-center justify-center shadow-sm border border-gray-100 flex-shrink-0"
+                                             style="background: linear-gradient(135deg, {{ \App\Helpers\SettingsHelper::getThemeColor() }} 0%, {{ \App\Helpers\SettingsHelper::getThemeColor() }}dd 100%);">
+                                            <span class="text-xs font-bold text-white">{{ substr($displayName, 0, 1) }}</span>
+                                        </div>
+                                        <svg class="topbar-chevron w-3.5 h-3.5 hidden sm:block shrink-0 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </summary>
+                                    <div class="client-topbar-dropdown w-[min(16rem,calc(100vw-2rem))] sm:w-64 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+                                        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/60">
+                                            <div class="flex items-center gap-3">
+                                                <div class="h-10 w-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0"
+                                                     style="background: linear-gradient(135deg, {{ \App\Helpers\SettingsHelper::getThemeColor() }} 0%, {{ \App\Helpers\SettingsHelper::getThemeColor() }}dd 100%);">
+                                                    <span class="text-sm font-bold text-white">{{ substr($displayName, 0, 1) }}</span>
+                                                </div>
+                                                <div class="min-w-0 flex-1 text-right">
+                                                    <div class="text-sm font-semibold text-gray-900 truncate font-tajawal">{{ $displayName }}</div>
+                                                    <div class="text-xs text-gray-500 truncate">{{ $displayEmail }}</div>
+                                                    <div class="text-xs font-medium" style="color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}">{{ $displayRole }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="py-1 text-sm font-semibold text-gray-800">
+                                            <a href="{{ route('client.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
+                                                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                                <span>لوحة العميل</span>
+                                            </a>
+                                            <a href="{{ route('client.notifications') }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
+                                                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                                <span>الإشعارات</span>
+                                            </a>
+                                            <a href="{{ route('client.help') }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
+                                                <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                <span>شرح البورتال</span>
+                                            </a>
+                                            <div class="border-t border-gray-100 my-1"></div>
+                                            <form method="POST" action="{{ route('client.logout') }}">
+                                                @csrf
+                                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-red-600 hover:bg-red-50 transition">
+                                                    <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                                    <span>تسجيل الخروج</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </details>
                             @else
-                            <!-- Start Day Button -->
-                            <button id="startDayBtn" 
-                                    class="hidden sm:flex items-center gap-2.5 px-4 sm:px-5 py-2.5 text-white rounded-xl transition-all duration-300 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-tajawal"
-                                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"
-                                    onclick="toggleWorkTimer()">
-                                <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <button id="startDayBtn" type="button" class="app-topbar-timer font-tajawal" onclick="toggleWorkTimer()">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <div class="flex flex-col items-start">
-                                    <span id="startDayText" class="text-xs font-bold leading-tight">بدء اليوم</span>
-                                    <span id="workTimer" class="text-xs opacity-90 font-mono leading-tight" style="display: none;">00:00:00</span>
-                                </div>
+                                <span id="startDayText">بدء اليوم</span>
+                                <span id="workTimer" class="app-topbar-timer-time" style="display: none;">00:00:00</span>
                             </button>
 
-                            <!-- Notifications -->
-                            <a href="{{ route('notifications.index') }}" 
-                               class="relative p-2.5 sm:p-3 rounded-xl transition-all duration-200 hover:shadow-md flex items-center justify-center flex-shrink-0"
-                               style="background: {{ \App\Helpers\SettingsHelper::getThemeColor() }}15; color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}"
-                               onmouseover="this.style.background='{{ \App\Helpers\SettingsHelper::getThemeColor() }}25'"
-                               onmouseout="this.style.background='{{ \App\Helpers\SettingsHelper::getThemeColor() }}15'">
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                </svg>
-                                <span id="top-bar-notifications-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden font-bold border-2 border-white shadow-lg"></span>
-                            </a>
-
-                            <!-- Messages -->
-                            <a href="{{ route('messages.index') }}" 
-                               class="hidden sm:flex relative p-2.5 sm:p-3 rounded-xl transition-all duration-200 hover:shadow-md items-center justify-center flex-shrink-0"
-                               style="background: {{ \App\Helpers\SettingsHelper::getThemeColor() }}15; color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}"
-                               onmouseover="this.style.background='{{ \App\Helpers\SettingsHelper::getThemeColor() }}25'"
-                               onmouseout="this.style.background='{{ \App\Helpers\SettingsHelper::getThemeColor() }}15'">
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                                <span id="top-bar-messages-count" class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden font-bold border-2 border-white shadow-lg"></span>
-                            </a>
-
-                            <!-- Settings -->
-                            <a href="{{ route('system-settings.index') }}" 
-                               class="hidden sm:flex p-2.5 sm:p-3 rounded-xl transition-all duration-200 hover:shadow-md items-center justify-center flex-shrink-0"
-                               style="background: {{ \App\Helpers\SettingsHelper::getThemeColor() }}15; color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}"
-                               onmouseover="this.style.background='{{ \App\Helpers\SettingsHelper::getThemeColor() }}25'"
-                               onmouseout="this.style.background='{{ \App\Helpers\SettingsHelper::getThemeColor() }}15'">
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            </a>
-                            @endif
-
-                            <!-- User Profile Dropdown -->
-                            @if($isClientGuard)
-                            <details class="relative z-50 group/client-account user-dropdown-container">
-                                <summary class="user-dropdown-trigger flex items-center gap-2 cursor-pointer select-none list-none rounded-xl border border-gray-200 bg-white px-2 sm:px-3 h-10 transition-all duration-200 hover:bg-gray-50 hover:shadow-sm [&::-webkit-details-marker]:hidden">
-                                    <div class="text-right hidden sm:block min-w-0">
-                                        <div class="text-xs font-bold text-gray-900 truncate max-w-24 font-tajawal leading-tight">{{ $displayName }}</div>
-                                        <div class="text-[10px] text-gray-500 truncate max-w-24 font-tajawal leading-tight">{{ $displayRole }}</div>
-                                    </div>
-                                    <div class="h-8 w-8 rounded-lg flex items-center justify-center shadow-sm border border-gray-100 flex-shrink-0"
-                                         style="background: linear-gradient(135deg, {{ \App\Helpers\SettingsHelper::getThemeColor() }} 0%, {{ \App\Helpers\SettingsHelper::getThemeColor() }}dd 100%);">
-                                        <span class="text-xs font-bold text-white">{{ substr($displayName, 0, 1) }}</span>
-                                    </div>
-                                    <svg class="topbar-chevron w-3.5 h-3.5 hidden sm:block shrink-0 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            <div class="app-topbar-toolbar">
+                                <a href="{{ route('notifications.index') }}" class="app-topbar-icon-btn" title="الإشعارات"
+                                   style="color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                     </svg>
-                                </summary>
-                                <div class="client-topbar-dropdown w-[min(16rem,calc(100vw-2rem))] sm:w-64 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
-                                    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/60">
-                                        <div class="flex items-center gap-3">
-                                            <div class="h-10 w-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0"
-                                                 style="background: linear-gradient(135deg, {{ \App\Helpers\SettingsHelper::getThemeColor() }} 0%, {{ \App\Helpers\SettingsHelper::getThemeColor() }}dd 100%);">
-                                                <span class="text-sm font-bold text-white">{{ substr($displayName, 0, 1) }}</span>
-                                            </div>
-                                            <div class="min-w-0 flex-1 text-right">
-                                                <div class="text-sm font-semibold text-gray-900 truncate font-tajawal">{{ $displayName }}</div>
-                                                <div class="text-xs text-gray-500 truncate">{{ $displayEmail }}</div>
-                                                <div class="text-xs font-medium" style="color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}">{{ $displayRole }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="py-1 text-sm font-semibold text-gray-800">
-                                        <a href="{{ route('client.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
-                                            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                                            <span>لوحة العميل</span>
-                                        </a>
-                                        <a href="{{ route('client.notifications') }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
-                                            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                                            <span>الإشعارات</span>
-                                        </a>
-                                        <a href="{{ route('client.help') }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition">
-                                            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                            <span>شرح البورتال</span>
-                                        </a>
-                                        <div class="border-t border-gray-100 my-1"></div>
-                                        <form method="POST" action="{{ route('client.logout') }}">
-                                            @csrf
-                                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-red-600 hover:bg-red-50 transition">
-                                                <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                                                <span>تسجيل الخروج</span>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </details>
-                            @else
+                                    <span id="top-bar-notifications-count" class="app-topbar-badge app-topbar-badge--red"></span>
+                                </a>
+                                <a href="{{ route('messages.index') }}" class="app-topbar-icon-btn hidden sm:inline-flex" title="الرسائل"
+                                   style="color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                    <span id="top-bar-messages-count" class="app-topbar-badge app-topbar-badge--blue"></span>
+                                </a>
+                            </div>
+
+                            <div class="app-topbar-divider hidden sm:block"></div>
+
                             <div class="relative overflow-visible user-dropdown-container">
-                                <button onclick="toggleUserDropdown()" 
-                                        class="flex items-center gap-2.5 sm:gap-3 rounded-xl p-2 sm:p-2.5 transition-all duration-200 hover:shadow-md group"
-                                        style="background: {{ \App\Helpers\SettingsHelper::getThemeColor() }}10"
-                                        onmouseover="this.style.background='{{ \App\Helpers\SettingsHelper::getThemeColor() }}20'"
-                                        onmouseout="this.style.background='{{ \App\Helpers\SettingsHelper::getThemeColor() }}10'">
-                                    <!-- User info - hidden on small screens -->
-                                    <div class="text-right hidden sm:block ml-2">
-                                        <div class="text-sm font-bold text-gray-900 truncate max-w-28 font-tajawal">{{ $displayName }}</div>
-                                        <div class="text-xs text-gray-600 truncate max-w-28 font-tajawal">{{ $displayRole }}</div>
+                                <button type="button" onclick="toggleUserDropdown()" class="app-topbar-user font-tajawal" aria-label="قائمة المستخدم">
+                                    <div class="app-topbar-user-info">
+                                        <span class="app-topbar-user-name">{{ $displayName }}</span>
+                                        <span class="app-topbar-user-role">{{ $displayRole }}</span>
                                     </div>
-                                    <!-- Profile picture - always visible -->
                                     @if($webUser && $webUser->profile_picture)
-                                        <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}" 
-                                             alt="Profile Picture" 
-                                             class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl object-cover shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-white ring-2 ring-transparent group-hover:ring-opacity-50 flex-shrink-0"
-                                             style="border-color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}30;">
+                                        <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}"
+                                             alt="{{ $displayName }}"
+                                             class="app-topbar-avatar">
                                     @else
-                                        <div class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-white ring-2 ring-transparent group-hover:ring-opacity-50 flex-shrink-0"
-                                             style="background: linear-gradient(135deg, {{ \App\Helpers\SettingsHelper::getThemeColor() }} 0%, {{ \App\Helpers\SettingsHelper::getThemeColor() }}dd 100%); border-color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}30;">
-                                            <span class="text-sm sm:text-base font-bold text-white">{{ substr($displayName, 0, 1) }}</span>
-                                        </div>
+                                        <span class="app-topbar-avatar app-topbar-avatar--fallback"
+                                              style="background: linear-gradient(135deg, {{ \App\Helpers\SettingsHelper::getThemeColor() }} 0%, {{ \App\Helpers\SettingsHelper::getThemeColor() }}dd 100%);">
+                                            {{ substr($displayName, 0, 1) }}
+                                        </span>
                                     @endif
-                                    <!-- Dropdown arrow - hidden on small screens -->
-                                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden sm:block transition-transform duration-200 group-hover:rotate-180 flex-shrink-0" 
-                                         style="color: {{ \App\Helpers\SettingsHelper::getThemeColor() }}" 
-                                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="app-topbar-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </button>
-                                            
-                                <!-- Dropdown Menu -->
+
                                 <div id="userDropdown" class="absolute top-full end-0 mt-2 w-56 sm:w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] hidden user-dropdown">
-                                                <div class="py-2">
-                                                    <!-- Profile Header -->
-                                                    <div class="px-4 py-3 border-b border-gray-100">
-                            <div class="flex items-center space-x-3 space-x-reverse">
-                                                            @if($webUser && $webUser->profile_picture)
-                                                                <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}" alt="Profile Picture" class="h-12 w-12 rounded-full object-cover shadow-sm">
-                                                            @else
-                                                                <div class="h-12 w-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
-                                                                    <span class="text-lg font-bold text-white">{{ substr($displayName, 0, 1) }}</span>
-                                                                </div>
-                                                            @endif
-                                                            <div class="flex-1">
-                                                                <div class="text-sm font-semibold text-gray-900">{{ $displayName }}</div>
-                                                                <div class="text-xs text-gray-500">{{ $displayEmail }}</div>
-                                                                <div class="text-xs text-blue-600">{{ $displayRole }}</div>
-                                                            </div>
-                                                        </div>
+                                    <div class="py-2">
+                                        <div class="px-4 py-3 border-b border-gray-100">
+                                            <div class="flex items-center space-x-3 space-x-reverse">
+                                                @if($webUser && $webUser->profile_picture)
+                                                    <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}" alt="Profile Picture" class="h-12 w-12 rounded-full object-cover shadow-sm">
+                                                @else
+                                                    <div class="h-12 w-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
+                                                        <span class="text-lg font-bold text-white">{{ substr($displayName, 0, 1) }}</span>
                                                     </div>
-                                                    
-                                                    <!-- Menu Items -->
-                                                    <div class="py-1">
-                                                        @if(!$isClientGuard)
-                                                        <a href="{{ route('profile.edit') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
-                                                            <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                            </svg>
-                                                            الملف الشخصي
-                                                        </a>
-                                                        @endif
-                                                        
-                                                        @if(!$isClientGuard)
-                                                        <a href="{{ route('system-settings.index') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
-                                                            <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                                            </svg>
-                                                            الإعدادات
-                                                        </a>
-                                                        @endif
-                                                        
-                                                        @if(!$isClientGuard)
-                                                        <!-- Mobile-only items (staff) -->
-                                                        <div class="sm:hidden">
-                                                            <div class="border-t border-gray-100 my-1"></div>
-                                                            
-                                                            <button onclick="toggleWorkTimer()" class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
-                                                                <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </svg>
-                                                                <div class="flex flex-col items-start">
-                                                                    <span id="startDayTextMobile">بدء اليوم</span>
-                                                                    <span id="workTimerMobile" class="text-xs text-gray-500" style="display: none;">00:00:00</span>
-                                                                </div>
-                                                            </button>
-                                                            
-                                                            <a href="{{ route('notifications.index') }}" class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
-                                                                <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                                                </svg>
-                                                                الإشعارات
-                                                            </a>
-                                                        </div>
-                                                        @else
-                                                        <!-- Mobile-only (client portal) -->
-                                                        <div class="sm:hidden">
-                                                            <div class="border-t border-gray-100 my-1"></div>
-                                                            <a href="{{ route('client.notifications') }}" class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
-                                                                <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                                                </svg>
-                                                                إشعارات البوابة
-                                                            </a>
-                                                        </div>
-                                                        @endif
-                                                        
-                                                        <div class="border-t border-gray-100 my-1"></div>
-                                                        
-                                                        <form method="POST" action="{{ $isClientGuard ? route('client.logout') : route('logout') }}">
-                                                            @csrf
-                                                            <button type="submit" class="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition duration-150">
-                                                                <svg class="ml-3 h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                                                </svg>
-                                                                تسجيل الخروج
-                                                            </button>
-                                                        </form>
+                                                @endif
+                                                <div class="flex-1">
+                                                    <div class="text-sm font-semibold text-gray-900">{{ $displayName }}</div>
+                                                    <div class="text-xs text-gray-500">{{ $displayEmail }}</div>
+                                                    <div class="text-xs text-blue-600">{{ $displayRole }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="py-1">
+                                            <a href="{{ route('profile.edit') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
+                                                <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
+                                                الملف الشخصي
+                                            </a>
+                                            <a href="{{ route('system-settings.index') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
+                                                <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                الإعدادات
+                                            </a>
+                                            <div class="sm:hidden">
+                                                <div class="border-t border-gray-100 my-1"></div>
+                                                <button type="button" onclick="toggleWorkTimer()" class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
+                                                    <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <div class="flex flex-col items-start">
+                                                        <span id="startDayTextMobile">بدء اليوم</span>
+                                                        <span id="workTimerMobile" class="text-xs text-gray-500" style="display: none;">00:00:00</span>
                                                     </div>
+                                                </button>
+                                                <a href="{{ route('notifications.index') }}" class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
+                                                    <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                                    </svg>
+                                                    الإشعارات
+                                                </a>
+                                                <a href="{{ route('messages.index') }}" class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition duration-150">
+                                                    <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                    </svg>
+                                                    الرسائل
+                                                </a>
+                                            </div>
+                                            <div class="border-t border-gray-100 my-1"></div>
+                                            <form method="POST" action="{{ route('logout') }}">
+                                                @csrf
+                                                <button type="submit" class="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition duration-150">
+                                                    <svg class="ml-3 h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                                    </svg>
+                                                    تسجيل الخروج
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             @endif
@@ -1350,7 +1638,7 @@
             
             <!-- Page Content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-                <div class="{{ request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.create', 'users.edit') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') || request()->routeIs('client-service-reports.*') || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*', 'client.system-features.*') || request()->routeIs('client-website-issues.*') || request()->routeIs('client-meeting-requests.*') || request()->routeIs('client-system-projects.*') || request()->routeIs('client-system-features.*') || request()->routeIs('projects.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6' }}">
+                <div class="{{ request()->routeIs('dashboard') || request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.*') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') || request()->routeIs('client-service-reports.*') || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*', 'client.system-features.*') || request()->routeIs('client-website-issues.*') || request()->routeIs('client-meeting-requests.*') || request()->routeIs('client-system-projects.*') || request()->routeIs('client-system-features.*') || request()->routeIs('projects.*') || request()->routeIs('job-postings.*') || request()->routeIs('admin.department-oversight.*') || request()->routeIs('admin.department-reports.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6' }}">
                     @if(session('success'))
                         <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded-r-lg shadow-sm">
                             {{ session('success') }}
@@ -2241,9 +2529,9 @@ function updateUnreadNotificationsCount() {
             if (topBarCountElement) {
                 if (data.count > 0) {
                     topBarCountElement.textContent = data.count;
-                    topBarCountElement.classList.remove('hidden');
+                    topBarCountElement.classList.add('is-visible');
                 } else {
-                    topBarCountElement.classList.add('hidden');
+                    topBarCountElement.classList.remove('is-visible');
                 }
             }
             

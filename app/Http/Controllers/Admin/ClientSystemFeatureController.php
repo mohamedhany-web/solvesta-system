@@ -11,6 +11,11 @@ use Illuminate\Http\Request;
 
 class ClientSystemFeatureController extends Controller
 {
+    public function index(Request $request)
+    {
+        return redirect()->route('client-system-projects.index', $request->query());
+    }
+
     public function show(ClientSystemFeature $clientSystemFeature)
     {
         $clientSystemFeature->load([
@@ -56,9 +61,15 @@ class ClientSystemFeatureController extends Controller
             );
         }
 
+        $message = 'تم تحديث الحالة — يُبلَغ العميل عند تغيّر الحالة.';
+        $redirectTo = $request->input('redirect_to');
+        if ($redirectTo && str_starts_with($redirectTo, url('/'))) {
+            return redirect()->to($redirectTo)->with('success', $message);
+        }
+
         return redirect()
             ->route('client-system-features.show', $clientSystemFeature)
-            ->with('success', 'تم تحديث الطلب.');
+            ->with('success', $message);
     }
 
     public function storeUpdate(Request $request, ClientSystemFeature $clientSystemFeature)

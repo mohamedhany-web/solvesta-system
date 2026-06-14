@@ -25,9 +25,17 @@ class JobPostingController extends Controller
             ->orderByDesc('is_featured')
             ->orderBy('sort_order')
             ->orderByDesc('updated_at')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('job-postings.index', compact('jobs'));
+        $stats = [
+            'total' => JobPosting::count(),
+            'published' => JobPosting::where('status', 'published')->count(),
+            'draft' => JobPosting::where('status', 'draft')->count(),
+            'applications' => JobApplication::count(),
+        ];
+
+        return view('job-postings.index', compact('jobs', 'stats'));
     }
 
     public function create()
@@ -77,6 +85,8 @@ class JobPostingController extends Controller
     public function edit(JobPosting $jobPosting)
     {
         abort_unless(auth()->user()->can('edit-jobs'), 403);
+
+        $jobPosting->loadCount('applications');
 
         $departments = Department::orderBy('name')->get();
 
@@ -131,7 +141,15 @@ class JobPostingController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('job-postings.applications', compact('jobPosting', 'applications'));
+        $appStats = [
+            'total' => $jobPosting->applications()->count(),
+            'pending' => $jobPosting->applications()->where('status', 'pending')->count(),
+            'reviewing' => $jobPosting->applications()->where('status', 'reviewing')->count(),
+            'shortlisted' => $jobPosting->applications()->where('status', 'shortlisted')->count(),
+            'hired' => $jobPosting->applications()->where('status', 'hired')->count(),
+        ];
+
+        return view('job-postings.applications', compact('jobPosting', 'applications', 'appStats'));
     }
 
     public function updateApplicationStatus(Request $request, JobApplication $application)

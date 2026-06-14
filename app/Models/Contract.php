@@ -16,6 +16,7 @@ class Contract extends Model
         'title',
         'description',
         'client_id',
+        'sale_id',
         'project_id',
         'contract_type',
         'start_date',
@@ -45,6 +46,11 @@ class Contract extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function sale(): BelongsTo
+    {
+        return $this->belongsTo(Sale::class);
     }
 
     public function project(): BelongsTo

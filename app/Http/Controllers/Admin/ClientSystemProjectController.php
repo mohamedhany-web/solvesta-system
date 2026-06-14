@@ -14,6 +14,7 @@ class ClientSystemProjectController extends Controller
     {
         $query = ClientSystemProject::with(['client', 'assignee'])
             ->withCount('features')
+            ->withCount(['features as open_features_count' => fn ($q) => $q->whereNotIn('status', ['completed', 'rejected', 'cancelled'])])
             ->orderByDesc('updated_at');
 
         if ($request->filled('status')) {
@@ -32,14 +33,14 @@ class ClientSystemProjectController extends Controller
         }
 
         $projects = $query->paginate(20)->withQueryString();
-        $clients = Client::orderBy('name')->get(['id', 'name', 'company']);
+        $clients = Client::orderBy('name')->get(['id', 'name', 'company_name']);
 
         return view('admin.client-system-projects.index', compact('projects', 'clients'));
     }
 
     public function create()
     {
-        $clients = Client::orderBy('name')->get(['id', 'name', 'company']);
+        $clients = Client::orderBy('name')->get(['id', 'name', 'company_name']);
         $users = User::orderBy('name')->get(['id', 'name']);
 
         return view('admin.client-system-projects.create', compact('clients', 'users'));
@@ -77,7 +78,7 @@ class ClientSystemProjectController extends Controller
             'client',
             'assignee',
             'features.assignee',
-            'features' => fn ($q) => $q->orderByDesc('created_at'),
+            'features' => fn ($q) => $q->orderByRaw("FIELD(status, 'submitted', 'reviewing', 'approved', 'in_progress', 'testing', 'completed', 'rejected', 'cancelled')")->orderByDesc('created_at'),
         ]);
         $users = User::orderBy('name')->get(['id', 'name']);
 

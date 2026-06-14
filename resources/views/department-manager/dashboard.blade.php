@@ -23,6 +23,35 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <div class="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('success') }}</div>
+    @endif
+
+    @if($pendingTeamProjects->isNotEmpty())
+    <div class="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-6 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+                <h2 class="text-lg font-extrabold text-amber-900">مشاريع بانتظار تعيين الفريق</h2>
+                <p class="text-sm text-amber-800 mt-1">مشاريع جديدة تحتاج منك تعيين Team Leader والفريق</p>
+            </div>
+            <span class="inline-flex items-center rounded-full bg-amber-200 text-amber-900 px-3 py-1 text-sm font-bold">{{ $pendingTeamProjects->count() }}</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @foreach($pendingTeamProjects as $pending)
+            <div class="bg-white rounded-xl border border-amber-100 p-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <div class="font-bold text-gray-900">{{ $pending->name }}</div>
+                    <div class="text-sm text-gray-600 mt-1">العميل: {{ $pending->client?->name ?? '—' }}</div>
+                </div>
+                <a href="{{ route('department-manager.projects.assign-team', $pending) }}" class="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-amber-700">
+                    تعيين الفريق
+                </a>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <div class="text-sm font-bold text-gray-600">المشاريع</div>
@@ -59,9 +88,17 @@
                                 </div>
                                 <div class="text-xs text-gray-500 mt-2">
                                     عدد المهام: {{ $project->tasks_count }}
+                                    @if(!$project->project_manager_id)
+                                        <span class="mr-2 inline-flex rounded-full bg-amber-100 text-amber-900 px-2 py-0.5 font-bold">بانتظار الفريق</span>
+                                    @endif
                                 </div>
                             </div>
-                            <a href="{{ route('projects.show', $project) }}" class="text-blue-600 font-bold text-sm hover:underline">فتح</a>
+                            <div class="flex flex-col gap-2 items-end">
+                                @if(!$project->project_manager_id)
+                                <a href="{{ route('department-manager.projects.assign-team', $project) }}" class="text-amber-700 font-bold text-sm hover:underline">تعيين الفريق</a>
+                                @endif
+                                <a href="{{ route('projects.show', $project) }}" class="text-blue-600 font-bold text-sm hover:underline">فتح</a>
+                            </div>
                         </div>
                     </div>
                 @empty

@@ -114,11 +114,11 @@
             <?php endif; ?>
             <a href="<?php echo e(route('client.support.tickets')); ?>" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition <?php echo e(request()->routeIs('client.support.*') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700'); ?>">
                 <span class="inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-                الدعم الفني
+                تذاكر الدعم
             </a>
             <a href="<?php echo e(route('client.help')); ?>" class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition <?php echo e(request()->routeIs('client.help') ? 'ring-2 ring-black/5 text-gray-900' : 'text-gray-700'); ?>">
                 <span class="inline-flex h-2.5 w-2.5 rounded-full bg-gray-400"></span>
-                المساعدة
+                شرح البورتال
             </a>
         </nav>
 
@@ -206,8 +206,8 @@
             <a href="<?php echo e(route('client.meeting-requests.index')); ?>" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 <?php echo e(request()->routeIs('client.meeting-requests.*') ? 'ring-2 ring-black/5 text-gray-900' : ''); ?>">طلبات الاجتماعات</a>
             <a href="<?php echo e(route('client.calendar')); ?>" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 <?php echo e(request()->routeIs('client.calendar') ? 'ring-2 ring-black/5 text-gray-900' : ''); ?>">التقويم</a>
             <?php endif; ?>
-            <a href="<?php echo e(route('client.support.tickets')); ?>" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 <?php echo e(request()->routeIs('client.support.*') ? 'ring-2 ring-black/5 text-gray-900' : ''); ?>">الدعم الفني</a>
-            <a href="<?php echo e(route('client.help')); ?>" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 <?php echo e(request()->routeIs('client.help') ? 'ring-2 ring-black/5 text-gray-900' : ''); ?>">المساعدة</a>
+            <a href="<?php echo e(route('client.support.tickets')); ?>" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 <?php echo e(request()->routeIs('client.support.*') ? 'ring-2 ring-black/5 text-gray-900' : ''); ?>">تذاكر الدعم</a>
+            <a href="<?php echo e(route('client.help')); ?>" class="block px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 <?php echo e(request()->routeIs('client.help') ? 'ring-2 ring-black/5 text-gray-900' : ''); ?>">شرح البورتال</a>
 
             <a href="<?php echo e(route('website.home')); ?>" class="mt-4 block text-center text-xs text-gray-500 hover:text-gray-700">العودة إلى موقع الشركة</a>
             <form method="POST" action="<?php echo e(route('client.logout')); ?>" class="mt-3">

@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('page-title', 'تفاصيل عملية البيع'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -27,6 +25,8 @@
             </div>
         </div>
     </div>
+
+    <?php echo $__env->make('sales.partials.workflow', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <!-- Sale Details -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">

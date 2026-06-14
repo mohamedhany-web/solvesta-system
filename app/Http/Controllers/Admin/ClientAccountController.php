@@ -19,7 +19,7 @@ class ClientAccountController extends Controller
                     ->orWhere('email', 'like', '%' . $request->search . '%')
                     ->orWhereHas('client', function ($qc) use ($request) {
                         $qc->where('name', 'like', '%' . $request->search . '%')
-                           ->orWhere('company', 'like', '%' . $request->search . '%');
+                           ->orWhere('company_name', 'like', '%' . $request->search . '%');
                     });
             })
             ->orderByDesc('id')

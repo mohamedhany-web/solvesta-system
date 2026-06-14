@@ -53,7 +53,7 @@
 
         <div class="bg-white rounded-xl border border-gray-200 p-6">
             <div class="text-sm font-bold text-gray-900 mb-4">إدارة الحالة</div>
-            <form method="POST" action="{{ route('support.contact-requests.status', $contactRequest) }}" class="space-y-3">
+            <form method="POST" action="{{ route('support.contact-requests.status', $contactRequest) }}" class="space-y-3 mb-4">
                 @csrf
                 @method('PATCH')
                 <select name="status" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm">
@@ -63,6 +63,13 @@
                 </select>
                 <button class="w-full px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-bold">حفظ</button>
             </form>
+
+            @can('create-sales')
+            <form method="POST" action="{{ route('workflow.contact.convert-to-lead', $contactRequest) }}">
+                @csrf
+                <button type="submit" class="w-full px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold">تحويل إلى Lead →</button>
+            </form>
+            @endcan
 
             <div class="mt-6 text-xs text-gray-500 space-y-2">
                 <div><span class="font-bold text-gray-600">التاريخ:</span> {{ $contactRequest->created_at->format('Y-m-d H:i') }}</div>

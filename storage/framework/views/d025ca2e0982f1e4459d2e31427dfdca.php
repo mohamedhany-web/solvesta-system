@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('page-title', 'مصروف جديد'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -92,6 +90,18 @@ unset($__errorArgs, $__bag); ?>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
+
+                    <?php if(isset($projects)): ?>
+                    <div>
+                        <label for="project_id" class="block text-sm font-medium text-gray-700 mb-2">المشروع (اختياري)</label>
+                        <select name="project_id" id="project_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="">مصروف عام</option>
+                            <?php $__currentLoopData = $projects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($p->id); ?>" <?php if(old('project_id', request('project_id')) == $p->id): echo 'selected'; endif; ?>><?php echo e($p->name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
 
                     <div>
                         <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">المبلغ</label>

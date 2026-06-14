@@ -65,6 +65,18 @@
                         </select>
                     </div>
 
+                    @isset($projects)
+                    <div>
+                        <label for="project_id" class="block text-sm font-medium text-gray-700 mb-2">المشروع (اختياري)</label>
+                        <select name="project_id" id="project_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="">مصروف عام</option>
+                            @foreach($projects as $p)
+                                <option value="{{ $p->id }}" @selected(old('project_id', request('project_id')) == $p->id)>{{ $p->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endisset
+
                     <div>
                         <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">المبلغ</label>
                         <input type="number" name="amount" id="amount" value="{{ old('amount') }}" step="0.01" required

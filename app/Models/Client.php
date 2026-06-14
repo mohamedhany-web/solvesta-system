@@ -15,11 +15,27 @@ class Client extends Model
         'name',
         'email',
         'phone',
-        'company',
+        'company_name',
+        'industry',
+        'client_type',
         'address',
+        'city',
+        'country',
+        'website',
         'status',
         'notes',
+        'assigned_to',
     ];
+
+    public function getCompanyAttribute(): ?string
+    {
+        return $this->attributes['company_name'] ?? null;
+    }
+
+    public function setCompanyAttribute(?string $value): void
+    {
+        $this->attributes['company_name'] = $value;
+    }
 
     protected $casts = [
         'created_at' => 'datetime',

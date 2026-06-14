@@ -3,91 +3,137 @@
 @section('page-title', 'التوظيف والوظائف')
 
 @section('content')
-<div class="w-full">
-  <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">التوظيف والوظائف</h1>
-      <p class="text-gray-600">إدارة الوظائف المعروضة على الموقع العام</p>
+@php $themeColor = \App\Helpers\SettingsHelper::getThemeColor(); @endphp
+<div class="w-full max-w-full font-tajawal">
+    @include('partials.erp-page-header', [
+        'title' => 'التوظيف والوظائف',
+        'subtitle' => 'إدارة الوظائف المعروضة على الموقع العام وطلبات التقديم',
+        'icon' => 'briefcase',
+    ])
+
+    <div class="flex flex-wrap justify-end gap-3 mb-6">
+        <a href="{{ route('website.careers') }}" target="_blank" rel="noopener"
+           class="inline-flex items-center gap-2 border border-gray-300 bg-white px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+            صفحة التوظيف العامة
+        </a>
+        @can('create-jobs')
+        <a href="{{ route('job-postings.create') }}"
+           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm shadow-lg hover:opacity-95"
+           style="background: linear-gradient(135deg, {{ $themeColor }} 0%, {{ $themeColor }}dd 100%);">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            وظيفة جديدة
+        </a>
+        @endcan
     </div>
-    @can('create-jobs')
-    <a href="{{ route('job-postings.create') }}" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition flex items-center justify-center shadow-sm font-bold">
-      <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-      وظيفة جديدة
-    </a>
-    @endcan
-  </div>
 
-  @if(session('success'))
-    <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">{{ session('success') }}</div>
-  @endif
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        @foreach([
+            ['إجمالي الوظائف', $stats['total'], $themeColor],
+            ['منشورة', $stats['published'], '#059669'],
+            ['مسودات', $stats['draft'], '#d97706'],
+            ['طلبات التقديم', $stats['applications'], '#7c3aed'],
+        ] as [$label, $val, $color])
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-5">
+            <p class="text-xs text-gray-500">{{ $label }}</p>
+            <p class="text-3xl font-bold mt-1" style="color: {{ $color }};">{{ $val }}</p>
+        </div>
+        @endforeach
+    </div>
 
-  <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-    <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <input type="text" name="search" value="{{ request('search') }}" placeholder="بحث في العنوان..."
-             class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-      <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-        <option value="">كل الحالات</option>
-        <option value="draft" @selected(request('status') === 'draft')>مسودة</option>
-        <option value="published" @selected(request('status') === 'published')>منشورة</option>
-        <option value="closed" @selected(request('status') === 'closed')>مغلقة</option>
-      </select>
-      <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded-lg font-bold hover:bg-black">تصفية</button>
+    <form method="GET" class="bg-white border border-gray-200 rounded-2xl p-4 mb-6 flex flex-wrap gap-3 items-end shadow-sm">
+        <div class="flex-1 min-w-[12rem]">
+            <label class="text-xs font-bold text-gray-600 block mb-1">بحث</label>
+            <input name="search" value="{{ request('search') }}" placeholder="المسمى أو الملخص..."
+                   class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+            <label class="text-xs font-bold text-gray-600 block mb-1">الحالة</label>
+            <select name="status" class="border border-gray-300 rounded-xl px-3 py-2 text-sm min-w-[10rem]">
+                <option value="">الكل</option>
+                <option value="draft" @selected(request('status') === 'draft')>مسودة</option>
+                <option value="published" @selected(request('status') === 'published')>منشورة</option>
+                <option value="closed" @selected(request('status') === 'closed')>مغلقة</option>
+            </select>
+        </div>
+        <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-bold">تصفية</button>
+        @if(request()->hasAny(['search', 'status']))
+        <a href="{{ route('job-postings.index') }}" class="border border-gray-300 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-50">إعادة تعيين</a>
+        @endif
     </form>
-  </div>
 
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">الوظيفة</th>
-            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">الحالة</th>
-            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">الطلبات</th>
-            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">التحديث</th>
-            <th class="px-6 py-3"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
-          @forelse($jobs as $job)
-          <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4">
-              <div class="font-bold text-gray-900">{{ $job->title }}</div>
-              @if($job->is_featured)<span class="text-xs text-orange-600 font-bold">مميزة</span>@endif
-              <div class="text-xs text-gray-500 mt-1">{{ $job->department?->name ?? '—' }} · {{ $job->employmentTypeLabel() }}</div>
-            </td>
-            <td class="px-6 py-4">
-              @php
-                $badge = match($job->status) {
-                  'published' => 'bg-green-100 text-green-800',
-                  'closed' => 'bg-gray-200 text-gray-700',
-                  default => 'bg-amber-100 text-amber-800',
-                };
-              @endphp
-              <span class="px-3 py-1 rounded-full text-xs font-bold {{ $badge }}">{{ $job->statusLabelAr() }}</span>
-            </td>
-            <td class="px-6 py-4 text-sm font-bold text-blue-600">{{ $job->applications_count }}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ $job->updated_at->format('Y-m-d') }}</td>
-            <td class="px-6 py-4 text-left whitespace-nowrap">
-              <a href="{{ route('job-postings.show', $job) }}" class="text-sm font-bold text-gray-700 hover:text-blue-600 ml-3">عرض</a>
-              @can('edit-jobs')
-              <a href="{{ route('job-postings.edit', $job) }}" class="text-sm font-bold text-blue-600 hover:underline ml-3">تعديل</a>
-              @endcan
-            </td>
-          </tr>
-          @empty
-          <tr>
-            <td colspan="5" class="px-6 py-12 text-center text-gray-600">
-              لا توجد وظائف. أنشئ وظيفة واضبط حالتها على «منشورة» لتظهر في
-              <a href="{{ route('website.careers') }}" target="_blank" class="text-blue-600 font-bold hover:underline">صفحة التوظيف</a>.
-            </td>
-          </tr>
-          @endforelse
-        </tbody>
-      </table>
+    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="font-bold text-gray-900">قائمة الوظائف <span class="text-gray-400 font-normal text-sm">({{ $jobs->total() }})</span></h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">الوظيفة</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">القسم / النوع</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">الحالة</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">الطلبات</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">التحديث</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($jobs as $job)
+                    @php
+                        $badge = match($job->status) {
+                            'published' => 'bg-emerald-100 text-emerald-800',
+                            'closed' => 'bg-gray-100 text-gray-600',
+                            default => 'bg-amber-100 text-amber-800',
+                        };
+                    @endphp
+                    <tr class="hover:bg-blue-50/40 transition-colors align-middle">
+                        <td class="px-4 py-3">
+                            <a href="{{ route('job-postings.show', $job) }}" class="font-bold text-gray-900 hover:underline" style="color: inherit;">{{ $job->title }}</a>
+                            @if($job->is_featured)
+                                <span class="inline-block ms-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">مميزة</span>
+                            @endif
+                            @if($job->summary)
+                                <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ $job->summary }}</p>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-gray-600 text-xs">
+                            <div>{{ $job->department?->name ?? '—' }}</div>
+                            <div class="text-gray-400">{{ $job->employmentTypeLabel() }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="text-xs font-bold px-2 py-1 rounded-full {{ $badge }}">{{ $job->statusLabelAr() }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <a href="{{ route('job-postings.applications', $job) }}" class="font-bold hover:underline" style="color: {{ $themeColor }};">{{ $job->applications_count }}</a>
+                        </td>
+                        <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ $job->updated_at->format('Y/m/d') }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('job-postings.show', $job) }}" class="text-xs font-bold hover:underline" style="color: {{ $themeColor }};">عرض</a>
+                                @can('edit-jobs')
+                                <a href="{{ route('job-postings.edit', $job) }}" class="text-xs font-bold text-gray-600 hover:underline">تعديل</a>
+                                @endcan
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="px-4 py-14 text-center text-gray-500">
+                            <p class="font-bold text-lg mb-1">لا توجد وظائف</p>
+                            <p class="text-sm mb-3">أنشئ وظيفة واضبط حالتها على «منشورة» لتظهر في الموقع.</p>
+                            @can('create-jobs')
+                            <a href="{{ route('job-postings.create') }}" class="font-semibold hover:underline" style="color: {{ $themeColor }};">إنشاء وظيفة جديدة</a>
+                            @endcan
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($jobs->hasPages())
+        <div class="px-4 py-3 border-t border-gray-100">{{ $jobs->links() }}</div>
+        @endif
     </div>
-    @if($jobs->hasPages())
-    <div class="px-6 py-4 border-t border-gray-100">{{ $jobs->links() }}</div>
-    @endif
-  </div>
 </div>
 @endsection

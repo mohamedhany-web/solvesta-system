@@ -16,7 +16,7 @@ class ClientController extends Controller
         $clients = Client::query()
             ->when(request('search'), function ($query) {
                 $query->where('name', 'like', '%' . request('search') . '%')
-                    ->orWhere('company', 'like', '%' . request('search') . '%')
+                    ->orWhere('company_name', 'like', '%' . request('search') . '%')
                     ->orWhere('email', 'like', '%' . request('search') . '%');
             })
             ->when(request('status'), function ($query) {

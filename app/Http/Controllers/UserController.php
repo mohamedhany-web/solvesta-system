@@ -13,12 +13,33 @@ use Spatie\Permission\Models\Role;
 class UserController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with(['employee', 'roles'])->paginate(15);
-        $roles = Role::all();
-        
-        return view('users.index', compact('users', 'roles'));
+        $users = User::with(['employee.department', 'roles'])
+            ->when($request->search, function ($q) use ($request) {
+                $s = '%'.$request->search.'%';
+                $q->where(function ($query) use ($s) {
+                    $query->where('name', 'like', $s)
+                        ->orWhere('email', 'like', $s);
+                });
+            })
+            ->when($request->role, fn ($q) => $q->role($request->role))
+            ->when($request->department_id, fn ($q) => $q->whereHas('employee', fn ($e) => $e->where('department_id', $request->department_id)))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        $stats = [
+            'total' => User::count(),
+            'verified' => User::whereNotNull('email_verified_at')->count(),
+            'pending' => User::whereNull('email_verified_at')->count(),
+            'admins' => User::role(['admin', 'super_admin'])->count(),
+        ];
+
+        $roles = Role::orderBy('name')->get();
+        $departments = Department::active()->orderBy('name')->get();
+
+        return view('users.index', compact('users', 'roles', 'departments', 'stats'));
     }
 
     public function create()
@@ -116,7 +137,7 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        $user->load(['employee.department', 'roles']);
+        $user->load(['employee.department', 'roles', 'permissions']);
         
         return view('users.show', compact('user'));
     }

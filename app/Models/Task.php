@@ -15,6 +15,7 @@ class Task extends Model
         'title',
         'description',
         'project_id',
+        'milestone_id',
         'assigned_to',
         'created_by',
         'parent_task_id',
@@ -22,8 +23,11 @@ class Task extends Model
         'start_date',
         'status',
         'priority',
+        'specialization',
         'estimated_hours',
         'actual_hours',
+        'has_blocker',
+        'blocker_description',
         'progress_percentage',
         'tags',
         'attachments',
@@ -42,6 +46,11 @@ class Task extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function milestone(): BelongsTo
+    {
+        return $this->belongsTo(ProjectMilestone::class, 'milestone_id');
     }
 
     /**

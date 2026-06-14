@@ -1,16 +1,17 @@
-
-
 <?php $__env->startSection('page-title', $feature->reference_code); ?>
 
 <?php $__env->startSection('content'); ?>
 <div class="w-full max-w-full">
-    <div class="mb-6">
-        <p class="text-sm font-mono text-gray-500"><?php echo e($feature->reference_code); ?></p>
-        <h1 class="text-2xl font-bold"><?php echo e($feature->title); ?></h1>
-        <p class="text-sm text-gray-600 mt-1">
-            مشروع: <a href="<?php echo e(route('client-system-projects.show', $feature->project)); ?>" class="text-blue-600 font-semibold"><?php echo e($feature->project->name); ?></a>
-            — عميل: <a href="<?php echo e(route('clients.show', $feature->project->client)); ?>" class="text-blue-600"><?php echo e($feature->project->client->name); ?></a>
-        </p>
+    <div class="mb-6 flex flex-wrap justify-between gap-4">
+        <div>
+            <p class="text-sm font-mono text-gray-500"><?php echo e($feature->reference_code); ?></p>
+            <h1 class="text-2xl font-bold"><?php echo e($feature->title); ?></h1>
+            <p class="text-sm text-gray-600 mt-1">
+                مشروع: <a href="<?php echo e(route('client-system-projects.show', $feature->project)); ?>" class="text-blue-600 font-semibold hover:underline"><?php echo e($feature->project->name); ?></a>
+                — عميل: <a href="<?php echo e(route('clients.show', $feature->project->client)); ?>" class="text-blue-600 hover:underline"><?php echo e($feature->project->client->name); ?></a>
+            </p>
+        </div>
+        <a href="<?php echo e(route('client-system-projects.show', $feature->project)); ?>" class="shrink-0 border border-gray-300 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-50">← العودة للمشروع</a>
     </div>
 
     <?php if(session('success')): ?><div class="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg"><?php echo e(session('success')); ?></div><?php endif; ?>
@@ -52,6 +53,7 @@
         <div class="xl:col-span-5 space-y-6">
             <form method="POST" action="<?php echo e(route('client-system-features.update', $feature)); ?>" class="bg-white border rounded-xl p-6 space-y-3">
                 <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
+                <input type="hidden" name="redirect_to" value="<?php echo e(route('client-system-projects.show', $feature->project)); ?>">
                 <h2 class="font-bold">حالة الطلب</h2>
                 <select name="status" class="w-full border rounded-lg px-3 py-2 text-sm">
                     <?php $__currentLoopData = ['submitted','reviewing','approved','in_progress','testing','completed','rejected','cancelled']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $st): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -82,8 +84,6 @@
                 </select>
                 <button class="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-bold">نشر التحديث</button>
             </form>
-
-            <a href="<?php echo e(route('client-system-projects.show', $feature->project)); ?>" class="block text-center text-sm text-blue-600 font-semibold">← العودة للمشروع</a>
         </div>
         <?php endif; ?>
     </div>

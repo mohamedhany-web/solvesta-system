@@ -11,6 +11,7 @@ class Expense extends Model
         'expense_number',
         'expense_category',
         'vendor_id',
+        'project_id',
         'expense_date',
         'amount',
         'description',
@@ -33,6 +34,11 @@ class Expense extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Client::class, 'vendor_id');
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     public function approver(): BelongsTo

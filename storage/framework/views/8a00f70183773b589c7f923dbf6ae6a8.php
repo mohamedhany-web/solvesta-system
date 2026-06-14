@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('page-title', 'تفاصيل الطلب'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -54,7 +52,7 @@
 
         <div class="bg-white rounded-xl border border-gray-200 p-6">
             <div class="text-sm font-bold text-gray-900 mb-4">إدارة الحالة</div>
-            <form method="POST" action="<?php echo e(route('support.contact-requests.status', $contactRequest)); ?>" class="space-y-3">
+            <form method="POST" action="<?php echo e(route('support.contact-requests.status', $contactRequest)); ?>" class="space-y-3 mb-4">
                 <?php echo csrf_field(); ?>
                 <?php echo method_field('PATCH'); ?>
                 <select name="status" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm">
@@ -64,6 +62,13 @@
                 </select>
                 <button class="w-full px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-bold">حفظ</button>
             </form>
+
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('create-sales')): ?>
+            <form method="POST" action="<?php echo e(route('workflow.contact.convert-to-lead', $contactRequest)); ?>">
+                <?php echo csrf_field(); ?>
+                <button type="submit" class="w-full px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold">تحويل إلى Lead →</button>
+            </form>
+            <?php endif; ?>
 
             <div class="mt-6 text-xs text-gray-500 space-y-2">
                 <div><span class="font-bold text-gray-600">التاريخ:</span> <?php echo e($contactRequest->created_at->format('Y-m-d H:i')); ?></div>

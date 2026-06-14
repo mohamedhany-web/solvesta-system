@@ -16,12 +16,15 @@ class Project extends Model
         'name',
         'description',
         'client_id',
+        'contract_id',
+        'sale_id',
         'department_id',
         'project_manager_id',
         'start_date',
         'end_date',
         'budget',
         'status',
+        'kickoff_status',
         'priority',
         'progress_percentage',
         'team_members',
@@ -37,12 +40,19 @@ class Project extends Model
         'technologies' => 'array',
     ];
 
-    /**
-     * Get the client that owns the project.
-     */
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class, 'client_id');
+    }
+
+    public function contract(): BelongsTo
+    {
+        return $this->belongsTo(Contract::class);
+    }
+
+    public function sale(): BelongsTo
+    {
+        return $this->belongsTo(Sale::class);
     }
 
     /**
@@ -75,6 +85,21 @@ class Project extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function milestones(): HasMany
+    {
+        return $this->hasMany(ProjectMilestone::class)->orderBy('sort_order');
+    }
+
+    public function dailyReports(): HasMany
+    {
+        return $this->hasMany(DailyReport::class);
+    }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
     }
 
     /**
@@ -112,6 +137,11 @@ class Project extends Model
     public function teamMembers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_team_members', 'project_id', 'user_id');
+    }
+
+    public function needsTeamAssignment(): bool
+    {
+        return $this->department_id && ! $this->project_manager_id;
     }
 
     /**

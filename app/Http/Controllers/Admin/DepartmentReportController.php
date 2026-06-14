@@ -23,7 +23,14 @@ class DepartmentReportController extends Controller
 
         $departments = Department::query()->orderBy('name')->get();
 
-        return view('department-reports.admin.index', compact('reports', 'departments'));
+        $stats = [
+            'total' => DepartmentReport::count(),
+            'submitted' => DepartmentReport::where('status', 'submitted')->count(),
+            'draft' => DepartmentReport::where('status', 'draft')->count(),
+            'this_month' => DepartmentReport::where('created_at', '>=', now()->startOfMonth())->count(),
+        ];
+
+        return view('department-reports.admin.index', compact('reports', 'departments', 'stats'));
     }
 
     public function show(DepartmentReport $departmentReport)

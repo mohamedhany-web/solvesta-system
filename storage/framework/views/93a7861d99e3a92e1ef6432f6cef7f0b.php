@@ -25,6 +25,7 @@
 </div>
 
 <div class="max-w-6xl mx-auto">
+    <?php echo $__env->make('employees.partials.kpi-panel', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Information -->
         <div class="lg:col-span-2 space-y-6">

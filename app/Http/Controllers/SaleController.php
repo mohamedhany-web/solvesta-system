@@ -119,7 +119,7 @@ class SaleController extends Controller
      */
     public function show(Sale $sale)
     {
-        $sale->load(['client', 'salesRep']);
+        $sale->load(['client', 'salesRep', 'lead', 'contracts', 'costEstimations', 'proposals']);
         
         // التحقق من وجود فاتورة مسبقة للبيع
         $existingInvoice = Invoice::where('sale_id', $sale->id)->first();

@@ -4,13 +4,16 @@
 
 @section('content')
 <div class="w-full max-w-full">
-    <div class="mb-6">
-        <p class="text-sm font-mono text-gray-500">{{ $feature->reference_code }}</p>
-        <h1 class="text-2xl font-bold">{{ $feature->title }}</h1>
-        <p class="text-sm text-gray-600 mt-1">
-            مشروع: <a href="{{ route('client-system-projects.show', $feature->project) }}" class="text-blue-600 font-semibold">{{ $feature->project->name }}</a>
-            — عميل: <a href="{{ route('clients.show', $feature->project->client) }}" class="text-blue-600">{{ $feature->project->client->name }}</a>
-        </p>
+    <div class="mb-6 flex flex-wrap justify-between gap-4">
+        <div>
+            <p class="text-sm font-mono text-gray-500">{{ $feature->reference_code }}</p>
+            <h1 class="text-2xl font-bold">{{ $feature->title }}</h1>
+            <p class="text-sm text-gray-600 mt-1">
+                مشروع: <a href="{{ route('client-system-projects.show', $feature->project) }}" class="text-blue-600 font-semibold hover:underline">{{ $feature->project->name }}</a>
+                — عميل: <a href="{{ route('clients.show', $feature->project->client) }}" class="text-blue-600 hover:underline">{{ $feature->project->client->name }}</a>
+            </p>
+        </div>
+        <a href="{{ route('client-system-projects.show', $feature->project) }}" class="shrink-0 border border-gray-300 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-50">← العودة للمشروع</a>
     </div>
 
     @if(session('success'))<div class="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">{{ session('success') }}</div>@endif
@@ -52,6 +55,7 @@
         <div class="xl:col-span-5 space-y-6">
             <form method="POST" action="{{ route('client-system-features.update', $feature) }}" class="bg-white border rounded-xl p-6 space-y-3">
                 @csrf @method('PUT')
+                <input type="hidden" name="redirect_to" value="{{ route('client-system-projects.show', $feature->project) }}">
                 <h2 class="font-bold">حالة الطلب</h2>
                 <select name="status" class="w-full border rounded-lg px-3 py-2 text-sm">
                     @foreach(['submitted','reviewing','approved','in_progress','testing','completed','rejected','cancelled'] as $st)
@@ -82,8 +86,6 @@
                 </select>
                 <button class="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-bold">نشر التحديث</button>
             </form>
-
-            <a href="{{ route('client-system-projects.show', $feature->project) }}" class="block text-center text-sm text-blue-600 font-semibold">← العودة للمشروع</a>
         </div>
         @endcan
     </div>

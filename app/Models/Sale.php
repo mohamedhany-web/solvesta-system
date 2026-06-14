@@ -11,6 +11,7 @@ class Sale extends Model
     use HasFactory;
 
     protected $fillable = [
+        'lead_id',
         'lead_source',
         'client_id',
         'assigned_to',
@@ -18,6 +19,9 @@ class Sale extends Model
         'estimated_value',
         'actual_value',
         'stage',
+        'qualification_status',
+        'lost_reason',
+        'requirement_summary',
         'probability_percentage',
         'expected_close_date',
         'actual_close_date',
@@ -62,6 +66,31 @@ class Sale extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(Lead::class);
+    }
+
+    public function contracts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Contract::class);
+    }
+
+    public function costEstimations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CostEstimation::class);
+    }
+
+    public function proposals(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Proposal::class);
+    }
+
+    public function latestProposal(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Proposal::class)->latestOfMany();
     }
 
     public function salesRep(): BelongsTo

@@ -56,7 +56,11 @@ class DepartmentOversightController extends Controller
             'departments_total' => $departments->count(),
             'projects_total' => Project::whereIn('department_id', $deptIds)->count(),
             'reports_total' => DepartmentReport::count(),
+            'overdue_tasks' => (int) $overdueCountsByDept->sum(),
+            'without_manager' => $departments->whereNull('manager_id')->count(),
         ];
+
+        $departmentsAtRisk = $departments->filter(fn ($d) => ($overdueCountsByDept[$d->id] ?? 0) > 0)->count();
 
         return view('admin.department-oversight.index', compact(
             'departments',
@@ -64,7 +68,8 @@ class DepartmentOversightController extends Controller
             'overdueCountsByDept',
             'latestReportByDept',
             'recentReports',
-            'stats'
+            'stats',
+            'departmentsAtRisk'
         ));
     }
 }

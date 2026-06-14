@@ -23,6 +23,9 @@ class ExpenseController extends Controller
             ->when(request('category'), function ($query) {
                 $query->where('expense_category', request('category'));
             })
+            ->when(request('project_id'), function ($query) {
+                $query->where('project_id', request('project_id'));
+            })
             ->orderBy('expense_date', 'desc')
             ->paginate(15);
         
@@ -39,7 +42,9 @@ class ExpenseController extends Controller
     public function create()
     {
         $vendors = Client::all();
-        return view('expenses.create', compact('vendors'));
+        $projects = \App\Models\Project::whereIn('status', ['planning', 'in_progress', 'completed'])->orderBy('name')->get(['id', 'name']);
+
+        return view('expenses.create', compact('vendors', 'projects'));
     }
 
     public function store(Request $request)
@@ -47,6 +52,7 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'expense_category' => 'required|in:office_supplies,utilities,rent,salaries,marketing,travel,maintenance,software,professional_fees,insurance,taxes,other',
             'vendor_id' => 'nullable|exists:clients,id',
+            'project_id' => 'nullable|exists:projects,id',
             'expense_date' => 'required|date',
             'amount' => 'required|numeric|min:0',
             'description' => 'required|string',

@@ -3,28 +3,48 @@
 @section('page-title', 'تعديل وظيفة')
 
 @section('content')
-<div class="w-full max-w-4xl mx-auto">
-  <div class="mb-8 flex items-center justify-between">
-    <div>
-      <h1 class="text-3xl font-bold text-gray-900">تعديل: {{ $jobPosting->title }}</h1>
-      <p class="text-gray-600 mt-1 text-sm" dir="ltr">{{ route('website.careers.show', $jobPosting->slug) }}</p>
-    </div>
-    <a href="{{ route('job-postings.show', $jobPosting) }}" class="text-gray-600 font-bold hover:text-gray-900">رجوع</a>
-  </div>
+@php $themeColor = \App\Helpers\SettingsHelper::getThemeColor(); @endphp
+<div class="w-full max-w-full font-tajawal">
+    @include('partials.erp-page-header', [
+        'title' => 'تعديل: ' . $jobPosting->title,
+        'subtitle' => 'تحديث بيانات الوظيفة وإعدادات النشر',
+        'icon' => 'briefcase',
+    ])
 
-  @if($errors->any())
-    <div class="mb-6 rounded-xl border border-red-200 bg-red-50 text-red-800 px-4 py-3 text-sm">
-      <ul class="list-disc list-inside">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+    <div class="flex flex-wrap justify-end gap-3 mb-6">
+        <a href="{{ route('job-postings.applications', $jobPosting) }}"
+           class="inline-flex items-center gap-2 border border-gray-300 bg-white px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm">
+            الطلبات ({{ $jobPosting->applications()->count() }})
+        </a>
+        <a href="{{ route('job-postings.show', $jobPosting) }}" class="inline-flex items-center gap-2 border border-gray-300 bg-white px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm">
+            عرض الوظيفة
+        </a>
     </div>
-  @endif
 
-  <div class="bg-white rounded-xl border border-gray-200 p-8">
-    <form action="{{ route('job-postings.update', $jobPosting) }}" method="POST" class="space-y-6">
-      @csrf
-      @method('PUT')
-      @include('job-postings._form', ['jobPosting' => $jobPosting])
-      <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-8 py-3 rounded-xl font-extrabold hover:bg-blue-700">تحديث</button>
-    </form>
-  </div>
+    @if($errors->any())
+        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <p class="font-bold mb-1">يرجى تصحيح الأخطاء:</p>
+            <ul class="list-disc list-inside">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
+    @endif
+
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div class="xl:col-span-8">
+            @include('job-postings.partials.form', [
+                'action' => route('job-postings.update', $jobPosting),
+                'method' => 'PUT',
+                'submitLabel' => 'تحديث الوظيفة',
+                'cancelUrl' => route('job-postings.show', $jobPosting),
+                'jobPosting' => $jobPosting,
+                'departments' => $departments,
+                'employmentTypes' => $employmentTypes,
+                'statuses' => $statuses,
+                'themeColor' => $themeColor,
+            ])
+        </div>
+        <div class="xl:col-span-4">
+            @include('job-postings.partials.form-sidebar', ['jobPosting' => $jobPosting, 'themeColor' => $themeColor])
+        </div>
+    </div>
 </div>
 @endsection

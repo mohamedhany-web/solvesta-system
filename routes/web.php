@@ -9,6 +9,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\DepartmentManager\DepartmentManagerController;
 use App\Http\Controllers\DepartmentManager\DepartmentManagerTaskController;
+use App\Http\Controllers\DepartmentManager\DepartmentManagerProjectController;
 use App\Http\Controllers\DepartmentManager\DepartmentReportController as DepartmentManagerReportController;
 use App\Http\Controllers\Admin\DepartmentReportController as AdminDepartmentReportController;
 use App\Http\Controllers\Admin\DepartmentOversightController;
@@ -174,6 +175,14 @@ Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'inde
     ->middleware(['auth', 'verified', 'verified.code'])
     ->name('dashboard');
 
+Route::get('/executive', [App\Http\Controllers\ExecutiveDashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', 'verified.code'])
+    ->name('executive.dashboard');
+
+Route::get('/executive/finance', [App\Http\Controllers\ExecutiveFinanceController::class, 'index'])
+    ->middleware(['auth', 'verified', 'verified.code'])
+    ->name('executive.finance');
+
 // Profile routes
 Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -295,6 +304,7 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::post('salaries/{salary}/mark-paid', [SalaryController::class, 'markAsPaid'])->name('salaries.mark-paid')->middleware('permission:edit-salaries');
     
     // Project Management
+    Route::get('projects/department-staff/{department}', [ProjectController::class, 'departmentStaff'])->name('projects.department-staff')->middleware('permission:create-projects|edit-projects');
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index')->middleware('permission:view-own-projects|view-all-projects');
     Route::get('projects/create', [ProjectController::class, 'create'])->name('projects.create')->middleware('permission:create-projects');
     Route::post('projects', [ProjectController::class, 'store'])->name('projects.store')->middleware('permission:create-projects');
@@ -302,6 +312,44 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('projects/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit')->middleware('permission:edit-projects');
     Route::put('projects/{project}', [ProjectController::class, 'update'])->name('projects.update')->middleware('permission:edit-projects');
     Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy')->middleware('permission:delete-projects');
+
+    // PMO — Milestones, task distribution, blockers
+    Route::get('pmo', [\App\Http\Controllers\PmoController::class, 'index'])->name('pmo.index')->middleware('permission:view-own-projects|view-all-projects');
+    Route::post('pmo/projects/{project}/seed-milestones', [\App\Http\Controllers\PmoController::class, 'seedMilestones'])->name('pmo.projects.seed-milestones')->middleware('permission:edit-projects');
+    Route::post('pmo/projects/{project}/milestones', [\App\Http\Controllers\PmoController::class, 'storeMilestone'])->name('pmo.projects.milestones.store')->middleware('permission:edit-projects');
+    Route::patch('pmo/milestones/{milestone}', [\App\Http\Controllers\PmoController::class, 'updateMilestone'])->name('pmo.milestones.update')->middleware('permission:edit-projects');
+    Route::post('pmo/projects/{project}/assign-task', [\App\Http\Controllers\PmoController::class, 'assignTask'])->name('pmo.projects.assign-task')->middleware('permission:edit-projects');
+    Route::post('pmo/tasks/{task}/resolve-blocker', [\App\Http\Controllers\PmoController::class, 'resolveBlocker'])->name('pmo.tasks.resolve-blocker')->middleware('permission:edit-projects');
+
+    // Daily reports
+    Route::get('daily-reports', [\App\Http\Controllers\DailyReportController::class, 'index'])->name('daily-reports.index')->middleware('permission:view-own-tasks|view-all-tasks');
+    Route::get('daily-reports/create', [\App\Http\Controllers\DailyReportController::class, 'create'])->name('daily-reports.create')->middleware('permission:view-own-tasks|view-all-tasks');
+    Route::post('daily-reports', [\App\Http\Controllers\DailyReportController::class, 'store'])->name('daily-reports.store')->middleware('permission:view-own-tasks|view-all-tasks');
+    Route::post('daily-reports/{dailyReport}/review', [\App\Http\Controllers\DailyReportController::class, 'review'])->name('daily-reports.review')->middleware('permission:edit-projects');
+
+    // Project finance — expenses & delivery invoice
+    Route::post('projects/{project}/expenses', [\App\Http\Controllers\ProjectFinanceController::class, 'storeExpense'])->name('projects.finance.expenses')->middleware('permission:create-finance');
+    Route::post('projects/{project}/delivery-invoice', [\App\Http\Controllers\ProjectFinanceController::class, 'createDeliveryInvoice'])->name('projects.finance.delivery-invoice')->middleware('permission:edit-sales|edit-finance');
+
+    // KPI & HR penalties
+    Route::get('kpi', [\App\Http\Controllers\KpiController::class, 'index'])->name('kpi.index')->middleware('permission:view-employees');
+    Route::get('kpi/users/{user}', [\App\Http\Controllers\KpiController::class, 'show'])->name('kpi.show')->middleware('permission:view-employees');
+    Route::post('kpi/users/{user}/rate', [\App\Http\Controllers\KpiController::class, 'rate'])->name('kpi.rate')->middleware('permission:edit-employees');
+    Route::post('kpi/recalculate', [\App\Http\Controllers\KpiController::class, 'recalculateTeam'])->name('kpi.recalculate')->middleware('permission:edit-employees');
+    Route::get('hr/warnings', [\App\Http\Controllers\HrWarningController::class, 'index'])->name('hr.warnings.index')->middleware('permission:view-employees');
+    Route::post('hr/warnings', [\App\Http\Controllers\HrWarningController::class, 'store'])->name('hr.warnings.store')->middleware('permission:edit-employees');
+    Route::post('hr/warnings/{warning}/resolve', [\App\Http\Controllers\HrWarningController::class, 'resolve'])->name('hr.warnings.resolve')->middleware('permission:edit-employees');
+    Route::post('hr/warnings/{warning}/investigate', [\App\Http\Controllers\HrWarningController::class, 'investigate'])->name('hr.warnings.investigate')->middleware('permission:edit-employees');
+    Route::post('hr/warnings/scan-overdue', [\App\Http\Controllers\HrWarningController::class, 'scanOverdue'])->name('hr.warnings.scan-overdue')->middleware('permission:edit-employees');
+
+    // Business Development
+    Route::get('bd', [\App\Http\Controllers\BdController::class, 'index'])->name('bd.index')->middleware('permission:view-sales');
+    Route::get('bd/partners/create', [\App\Http\Controllers\BdController::class, 'createPartner'])->name('bd.partners.create')->middleware('permission:create-sales');
+    Route::post('bd/partners', [\App\Http\Controllers\BdController::class, 'storePartner'])->name('bd.partners.store')->middleware('permission:create-sales');
+    Route::get('bd/partners/{partner}', [\App\Http\Controllers\BdController::class, 'showPartner'])->name('bd.partners.show')->middleware('permission:view-sales');
+    Route::post('bd/opportunities', [\App\Http\Controllers\BdController::class, 'storeOpportunity'])->name('bd.opportunities.store')->middleware('permission:create-sales');
+    Route::post('bd/opportunities/{opportunity}/convert', [\App\Http\Controllers\BdController::class, 'convertOpportunity'])->name('bd.opportunities.convert')->middleware('permission:create-sales');
+    Route::patch('bd/opportunities/{opportunity}/status', [\App\Http\Controllers\BdController::class, 'updateOpportunityStatus'])->name('bd.opportunities.status')->middleware('permission:edit-sales');
     
     // Tasks
     Route::get('tasks', [TaskController::class, 'index'])->name('tasks.index')->middleware('permission:view-own-tasks|view-all-tasks');
@@ -319,6 +367,8 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
         Route::get('/', [DepartmentManagerController::class, 'dashboard'])->name('dashboard');
         Route::get('/tasks/create', [DepartmentManagerTaskController::class, 'create'])->name('tasks.create');
         Route::post('/tasks', [DepartmentManagerTaskController::class, 'store'])->name('tasks.store');
+        Route::get('/projects/{project}/assign-team', [DepartmentManagerProjectController::class, 'assignTeam'])->name('projects.assign-team');
+        Route::put('/projects/{project}/assign-team', [DepartmentManagerProjectController::class, 'updateTeam'])->name('projects.assign-team.update');
 
         Route::get('/reports', [DepartmentManagerReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/create', [DepartmentManagerReportController::class, 'create'])->name('reports.create');
@@ -401,6 +451,33 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::post('sales/{sale}/update-stage', [SaleController::class, 'updateStage'])->name('sales.update-stage')->middleware('permission:edit-sales');
     Route::post('sales/{sale}/generate-invoice', [SaleController::class, 'generateInvoice'])->name('sales.generate-invoice')->middleware('permission:edit-sales');
     Route::get('sales/statistics/data', [SaleController::class, 'getStatistics'])->name('sales.statistics')->middleware('permission:view-sales');
+
+    // CRM — Leads (Business Development)
+    Route::get('leads', [\App\Http\Controllers\LeadController::class, 'index'])->name('leads.index')->middleware('permission:view-sales');
+    Route::get('leads/create', [\App\Http\Controllers\LeadController::class, 'create'])->name('leads.create')->middleware('permission:create-sales');
+    Route::post('leads', [\App\Http\Controllers\LeadController::class, 'store'])->name('leads.store')->middleware('permission:create-sales');
+    Route::get('leads/{lead}', [\App\Http\Controllers\LeadController::class, 'show'])->name('leads.show')->middleware('permission:view-sales');
+    Route::post('leads/{lead}/status', [\App\Http\Controllers\LeadController::class, 'updateStatus'])->name('leads.update-status')->middleware('permission:edit-sales');
+    Route::post('leads/{lead}/convert-to-sale', [\App\Http\Controllers\LeadController::class, 'convertToSale'])->name('leads.convert-to-sale')->middleware('permission:create-sales');
+
+    // Commercial workflow handoffs
+    Route::post('workflow/contact-requests/{contactRequest}/convert-to-lead', [\App\Http\Controllers\CommercialWorkflowController::class, 'convertContactToLead'])->name('workflow.contact.convert-to-lead')->middleware('permission:create-sales');
+    Route::post('workflow/sales/{sale}/qualify', [\App\Http\Controllers\CommercialWorkflowController::class, 'qualifySale'])->name('workflow.sales.qualify')->middleware('permission:edit-sales');
+    Route::post('workflow/sales/{sale}/disqualify', [\App\Http\Controllers\CommercialWorkflowController::class, 'disqualifySale'])->name('workflow.sales.disqualify')->middleware('permission:edit-sales');
+    Route::post('workflow/sales/{sale}/create-contract', [\App\Http\Controllers\CommercialWorkflowController::class, 'createContract'])->name('workflow.sales.create-contract')->middleware('permission:edit-sales');
+    Route::post('workflow/contracts/{contract}/deposit-invoice', [\App\Http\Controllers\CommercialWorkflowController::class, 'createDepositInvoice'])->name('workflow.contracts.deposit-invoice')->middleware('permission:edit-sales');
+    Route::post('workflow/contracts/{contract}/kickoff-project', [\App\Http\Controllers\CommercialWorkflowController::class, 'kickoffProject'])->name('workflow.contracts.kickoff')->middleware('permission:edit-sales');
+
+    // Pre-Sales — Cost Estimation & Proposals
+    Route::get('pre-sales', [\App\Http\Controllers\PreSalesController::class, 'index'])->name('pre-sales.index')->middleware('permission:view-sales');
+    Route::get('pre-sales/sales/{sale}/estimate', [\App\Http\Controllers\PreSalesController::class, 'estimate'])->name('pre-sales.estimate')->middleware('permission:view-sales');
+    Route::post('pre-sales/sales/{sale}/estimate', [\App\Http\Controllers\PreSalesController::class, 'storeEstimate'])->name('pre-sales.estimate.store')->middleware('permission:edit-sales');
+    Route::post('pre-sales/estimations/{estimation}/approve', [\App\Http\Controllers\PreSalesController::class, 'approveEstimate'])->name('pre-sales.estimations.approve')->middleware('permission:edit-sales');
+    Route::post('pre-sales/sales/{sale}/proposals/generate', [\App\Http\Controllers\PreSalesController::class, 'generateProposal'])->name('pre-sales.proposals.generate')->middleware('permission:edit-sales');
+    Route::get('pre-sales/proposals/{proposal}', [\App\Http\Controllers\PreSalesController::class, 'showProposal'])->name('pre-sales.proposals.show')->middleware('permission:view-sales');
+    Route::post('pre-sales/proposals/{proposal}/sent', [\App\Http\Controllers\PreSalesController::class, 'markSent'])->name('pre-sales.proposals.sent')->middleware('permission:edit-sales');
+    Route::post('pre-sales/proposals/{proposal}/accept', [\App\Http\Controllers\PreSalesController::class, 'accept'])->name('pre-sales.proposals.accept')->middleware('permission:edit-sales');
+    Route::post('pre-sales/proposals/{proposal}/reject', [\App\Http\Controllers\PreSalesController::class, 'reject'])->name('pre-sales.proposals.reject')->middleware('permission:edit-sales');
     
     // Support - Tickets
     Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index')->middleware('permission:view-tickets');
@@ -430,6 +507,7 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::post('client-system-projects', [\App\Http\Controllers\Admin\ClientSystemProjectController::class, 'store'])->name('client-system-projects.store')->middleware('permission:edit-tickets');
     Route::get('client-system-projects/{clientSystemProject}', [\App\Http\Controllers\Admin\ClientSystemProjectController::class, 'show'])->name('client-system-projects.show')->middleware('permission:view-tickets');
     Route::put('client-system-projects/{clientSystemProject}', [\App\Http\Controllers\Admin\ClientSystemProjectController::class, 'update'])->name('client-system-projects.update')->middleware('permission:edit-tickets');
+    Route::get('client-system-features', [\App\Http\Controllers\Admin\ClientSystemFeatureController::class, 'index'])->name('client-system-features.index')->middleware('permission:view-tickets');
     Route::get('client-system-features/{clientSystemFeature}', [\App\Http\Controllers\Admin\ClientSystemFeatureController::class, 'show'])->name('client-system-features.show')->middleware('permission:view-tickets');
     Route::put('client-system-features/{clientSystemFeature}', [\App\Http\Controllers\Admin\ClientSystemFeatureController::class, 'update'])->name('client-system-features.update')->middleware('permission:edit-tickets');
     Route::post('client-system-features/{clientSystemFeature}/updates', [\App\Http\Controllers\Admin\ClientSystemFeatureController::class, 'storeUpdate'])->name('client-system-features.updates.store')->middleware('permission:edit-tickets');

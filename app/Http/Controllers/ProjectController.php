@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Client;
+use App\Models\Department;
+use App\Models\Employee;
 use App\Models\User;
 use App\Models\Task;
 use Illuminate\Http\Request;
@@ -16,7 +18,7 @@ class ProjectController extends Controller
     {
         $this->authorize('viewAny', Project::class);
         // Get projects based on user permissions
-        $query = Project::with(['client', 'projectManager', 'teamMembers']);
+        $query = Project::with(['client', 'projectManager', 'teamMembers', 'department']);
         
         // إذا كان المستخدم لديه صلاحية view-own-projects فقط (موظف عادي)
         if (auth()->user()->can('view-own-projects') && !auth()->user()->can('view-all-projects')) {
@@ -42,6 +44,9 @@ class ProjectController extends Controller
             })
             ->when(request('client_id'), function ($query) {
                 $query->where('client_id', request('client_id'));
+            })
+            ->when(request('department_id'), function ($query) {
+                $query->where('department_id', request('department_id'));
             })
             ->orderBy('created_at', 'desc')
             ->paginate(15);
@@ -71,7 +76,7 @@ class ProjectController extends Controller
         ];
 
         // Get recent/featured projects (latest 3) based on user access
-        $featuredQuery = Project::with(['client', 'projectManager', 'teamMembers', 'tasks']);
+        $featuredQuery = Project::with(['client', 'projectManager', 'teamMembers', 'tasks', 'department']);
         if (auth()->user()->can('view-own-projects') && !auth()->user()->can('view-all-projects')) {
             $featuredQuery->where(function($q) {
                 $q->where('project_manager_id', auth()->id())
@@ -83,16 +88,50 @@ class ProjectController extends Controller
         $featuredProjects = $featuredQuery->orderBy('created_at', 'desc')->take(3)->get();
 
         $clients = Client::where('status', 'active')->get();
-        
-        return view('projects.index', compact('projects', 'clients', 'stats', 'featuredProjects'));
+        $departments = Department::active()->orderBy('name')->get();
+
+        return view('projects.index', compact('projects', 'clients', 'departments', 'stats', 'featuredProjects'));
+    }
+
+    public function departmentStaff(Department $department)
+    {
+        $department->load('manager.user');
+
+        $employees = Employee::query()
+            ->where('department_id', $department->id)
+            ->where('status', 'active')
+            ->whereNotNull('user_id')
+            ->with('user:id,name')
+            ->orderBy('first_name')
+            ->get();
+
+        $manager = $department->manager;
+
+        return response()->json([
+            'department' => [
+                'id' => $department->id,
+                'name' => $department->name,
+            ],
+            'manager' => $manager ? [
+                'name' => $manager->user?->name ?? trim($manager->first_name.' '.$manager->last_name),
+                'user_id' => $manager->user_id,
+                'position' => $manager->position,
+            ] : null,
+            'staff' => $employees->map(fn ($employee) => [
+                'user_id' => $employee->user_id,
+                'name' => $employee->user?->name ?? trim($employee->first_name.' '.$employee->last_name),
+                'position' => $employee->position,
+            ])->values(),
+            'employees_count' => $employees->count(),
+        ]);
     }
 
     public function create()
     {
         $clients = Client::where('status', 'active')->get();
-        $users = User::all();
-        
-        return view('projects.create', compact('clients', 'users'));
+        $departments = Department::active()->orderBy('name')->get();
+
+        return view('projects.create', compact('clients', 'departments'));
     }
 
     public function store(Request $request)
@@ -101,14 +140,13 @@ class ProjectController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'client_id' => 'required|exists:clients,id',
-            'project_manager_id' => 'required|exists:users,id',
+            'department_id' => 'required|exists:departments,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'budget' => 'required|numeric|min:0',
             'priority' => 'required|in:low,medium,high,urgent',
             'status' => 'required|in:planning,in_progress,on_hold,completed,cancelled',
-            'team_members' => 'nullable|array',
-            'team_members.*' => 'exists:users,id',
+            'project_type' => 'nullable|string|max:64',
         ]);
 
         if ($validator->fails()) {
@@ -117,20 +155,22 @@ class ProjectController extends Controller
                 ->withInput();
         }
 
-        $project = Project::create($request->except('team_members'));
-
-        if ($request->team_members) {
-            $project->teamMembers()->attach($request->team_members);
-        }
+        $project = Project::create([
+            ...$request->only([
+                'name', 'description', 'client_id', 'department_id',
+                'start_date', 'end_date', 'budget', 'priority', 'status', 'project_type',
+            ]),
+            'project_manager_id' => null,
+        ]);
 
         return redirect()->route('projects.index')
-            ->with('success', 'تم إنشاء المشروع بنجاح');
+            ->with('success', 'تم إنشاء المشروع — بانتظار رئيس القسم لتعيين قائد الفريق والفريق.');
     }
 
     public function show(Project $project)
     {
         $this->authorize('view', $project);
-        $project->load(['client', 'projectManager', 'teamMembers', 'tasks']);
+        $project->load(['client', 'projectManager', 'teamMembers', 'tasks.milestone', 'milestones.tasks', 'milestones.assignedLead', 'contract', 'expenses']);
         
         // إحصائيات المشروع
         $stats = [
@@ -139,21 +179,35 @@ class ProjectController extends Controller
             'in_progress_tasks' => $project->tasks()->where('status', 'in_progress')->count(),
             'pending_tasks' => $project->tasks()->whereIn('status', ['todo', 'review', 'pending'])->count(),
             'team_members_count' => $project->teamMembers()->count(),
-            'progress_percentage' => $project->tasks()->count() > 0 
-                ? round(($project->tasks()->where('status', 'completed')->count() / $project->tasks()->count()) * 100, 2)
-                : 0,
+            'milestones_count' => $project->milestones()->count(),
+            'blockers_count' => $project->tasks()->where('has_blocker', true)->count(),
+            'progress_percentage' => $project->milestones()->exists()
+                ? (int) round($project->milestones()->avg('progress_percentage'))
+                : ($project->tasks()->count() > 0
+                    ? round(($project->tasks()->where('status', 'completed')->count() / $project->tasks()->count()) * 100, 2)
+                    : ($project->progress_percentage ?? 0)),
         ];
-        
-        return view('projects.show', compact('project', 'stats'));
+
+        $teamUsers = $project->teamMembers;
+        if ($project->projectManager) {
+            $teamUsers = $teamUsers->contains('id', $project->projectManager->id)
+                ? $teamUsers
+                : $teamUsers->concat([$project->projectManager]);
+        }
+
+        $financials = app(\App\Services\ProjectFinanceService::class)->getProjectFinancials($project);
+        $projectExpenses = $project->expenses()->with('creator')->orderByDesc('expense_date')->limit(10)->get();
+
+        return view('projects.show', compact('project', 'stats', 'teamUsers', 'financials', 'projectExpenses'));
     }
 
     public function edit(Project $project)
     {
         $clients = Client::where('status', 'active')->get();
-        $users = User::all();
-        $project->load('teamMembers');
-        
-        return view('projects.edit', compact('project', 'clients', 'users'));
+        $departments = Department::active()->orderBy('name')->get();
+        $project->load(['teamMembers', 'department.manager.user', 'projectManager']);
+
+        return view('projects.edit', compact('project', 'clients', 'departments'));
     }
 
     public function update(Request $request, Project $project)
@@ -162,14 +216,13 @@ class ProjectController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'client_id' => 'required|exists:clients,id',
-            'project_manager_id' => 'required|exists:users,id',
+            'department_id' => 'required|exists:departments,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'budget' => 'required|numeric|min:0',
             'priority' => 'required|in:low,medium,high,urgent',
             'status' => 'required|in:planning,in_progress,on_hold,completed,cancelled',
-            'team_members' => 'nullable|array',
-            'team_members.*' => 'exists:users,id',
+            'project_type' => 'nullable|string|max:64',
         ]);
 
         if ($validator->fails()) {
@@ -178,11 +231,17 @@ class ProjectController extends Controller
                 ->withInput();
         }
 
-        $project->update($request->except('team_members'));
+        $data = $request->only([
+            'name', 'description', 'client_id', 'department_id',
+            'start_date', 'end_date', 'budget', 'priority', 'status', 'project_type',
+        ]);
 
-        if ($request->has('team_members')) {
-            $project->teamMembers()->sync($request->team_members);
+        if ((int) $request->department_id !== (int) $project->department_id) {
+            $data['project_manager_id'] = null;
+            $project->teamMembers()->detach();
         }
+
+        $project->update($data);
 
         return redirect()->route('projects.index')
             ->with('success', 'تم تحديث المشروع بنجاح');

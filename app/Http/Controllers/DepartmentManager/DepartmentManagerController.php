@@ -25,6 +25,14 @@ class DepartmentManagerController extends Controller
             ->latest()
             ->paginate(10);
 
+        $pendingTeamProjects = Project::query()
+            ->with(['client'])
+            ->where('department_id', $managedDeptId)
+            ->whereNull('project_manager_id')
+            ->latest()
+            ->take(6)
+            ->get();
+
         $tasksQuery = Task::query()
             ->whereHas('project', fn ($q) => $q->where('department_id', $managedDeptId));
 
@@ -42,7 +50,7 @@ class DepartmentManagerController extends Controller
             ->take(8)
             ->get();
 
-        return view('department-manager.dashboard', compact('department', 'projects', 'stats', 'recentTasks'));
+        return view('department-manager.dashboard', compact('department', 'projects', 'stats', 'recentTasks', 'pendingTeamProjects'));
     }
 }
 
