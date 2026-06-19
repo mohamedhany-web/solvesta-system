@@ -9,36 +9,30 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('github_accounts', function (Blueprint $table) {
-            $table->id();
-            $table->string('label')->nullable();
-            $table->string('account_type', 20)->default('personal');
-            $table->string('login', 100);
-            $table->string('organization', 100)->nullable();
-            $table->string('avatar_url')->nullable();
-            $table->text('access_token');
-            $table->boolean('is_default')->default(false);
-            $table->boolean('is_active')->default(true);
-            $table->foreignId('connected_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('connected_at')->nullable();
-            $table->timestamps();
+        if (! Schema::hasTable('github_accounts')) {
+            Schema::create('github_accounts', function (Blueprint $table) {
+                $table->id();
+                $table->string('label')->nullable();
+                $table->string('account_type', 20)->default('personal');
+                $table->string('login', 100);
+                $table->string('organization', 100)->nullable();
+                $table->string('avatar_url')->nullable();
+                $table->text('access_token');
+                $table->boolean('is_default')->default(false);
+                $table->boolean('is_active')->default(true);
+                $table->foreignId('connected_by')->nullable()->constrained('users')->nullOnDelete();
+                $table->timestamp('connected_at')->nullable();
+                $table->timestamps();
 
-            $table->unique(['login', 'account_type', 'organization']);
-        });
-
-        Schema::table('project_repositories', function (Blueprint $table) {
-            $table->foreignId('github_account_id')->nullable()->after('project_id')->constrained('github_accounts')->nullOnDelete();
-        });
+                $table->unique(['login', 'account_type', 'organization']);
+            });
+        }
 
         $this->migrateLegacyConnection();
     }
 
     public function down(): void
     {
-        Schema::table('project_repositories', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('github_account_id');
-        });
-
         Schema::dropIfExists('github_accounts');
     }
 

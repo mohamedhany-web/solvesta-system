@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('project_repositories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('github_account_id')->nullable()->constrained('github_accounts')->nullOnDelete();
             $table->string('provider', 32)->default('github');
             $table->string('owner');
             $table->string('repo_name');

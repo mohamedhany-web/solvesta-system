@@ -8,6 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('project_repositories') && ! Schema::hasColumn('project_repositories', 'github_account_id')) {
+            Schema::table('project_repositories', function (Blueprint $table) {
+                $table->foreignId('github_account_id')->nullable()->after('project_id')->constrained('github_accounts')->nullOnDelete();
+            });
+        }
+
         Schema::table('user_git_identities', function (Blueprint $table) {
             if (! Schema::hasColumn('user_git_identities', 'email')) {
                 $table->string('email')->nullable()->after('username');
@@ -44,6 +50,12 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (Schema::hasTable('project_repositories') && Schema::hasColumn('project_repositories', 'github_account_id')) {
+            Schema::table('project_repositories', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('github_account_id');
+            });
+        }
+
         Schema::table('project_repository_users', function (Blueprint $table) {
             foreach (['invite_error', 'invited_at', 'invite_status'] as $col) {
                 if (Schema::hasColumn('project_repository_users', $col)) {
