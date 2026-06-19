@@ -33,7 +33,7 @@ class ProjectRepository extends Model
 
     public function githubAccount(): BelongsTo
     {
-        return $this->belongsTo(GitHubAccount::class);
+        return $this->belongsTo(GitHubAccount::class, 'github_account_id');
     }
 
     public function creator(): BelongsTo

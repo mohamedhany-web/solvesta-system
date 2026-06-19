@@ -46,7 +46,7 @@ class GitHubAccount extends Model
 
     public function projectRepositories(): HasMany
     {
-        return $this->hasMany(ProjectRepository::class);
+        return $this->hasMany(ProjectRepository::class, 'github_account_id');
     }
 
     public function isPersonal(): bool
