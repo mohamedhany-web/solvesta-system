@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -98,6 +99,13 @@ class User extends Authenticatable
      */
     public function can($permission, $guard = null)
     {
+        // فحص Policy / Gate عند تمرير نموذج (مثال: can('update', $project))
+        if ($guard !== null && ! is_string($guard)) {
+            $arguments = is_array($guard) ? $guard : [$guard];
+
+            return app(Gate::class)->forUser($this)->check($permission, $arguments);
+        }
+
         // أولاً: التحقق من الصلاحيات المخصصة في جدول user_permissions
         $customPermission = $this->customPermissions()
                                   ->where('permission_key', $permission)
@@ -110,7 +118,6 @@ class User extends Authenticatable
         }
         
         // إذا لم تكن هناك صلاحية مخصصة، نستخدم طريقة Spatie الافتراضية
-        // نستخدم hasPermissionTo من Spatie مباشرة لضمان التحقق الصحيح
         return $this->hasPermissionTo($permission, $guard);
     }
 
@@ -214,5 +221,10 @@ class User extends Authenticatable
     public function trainingParticipants(): HasMany
     {
         return $this->hasMany(TrainingParticipant::class, 'user_id');
+    }
+
+    public function gitIdentity(): HasOne
+    {
+        return $this->hasOne(UserGitIdentity::class);
     }
 }

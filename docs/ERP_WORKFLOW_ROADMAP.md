@@ -122,7 +122,40 @@ Lead → BD → Sales → Pre-Sales → Proposal → Contract → Finance → Pr
 | 3 تحذيرات → تحقيق HR | ✅ |
 | BD شركاء + فرص → Lead | ✅ |
 
-**ERP مكتمل.**
+**ERP مكتمل حتى المرحلة 5.**
+
+---
+
+### ✅ المرحلة 6 — بيئة التطوير و Git (مُنفَّذ)
+
+| المكوّن | الحالة |
+|---------|--------|
+| ربط المشروع بمستودع GitHub | ✅ |
+| صلاحيات الفريق على المستودع | ✅ |
+| إنشاء فرع من المهمة (feature/bugfix) | ✅ |
+| Pull Request مرتبط بالمهمة | ✅ |
+| مراجعة الكود (موافقة / تعديلات / دمج) | ✅ |
+| لوحة بيئة التطوير `/dev-workflow` | ✅ |
+| تكامل GitHub API (اختياري عبر `GITHUB_TOKEN`) | ✅ |
+| حساب GitHub لكل مطوّر | ✅ |
+
+**مسار الاستخدام:**
+
+1. PM/Team Lead يُنشئ Task ويعيّنها للمطوّر
+2. من **صفحة المشروع** → ربط مستودع `owner/repo`
+3. المطوّر من **صفحة المهمة** → «إنشاء فرع» → `git clone` → commit → push
+4. «فتح Pull Request» → Team Lead يراجع من `/dev-workflow`
+5. بعد الدمج → المهمة تنتقل لـ QA (`review`) → ثم نشر
+
+**إعداد GitHub:** أضف في `.env`:
+```
+GITHUB_TOKEN=ghp_...
+GITHUB_ORG=your-org
+```
+
+**صلاحيات جديدة:** `view-dev-workflow`, `manage-project-repos`, `create-git-branches`, `create-pull-requests`, `review-code`
+
+تشغيل الصلاحيات: `php artisan db:seed --class=DevWorkflowPermissionSeeder`
 
 ---
 

@@ -255,6 +255,8 @@
         </div>
 
         <div class="space-y-6">
+            @include('dev-workflow.partials.project-repo-panel', ['project' => $project])
+
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 sm:p-6">
                 <h3 class="text-sm font-bold text-gray-900 mb-4 font-tajawal">حالة الإنجاز</h3>
                 <div class="text-center mb-4">

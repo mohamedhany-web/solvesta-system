@@ -62,7 +62,11 @@ class ProjectPolicy
             return true;
         }
 
-        // allow PM to update their own project if permitted
+        $managedDeptId = DepartmentAccess::managedDepartmentId($user);
+        if ($managedDeptId && (int) $project->department_id === (int) $managedDeptId) {
+            return true;
+        }
+
         return $user->can('edit-own-projects') && (int) $project->project_manager_id === (int) $user->id;
     }
 

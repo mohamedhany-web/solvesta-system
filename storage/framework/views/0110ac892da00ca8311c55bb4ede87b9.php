@@ -582,6 +582,7 @@
         $displayName = $webUser?->name ?? $clientAccount?->name ?? 'مستخدم';
         $displayEmail = $webUser?->email ?? $clientAccount?->email ?? null;
         $displayRole = $webUser?->roles?->first()?->name ?? ($isClientGuard ? 'عميل' : 'مستخدم');
+        $deptNav = $deptNav ?? \App\Services\DepartmentNavContext::forUser($webUser);
     ?>
     <div class="flex h-screen">
         <!-- Mobile Overlay -->
@@ -631,6 +632,13 @@
                     </div>
                 </div>
             </div>
+
+            <?php if($webUser && $deptNav->departmentLabel()): ?>
+            <div class="px-4 py-3 border-b border-slate-700/80 bg-slate-800/60">
+                <p class="text-[10px] uppercase tracking-wider text-slate-400 mb-1">قسمك</p>
+                <p class="text-sm font-semibold text-white leading-snug"><?php echo e($deptNav->departmentLabel()); ?></p>
+            </div>
+            <?php endif; ?>
             
             <!-- Navigation - Scrollable -->
             <nav class="flex-1 overflow-y-auto sidebar-scroll sidebar-nav-bg">
@@ -784,7 +792,7 @@
                         <?php endif; ?>
                         
                         <!-- Administration Section -->
-                        <?php if($webUser && ($webUser->can('view-users') || $webUser->can('view-reports') || $webUser->can('view-departments') || $webUser->can('view-settings') || $webUser->can('manage-roles'))): ?>
+                        <?php if($deptNav->unrestricted && $webUser && ($webUser->can('view-users') || $webUser->can('view-reports') || $webUser->can('view-departments') || $webUser->can('view-settings') || $webUser->can('manage-roles'))): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">الإدارة العليا</h3>
                             
@@ -879,7 +887,7 @@
                         <?php endif; ?>
 
                         <!-- Advanced HR Management -->
-                        <?php if($webUser && ($webUser->can('view-employees') || $webUser->can('view-attendance') || $webUser->can('view-leaves') || $webUser->can('view-salaries'))): ?>
+                        <?php if($deptNav->canShow('hr') && $webUser && ($webUser->can('view-employees') || $webUser->can('view-attendance') || $webUser->can('view-leaves') || $webUser->can('view-salaries'))): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">إدارة الموارد البشرية المتقدمة</h3>
                             
@@ -905,6 +913,15 @@
                                 </svg>
                                 تحذيرات HR
                             </a>
+                            <?php if($deptNav->canShow('promotions')): ?>
+                            <a href="<?php echo e(route('hr.promotions.index')); ?>"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('hr.promotions.*') ? 'active' : ''); ?>">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                                الترقيات والتطوير الوظيفي
+                            </a>
+                            <?php endif; ?>
                             <?php endif; ?>
                             
                             <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view-attendance')): ?>
@@ -939,12 +956,25 @@
                         </div>
                         <?php endif; ?>
 
+                        <?php if($webUser && \App\Policies\DepartmentAccess::isDepartmentManager($webUser)): ?>
+                        <div class="mt-6">
+                            <h3 class="sidebar-section-title px-4">إدارة القسم</h3>
+                            <a href="<?php echo e(route('department-manager.dashboard')); ?>"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('department-manager.*') ? 'active' : ''); ?>">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4V7M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                                </svg>
+                                لوحة مدير القسم
+                            </a>
+                        </div>
+                        <?php endif; ?>
+
                         <!-- Project Management Section -->
-                        <?php if($webUser && ($webUser->can('view-own-projects') || $webUser->can('view-all-projects') || $webUser->can('view-own-tasks') || $webUser->can('view-all-tasks'))): ?>
+                        <?php if($webUser && ($deptNav->canShow('projects') || $deptNav->canShow('tasks') || $deptNav->canShow('dev_workflow') || $deptNav->canShow('github')) && ($webUser->can('view-own-projects') || $webUser->can('view-all-projects') || $webUser->can('view-own-tasks') || $webUser->can('view-all-tasks'))): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">إدارة المشاريع</h3>
                             
-                            <?php if($webUser && ($webUser->can('view-own-projects') || $webUser->can('view-all-projects'))): ?>
+                            <?php if($deptNav->canShow('projects') && $webUser && ($webUser->can('view-own-projects') || $webUser->can('view-all-projects'))): ?>
                             <a href="<?php echo e(route('projects.index')); ?>" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('projects.*') ? 'active' : ''); ?>">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -959,9 +989,34 @@
                                 </svg>
                                 PMO (التنفيذ)
                             </a>
+                            <?php if($deptNav->canShow('dev_workflow')): ?>
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view-dev-workflow')): ?>
+                            <a href="<?php echo e(route('dev-workflow.index')); ?>" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('dev-workflow.*') ? 'active' : ''); ?>">
+                                <svg class="ml-3 h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                                بيئة التطوير
+                            </a>
+                            <?php endif; ?>
+                            <?php endif; ?>
+                            <?php if($deptNav->canShow('github')): ?>
+                            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view-github-integration')): ?>
+                            <a href="<?php echo e(route('github.index')); ?>" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('github.*') ? 'active' : ''); ?>">
+                                <svg class="ml-3 h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                                تكامل GitHub
+                            </a>
+                            <?php endif; ?>
+                            <?php endif; ?>
                             <?php endif; ?>
                             
-                            <?php if($webUser && ($webUser->can('view-own-tasks') || $webUser->can('view-all-tasks'))): ?>
+                            <?php if($deptNav->canShow('tasks') && $webUser && ($webUser->can('view-own-tasks') || $webUser->can('view-all-tasks'))): ?>
+                            <a href="<?php echo e(route('workspace.index')); ?>" 
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('workspace.*') ? 'active' : ''); ?>">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                                </svg>
+                                مساحة عملي
+                            </a>
                             <a href="<?php echo e(route('daily-reports.index')); ?>" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium <?php echo e(request()->routeIs('daily-reports.*') ? 'active' : ''); ?>">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -981,6 +1036,7 @@
                         <?php endif; ?>
 
                         <!-- Training & Development Section -->
+                        <?php if($deptNav->canShow('training')): ?>
                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view-training')): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">التدريب والتطوير</h3>
@@ -994,7 +1050,9 @@
                             </a>
                         </div>
                         <?php endif; ?>
+                        <?php endif; ?>
 
+                        <?php if($deptNav->canShow('jobs')): ?>
                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view-jobs')): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">التوظيف</h3>
@@ -1007,8 +1065,10 @@
                             </a>
                         </div>
                         <?php endif; ?>
+                        <?php endif; ?>
 
                         <!-- Meetings & Conferences Section -->
+                        <?php if($deptNav->canShow('meetings')): ?>
                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view-meetings')): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">الاجتماعات والمؤتمرات</h3>
@@ -1022,9 +1082,10 @@
                             </a>
                         </div>
                         <?php endif; ?>
+                        <?php endif; ?>
 
                         <!-- Assets & Properties Section -->
-                        <?php if($webUser && $webUser->can('view-assets')): ?>
+                        <?php if($deptNav->canShow('hr') && $webUser && $webUser->can('view-assets')): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">الأصول والممتلكات</h3>
                             
@@ -1039,7 +1100,7 @@
                         <?php endif; ?>
 
                         <!-- CRM System -->
-                        <?php if($webUser && ($webUser->can('view-clients') || $webUser->can('view-sales') || $webUser->can('view-contracts') || $webUser->can('view-invoices'))): ?>
+                        <?php if($deptNav->canShow('clients') && $webUser && ($webUser->can('view-clients') || $webUser->can('view-sales') || $webUser->can('view-contracts') || $webUser->can('view-invoices'))): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">نظام إدارة العملاء (CRM)</h3>
                             
@@ -1130,7 +1191,7 @@
                         <?php endif; ?>
 
                         <!-- Development Section -->
-                        <?php if($webUser && ($webUser->can('view-bugs') || $webUser->can('view-qa'))): ?>
+                        <?php if($deptNav->canShow('bugs') && $webUser && ($webUser->can('view-bugs') || $webUser->can('view-qa'))): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">التطوير والبرمجة</h3>
                             
@@ -1234,6 +1295,7 @@
                         <?php endif; ?>
 
                         <!-- Finance & Accounting Section -->
+                        <?php if($deptNav->canShow('accounting')): ?>
                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view-finance')): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">المالية والمحاسبة</h3>
@@ -1336,8 +1398,10 @@
                             </a>
                         </div>
                         <?php endif; ?>
+                        <?php endif; ?>
 
                         <!-- Legal Section -->
+                        <?php if($deptNav->canShow('legal')): ?>
                         <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('view-contracts')): ?>
                         <div class="mt-6">
                             <h3 class="sidebar-section-title px-4">الشؤون القانونية</h3>
@@ -1350,6 +1414,7 @@
                                 العقود
                             </a>
                         </div>
+                        <?php endif; ?>
                         <?php endif; ?>
 
                     </div>
@@ -1639,7 +1704,7 @@
             
             <!-- Page Content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-                <div class="<?php echo e(request()->routeIs('dashboard') || request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.*') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') || request()->routeIs('client-service-reports.*') || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*', 'client.system-features.*') || request()->routeIs('client-website-issues.*') || request()->routeIs('client-meeting-requests.*') || request()->routeIs('client-system-projects.*') || request()->routeIs('client-system-features.*') || request()->routeIs('projects.*') || request()->routeIs('job-postings.*') || request()->routeIs('admin.department-oversight.*') || request()->routeIs('admin.department-reports.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6'); ?>">
+                <div class="<?php echo e(request()->routeIs('dashboard') || request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.*') || request()->routeIs('employees.*') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') || request()->routeIs('client-service-reports.*') || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*', 'client.system-features.*') || request()->routeIs('client-website-issues.*') || request()->routeIs('client-meeting-requests.*') || request()->routeIs('client-system-projects.*') || request()->routeIs('client-system-features.*') || request()->routeIs('projects.*') || request()->routeIs('job-postings.*') || request()->routeIs('admin.department-oversight.*') || request()->routeIs('admin.department-reports.*') || request()->routeIs('dev-workflow.*') || request()->routeIs('workspace.*') || request()->routeIs('daily-reports.*') || request()->routeIs('github.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6'); ?>">
                     <?php if(session('success')): ?>
                         <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded-r-lg shadow-sm">
                             <?php echo e(session('success')); ?>

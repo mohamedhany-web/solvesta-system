@@ -39,6 +39,12 @@
                 </div>
                 <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-1">{{ $department->name }}</h3>
                 <p class="text-xs sm:text-sm text-gray-600">{{ $department->code }}</p>
+                @if($department->parent)
+                <p class="text-xs text-indigo-600 mt-1">تابع: {{ $department->parent->name }}</p>
+                @endif
+                @if($department->children->isNotEmpty())
+                <p class="text-xs text-gray-500 mt-1">{{ $department->children->count() }} قسم فرعي</p>
+                @endif
             </div>
 
             <!-- Department Info -->

@@ -17,9 +17,15 @@ class DailyReport extends Model
         'has_blocker',
         'blocker_description',
         'blocker_status',
+        'review_status',
         'reviewed_by',
         'reviewed_at',
         'team_lead_notes',
+        'dept_head_reviewed_by',
+        'dept_head_reviewed_at',
+        'dept_head_notes',
+        'executive_acknowledged_by',
+        'executive_acknowledged_at',
     ];
 
     protected $casts = [
@@ -27,6 +33,8 @@ class DailyReport extends Model
         'hours_worked' => 'decimal:2',
         'has_blocker' => 'boolean',
         'reviewed_at' => 'datetime',
+        'dept_head_reviewed_at' => 'datetime',
+        'executive_acknowledged_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -47,5 +55,15 @@ class DailyReport extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function deptHeadReviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'dept_head_reviewed_by');
+    }
+
+    public function executiveAcknowledger(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'executive_acknowledged_by');
     }
 }

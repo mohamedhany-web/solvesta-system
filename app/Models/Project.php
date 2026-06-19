@@ -131,6 +131,16 @@ class Project extends Model
         return $this->hasMany(Ticket::class);
     }
 
+    public function repositories(): HasMany
+    {
+        return $this->hasMany(ProjectRepository::class);
+    }
+
+    public function activeRepository(): ?ProjectRepository
+    {
+        return $this->repositories()->where('is_active', true)->first();
+    }
+
     /**
      * Get team members users.
      */

@@ -16,7 +16,14 @@
             </p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
+            <a href="{{ route('department-manager.team.index') }}" class="bg-white border border-gray-300 text-gray-800 px-5 py-3 rounded-xl hover:bg-gray-50 text-sm font-bold shadow-sm">
+                هيكل الفريق
+            </a>
+            <a href="{{ route('daily-reports.index', ['view' => 'department']) }}" class="bg-white border border-gray-300 text-gray-800 px-5 py-3 rounded-xl hover:bg-gray-50 text-sm font-bold shadow-sm">
+                التقارير اليومية
+                @if($stats['pending_daily_reports'])<span class="mr-1 rounded-full bg-red-500 text-white px-1.5 text-xs">{{ $stats['pending_daily_reports'] }}</span>@endif
+            </a>
             <a href="{{ route('department-manager.tasks.create') }}" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm">
                 إنشاء مهمة + إسناد
             </a>
@@ -29,26 +36,18 @@
 
     @if($pendingTeamProjects->isNotEmpty())
     <div class="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-6 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
             <div>
                 <h2 class="text-lg font-extrabold text-amber-900">مشاريع بانتظار تعيين الفريق</h2>
-                <p class="text-sm text-amber-800 mt-1">مشاريع جديدة تحتاج منك تعيين Team Leader والفريق</p>
+                <p class="text-sm text-amber-800 mt-1">الإدارة تعيّن الفريق من صفحة القسم — بعدها يمكنك توزيع المهام</p>
             </div>
             <span class="inline-flex items-center rounded-full bg-amber-200 text-amber-900 px-3 py-1 text-sm font-bold">{{ $pendingTeamProjects->count() }}</span>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ul class="text-sm text-amber-900 space-y-1">
             @foreach($pendingTeamProjects as $pending)
-            <div class="bg-white rounded-xl border border-amber-100 p-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <div class="font-bold text-gray-900">{{ $pending->name }}</div>
-                    <div class="text-sm text-gray-600 mt-1">العميل: {{ $pending->client?->name ?? '—' }}</div>
-                </div>
-                <a href="{{ route('department-manager.projects.assign-team', $pending) }}" class="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-amber-700">
-                    تعيين الفريق
-                </a>
-            </div>
+            <li>• {{ $pending->name }} — {{ $pending->client?->name ?? 'بدون عميل' }}</li>
             @endforeach
-        </div>
+        </ul>
     </div>
     @endif
 
@@ -95,9 +94,9 @@
                             </div>
                             <div class="flex flex-col gap-2 items-end">
                                 @if(!$project->project_manager_id)
-                                <a href="{{ route('department-manager.projects.assign-team', $project) }}" class="text-amber-700 font-bold text-sm hover:underline">تعيين الفريق</a>
+                                <span class="text-xs font-bold text-amber-700">بانتظار الإدارة</span>
                                 @endif
-                                <a href="{{ route('projects.show', $project) }}" class="text-blue-600 font-bold text-sm hover:underline">فتح</a>
+                                <a href="{{ route('projects.show', $project) }}" class="text-blue-600 font-bold text-sm hover:underline">فتح وتوزيع</a>
                             </div>
                         </div>
                     </div>

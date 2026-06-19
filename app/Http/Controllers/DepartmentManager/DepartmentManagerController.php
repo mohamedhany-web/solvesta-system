@@ -4,9 +4,12 @@ namespace App\Http\Controllers\DepartmentManager;
 
 use App\Http\Controllers\Controller;
 use App\Models\Department;
+use App\Models\Employee;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\DailyReport;
 use App\Policies\DepartmentAccess;
+use App\Support\ReportingHierarchy;
 use Illuminate\Http\Request;
 
 class DepartmentManagerController extends Controller
@@ -42,6 +45,7 @@ class DepartmentManagerController extends Controller
             'tasks_in_progress' => (clone $tasksQuery)->where('status', 'in_progress')->count(),
             'tasks_completed' => (clone $tasksQuery)->where('status', 'completed')->count(),
             'tasks_overdue' => (clone $tasksQuery)->whereNotIn('status', ['completed', 'cancelled'])->whereDate('due_date', '<', now())->count(),
+            'pending_daily_reports' => ReportingHierarchy::applyReviewerScope(DailyReport::query(), $request->user(), 'department')->count(),
         ];
 
         $recentTasks = Task::with(['project', 'assignedTo'])

@@ -2,17 +2,22 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeePromotionController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\DepartmentManager\DepartmentManagerController;
+use App\Http\Controllers\DepartmentManager\DepartmentManagerTeamController;
 use App\Http\Controllers\DepartmentManager\DepartmentManagerTaskController;
 use App\Http\Controllers\DepartmentManager\DepartmentManagerProjectController;
 use App\Http\Controllers\DepartmentManager\DepartmentReportController as DepartmentManagerReportController;
 use App\Http\Controllers\Admin\DepartmentReportController as AdminDepartmentReportController;
 use App\Http\Controllers\Admin\DepartmentOversightController;
+use App\Http\Controllers\DevWorkflowController;
+use App\Http\Controllers\GitHubIntegrationController;
+use App\Http\Controllers\EmployeeWorkspaceController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\SalaryController;
@@ -214,6 +219,12 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.edit')->middleware('permission:edit-departments');
     Route::put('departments/{department}', [DepartmentController::class, 'update'])->name('departments.update')->middleware('permission:edit-departments');
     Route::delete('departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy')->middleware('permission:delete-departments');
+    Route::post('departments/{department}/assign-employee', [DepartmentController::class, 'assignEmployee'])->name('departments.assign-employee')->middleware('permission:edit-departments');
+    Route::post('departments/{department}/employees/{employee}/remove', [DepartmentController::class, 'removeEmployee'])->name('departments.remove-employee')->middleware('permission:edit-departments');
+    Route::post('departments/{department}/set-manager', [DepartmentController::class, 'setManager'])->name('departments.set-manager')->middleware('permission:edit-departments');
+    Route::put('departments/{department}/team/{employee}', [DepartmentController::class, 'updateTeamMember'])->name('departments.team.update')->middleware('permission:edit-departments');
+    Route::put('departments/{department}/projects/{project}/team', [DepartmentController::class, 'updateProjectTeam'])->name('departments.projects.team')->middleware('permission:edit-departments');
+    Route::post('departments/{department}/assign-project', [DepartmentController::class, 'assignProject'])->name('departments.assign-project')->middleware('permission:edit-departments');
     
     // Login Activity Logs
     Route::get('login-activity', [LoginActivityController::class, 'index'])->name('login-activity.index')->middleware('permission:view-users|manage-roles');
@@ -260,6 +271,7 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     // HR Department - Employees
     Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index')->middleware('permission:view-employees');
     Route::get('employees/create', [EmployeeController::class, 'create'])->name('employees.create')->middleware('permission:create-employees');
+    Route::get('employees/department-profile/{department}', [EmployeeController::class, 'departmentProfile'])->name('employees.department-profile')->middleware('permission:create-employees');
     Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store')->middleware('permission:create-employees');
     Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show')->middleware('permission:view-employees');
     Route::get('employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit')->middleware('permission:edit-employees');
@@ -321,11 +333,36 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::post('pmo/projects/{project}/assign-task', [\App\Http\Controllers\PmoController::class, 'assignTask'])->name('pmo.projects.assign-task')->middleware('permission:edit-projects');
     Route::post('pmo/tasks/{task}/resolve-blocker', [\App\Http\Controllers\PmoController::class, 'resolveBlocker'])->name('pmo.tasks.resolve-blocker')->middleware('permission:edit-projects');
 
+    // Dev Workflow — Git, Branches, Pull Requests
+    Route::get('dev-workflow', [DevWorkflowController::class, 'index'])->name('dev-workflow.index')->middleware('permission:view-dev-workflow');
+    Route::post('projects/{project}/repository', [DevWorkflowController::class, 'storeRepository'])->name('dev-workflow.repositories.store')->middleware('permission:manage-project-repos');
+    Route::post('tasks/{task}/branches', [DevWorkflowController::class, 'storeBranch'])->name('dev-workflow.branches.store')->middleware('permission:create-git-branches');
+    Route::post('dev-workflow/branches/{branch}/pull-requests', [DevWorkflowController::class, 'storePullRequest'])->name('dev-workflow.pull-requests.store')->middleware('permission:create-pull-requests');
+    Route::get('dev-workflow/pull-requests/{pullRequest}', [DevWorkflowController::class, 'showPullRequest'])->name('dev-workflow.pull-requests.show')->middleware('permission:view-dev-workflow');
+    Route::post('dev-workflow/pull-requests/{pullRequest}/review', [DevWorkflowController::class, 'reviewPullRequest'])->name('dev-workflow.pull-requests.review')->middleware('permission:review-code');
+    Route::post('dev-workflow/git-identity', [DevWorkflowController::class, 'updateGitIdentity'])->name('dev-workflow.git-identity')->middleware('auth');
+
+    Route::prefix('github')->name('github.')->group(function () {
+        Route::get('/', [GitHubIntegrationController::class, 'index'])->name('index')->middleware('permission:view-github-integration|manage-github-integration');
+        Route::post('/accounts', [GitHubIntegrationController::class, 'storeAccount'])->name('accounts.store')->middleware('permission:manage-github-integration');
+        Route::delete('/accounts/{githubAccount}', [GitHubIntegrationController::class, 'destroyAccount'])->name('accounts.destroy')->middleware('permission:manage-github-integration');
+        Route::post('/accounts/{githubAccount}/default', [GitHubIntegrationController::class, 'setDefaultAccount'])->name('accounts.default')->middleware('permission:manage-github-integration');
+        Route::post('/accounts/{githubAccount}/test', [GitHubIntegrationController::class, 'testAccount'])->name('accounts.test')->middleware('permission:manage-github-integration');
+        Route::post('/connect', [GitHubIntegrationController::class, 'connect'])->name('connect')->middleware('permission:manage-github-integration');
+        Route::post('/disconnect', [GitHubIntegrationController::class, 'disconnect'])->name('disconnect')->middleware('permission:manage-github-integration');
+        Route::post('/refresh', [GitHubIntegrationController::class, 'refresh'])->name('refresh')->middleware('permission:view-github-integration|manage-github-integration');
+        Route::post('/test', [GitHubIntegrationController::class, 'test'])->name('test')->middleware('permission:manage-github-integration');
+        Route::post('/link-project', [GitHubIntegrationController::class, 'linkProject'])->name('link-project')->middleware('permission:manage-project-repos');
+        Route::post('/access/{gitIdentity}/approve', [GitHubIntegrationController::class, 'approveGitAccess'])->name('access.approve')->middleware('permission:manage-github-integration');
+        Route::post('/access/{gitIdentity}/reject', [GitHubIntegrationController::class, 'rejectGitAccess'])->name('access.reject')->middleware('permission:manage-github-integration');
+        Route::post('/access/{gitIdentity}/resync', [GitHubIntegrationController::class, 'resyncGitInvites'])->name('access.resync')->middleware('permission:manage-github-integration');
+    });
+
     // Daily reports
     Route::get('daily-reports', [\App\Http\Controllers\DailyReportController::class, 'index'])->name('daily-reports.index')->middleware('permission:view-own-tasks|view-all-tasks');
     Route::get('daily-reports/create', [\App\Http\Controllers\DailyReportController::class, 'create'])->name('daily-reports.create')->middleware('permission:view-own-tasks|view-all-tasks');
     Route::post('daily-reports', [\App\Http\Controllers\DailyReportController::class, 'store'])->name('daily-reports.store')->middleware('permission:view-own-tasks|view-all-tasks');
-    Route::post('daily-reports/{dailyReport}/review', [\App\Http\Controllers\DailyReportController::class, 'review'])->name('daily-reports.review')->middleware('permission:edit-projects');
+    Route::post('daily-reports/{dailyReport}/review', [\App\Http\Controllers\DailyReportController::class, 'review'])->name('daily-reports.review');
 
     // Project finance — expenses & delivery invoice
     Route::post('projects/{project}/expenses', [\App\Http\Controllers\ProjectFinanceController::class, 'storeExpense'])->name('projects.finance.expenses')->middleware('permission:create-finance');
@@ -342,6 +379,11 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::post('hr/warnings/{warning}/investigate', [\App\Http\Controllers\HrWarningController::class, 'investigate'])->name('hr.warnings.investigate')->middleware('permission:edit-employees');
     Route::post('hr/warnings/scan-overdue', [\App\Http\Controllers\HrWarningController::class, 'scanOverdue'])->name('hr.warnings.scan-overdue')->middleware('permission:edit-employees');
 
+    Route::get('hr/promotions', [EmployeePromotionController::class, 'index'])->name('hr.promotions.index')->middleware('permission:view-employees');
+    Route::post('hr/promotions', [EmployeePromotionController::class, 'store'])->name('hr.promotions.store')->middleware('permission:edit-employees');
+    Route::post('hr/promotions/{promotion}/advance', [EmployeePromotionController::class, 'advance'])->name('hr.promotions.advance');
+    Route::post('hr/promotions/{promotion}/reject', [EmployeePromotionController::class, 'reject'])->name('hr.promotions.reject');
+
     // Business Development
     Route::get('bd', [\App\Http\Controllers\BdController::class, 'index'])->name('bd.index')->middleware('permission:view-sales');
     Route::get('bd/partners/create', [\App\Http\Controllers\BdController::class, 'createPartner'])->name('bd.partners.create')->middleware('permission:create-sales');
@@ -352,6 +394,8 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::patch('bd/opportunities/{opportunity}/status', [\App\Http\Controllers\BdController::class, 'updateOpportunityStatus'])->name('bd.opportunities.status')->middleware('permission:edit-sales');
     
     // Tasks
+    Route::get('workspace', [EmployeeWorkspaceController::class, 'index'])->name('workspace.index')->middleware('permission:view-own-tasks|view-all-tasks');
+    Route::patch('workspace/tasks/{task}/status', [EmployeeWorkspaceController::class, 'updateStatus'])->name('workspace.tasks.status')->middleware('permission:view-own-tasks|view-all-tasks');
     Route::get('tasks', [TaskController::class, 'index'])->name('tasks.index')->middleware('permission:view-own-tasks|view-all-tasks');
     Route::get('tasks/create', [TaskController::class, 'create'])->name('tasks.create')->middleware('permission:create-tasks');
     Route::post('tasks', [TaskController::class, 'store'])->name('tasks.store')->middleware('permission:create-tasks');
@@ -369,6 +413,9 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
         Route::post('/tasks', [DepartmentManagerTaskController::class, 'store'])->name('tasks.store');
         Route::get('/projects/{project}/assign-team', [DepartmentManagerProjectController::class, 'assignTeam'])->name('projects.assign-team');
         Route::put('/projects/{project}/assign-team', [DepartmentManagerProjectController::class, 'updateTeam'])->name('projects.assign-team.update');
+
+        Route::get('/team', [DepartmentManagerTeamController::class, 'index'])->name('team.index');
+        Route::put('/team/{employee}', [DepartmentManagerTeamController::class, 'update'])->name('team.update');
 
         Route::get('/reports', [DepartmentManagerReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/create', [DepartmentManagerReportController::class, 'create'])->name('reports.create');

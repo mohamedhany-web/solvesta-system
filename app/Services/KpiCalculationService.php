@@ -14,14 +14,33 @@ class KpiCalculationService
 {
     public function roleTemplate(User $user): string
     {
+        $employee = $user->employee;
+        if ($employee?->department?->kpi_profile) {
+            return match ($employee->department->kpi_profile) {
+                'developer_strict' => 'developer_strict',
+                'sales_strict' => 'sales_strict',
+                'accountant_strict' => 'accountant_strict',
+                'hr_strict' => 'hr_strict',
+                'legal' => 'legal',
+                'admin' => 'admin',
+                default => $employee->department->kpi_profile,
+            };
+        }
+
         if ($user->hasRole('developer')) {
-            return 'developer';
+            return 'developer_strict';
         }
         if ($user->hasRole('designer')) {
             return 'designer';
         }
         if ($user->hasRole('sales_rep')) {
-            return 'sales';
+            return 'sales_strict';
+        }
+        if ($user->hasRole('accountant')) {
+            return 'accountant_strict';
+        }
+        if ($user->hasRole('hr')) {
+            return 'hr_strict';
         }
 
         return 'default';
@@ -30,9 +49,15 @@ class KpiCalculationService
     public function roleWeights(string $template): array
     {
         return match ($template) {
+            'developer_strict' => ['adherence' => 15, 'task_completion' => 40, 'quality' => 25, 'team_lead' => 20],
             'developer' => ['adherence' => 20, 'task_completion' => 40, 'quality' => 20, 'team_lead' => 20],
             'designer' => ['adherence' => 20, 'task_completion' => 35, 'quality' => 25, 'team_lead' => 20],
+            'sales_strict' => ['adherence' => 10, 'task_completion' => 50, 'quality' => 15, 'team_lead' => 25],
             'sales' => ['adherence' => 15, 'task_completion' => 45, 'quality' => 15, 'team_lead' => 25],
+            'accountant_strict' => ['adherence' => 30, 'task_completion' => 25, 'quality' => 35, 'team_lead' => 10],
+            'hr_strict' => ['adherence' => 30, 'task_completion' => 25, 'quality' => 30, 'team_lead' => 15],
+            'legal' => ['adherence' => 25, 'task_completion' => 20, 'quality' => 40, 'team_lead' => 15],
+            'admin' => ['adherence' => 30, 'task_completion' => 30, 'quality' => 20, 'team_lead' => 20],
             default => ['adherence' => 25, 'task_completion' => 35, 'quality' => 20, 'team_lead' => 20],
         };
     }

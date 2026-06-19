@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DailyReport;
+use App\Support\ReportingHierarchy;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\Task;
@@ -148,6 +149,15 @@ class PmoService
                     'has_blocker' => $data['has_blocker'] ?? false,
                     'blocker_description' => $data['blocker_description'] ?? null,
                     'blocker_status' => ($data['has_blocker'] ?? false) ? 'open' : null,
+                    'review_status' => ReportingHierarchy::STATUS_SUBMITTED,
+                    'reviewed_by' => null,
+                    'reviewed_at' => null,
+                    'team_lead_notes' => null,
+                    'dept_head_reviewed_by' => null,
+                    'dept_head_reviewed_at' => null,
+                    'dept_head_notes' => null,
+                    'executive_acknowledged_by' => null,
+                    'executive_acknowledged_at' => null,
                 ]
             );
 
@@ -174,13 +184,31 @@ class PmoService
         });
     }
 
-    public function reviewDailyReport(DailyReport $report, ?string $notes = null): DailyReport
+    public function reviewDailyReport(DailyReport $report, ?string $notes = null, string $level = 'team_lead'): DailyReport
     {
-        $report->update([
-            'reviewed_by' => auth()->id(),
-            'reviewed_at' => now(),
-            'team_lead_notes' => $notes,
-        ]);
+        $userId = auth()->id();
+
+        if ($level === 'dept_head') {
+            $report->update([
+                'review_status' => ReportingHierarchy::STATUS_DEPT_HEAD_REVIEWED,
+                'dept_head_reviewed_by' => $userId,
+                'dept_head_reviewed_at' => now(),
+                'dept_head_notes' => $notes,
+            ]);
+        } elseif ($level === 'executive') {
+            $report->update([
+                'review_status' => ReportingHierarchy::STATUS_CLOSED,
+                'executive_acknowledged_by' => $userId,
+                'executive_acknowledged_at' => now(),
+            ]);
+        } else {
+            $report->update([
+                'review_status' => ReportingHierarchy::STATUS_TEAM_LEAD_REVIEWED,
+                'reviewed_by' => $userId,
+                'reviewed_at' => now(),
+                'team_lead_notes' => $notes,
+            ]);
+        }
 
         return $report->fresh();
     }

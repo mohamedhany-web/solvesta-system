@@ -1,2 +1,0 @@
-<?php echo $__env->make('job-postings.partials.form', get_defined_vars(), array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-<?php /**PATH C:\xampp\htdocs\solvesta\resources\views\job-postings\_form.blade.php ENDPATH**/ ?>

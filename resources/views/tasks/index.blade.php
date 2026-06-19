@@ -11,14 +11,19 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">إدارة المهام</h1>
                 <p class="text-sm sm:text-base text-gray-600">تتبع وإدارة مهام المشاريع والموظفين</p>
             </div>
-            @can('create-tasks')
-            <a href="{{ route('tasks.create') }}" class="bg-blue-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
-                <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                مهمة جديدة
-            </a>
-            @endcan
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('workspace.index') }}" class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-5 py-2.5 rounded-lg hover:bg-indigo-100 transition text-sm font-medium inline-flex items-center">
+                    لوحة Kanban
+                </a>
+                @can('create-tasks')
+                <a href="{{ route('tasks.create') }}" class="bg-blue-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
+                    <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    مهمة جديدة
+                </a>
+                @endcan
+            </div>
         </div>
     </div>
 
@@ -174,19 +179,8 @@
                         </td>
                         <td class="px-6 py-4 w-1/6">
                             <div class="flex items-center gap-2">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                    @if($task->status == 'completed') bg-green-100 text-green-800
-                                    @elseif($task->status == 'in_progress') bg-orange-100 text-orange-800
-                                    @elseif($task->status == 'pending') bg-yellow-100 text-yellow-800
-                                    @elseif($task->status == 'on_hold') bg-red-100 text-red-800
-                                    @else bg-gray-100 text-gray-800
-                                    @endif">
-                                    @if($task->status == 'completed') مكتمل
-                                    @elseif($task->status == 'in_progress') قيد التنفيذ
-                                    @elseif($task->status == 'pending') معلق
-                                    @elseif($task->status == 'on_hold') متوقف
-                                    @else {{ $task->status }}
-                                    @endif
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ $task->status_color }}-100 text-{{ $task->status_color }}-800">
+                                    {{ $task->status_label_ar }}
                                 </span>
                                 <div class="flex gap-1">
                                     <a href="{{ route('tasks.show', $task) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">

@@ -8,7 +8,7 @@
         ->where('period_year', now()->year)->where('period_month', now()->month)->first();
     $warnings = \App\Models\HrWarning::where('user_id', $user->id)->whereIn('status',['active','escalated'])->count();
 @endphp
-<div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-6">
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
     <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
         <h2 class="text-lg font-bold font-tajawal" style="color:{{ $themeColor }};">KPI والأداء</h2>
         <a href="{{ route('kpi.show', $user) }}" class="text-sm font-bold text-blue-600">تفاصيل KPI →</a>

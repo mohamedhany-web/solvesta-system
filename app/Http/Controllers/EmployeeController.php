@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\Department;
 use App\Models\User;
+use App\Services\DepartmentProfileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -41,10 +42,18 @@ class EmployeeController extends Controller
             abort(403, 'غير مصرح لك بإنشاء موظفين');
         }
 
-        $departments = Department::where('is_active', true)->get();
+        $departments = Department::where('is_active', true)->with('parent')->orderBy('name')->get();
         $users = User::doesntHave('employee')->get();
-        
-        return view('employees.create', compact('departments', 'users'));
+        $roleLabels = DepartmentProfileService::roleLabels();
+        $assignableRoles = DepartmentProfileService::assignableRoles();
+        $preselectedDepartmentId = request('department_id');
+
+        return view('employees.create', compact('departments', 'users', 'roleLabels', 'assignableRoles', 'preselectedDepartmentId'));
+    }
+
+    public function departmentProfile(Department $department)
+    {
+        return response()->json(DepartmentProfileService::forDepartment($department));
     }
 
     public function store(Request $request)
@@ -66,6 +75,8 @@ class EmployeeController extends Controller
             'daily_hours' => 'required|numeric|min:1|max:12',
             'hire_date' => 'required|date',
             'employment_type' => 'required|in:full_time,part_time,contract,intern',
+            'system_role' => 'required|string|max:64',
+            'career_level' => 'nullable|string|max:128',
             'address' => 'nullable|string',
             'emergency_contact' => 'nullable|string',
             'emergency_phone' => 'nullable|string',
@@ -113,14 +124,8 @@ class EmployeeController extends Controller
                     'email_verified_at' => now(),
                 ]);
 
-                // تعيين دور افتراضي للموظف
-                $employeeRole = \Spatie\Permission\Models\Role::where('name', 'employee')->first();
-                if ($employeeRole) {
-                    $user->assignRole($employeeRole);
-                }
-
                 $userId = $user->id;
-                $employeeEmail = $user->email; // ensure consistency
+                $employeeEmail = $user->email;
             }
 
             // التحقق من أن المستخدم المختار ليس لديه موظف بالفعل
@@ -132,6 +137,10 @@ class EmployeeController extends Controller
 
             // Generate employee ID automatically
             $employeeId = Employee::generateEmployeeIdBySettings();
+
+            $department = Department::find($request->department_id);
+            $profile = DepartmentProfileService::forDepartment($department);
+            $roleName = $request->system_role ?: ($profile['default_role'] ?? 'employee');
             
             // إنشاء الموظف
             $employee = Employee::create([
@@ -139,7 +148,6 @@ class EmployeeController extends Controller
                 'employee_id' => $employeeId,
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
-                // لا نقوم بتغيير بريد المستخدم الموجود؛ نستخدم بريده الحالي لحقل الموظف
                 'email' => $employeeEmail,
                 'phone' => $request->phone,
                 'department_id' => $request->department_id,
@@ -149,20 +157,22 @@ class EmployeeController extends Controller
                 'hire_date' => $request->hire_date,
                 'employment_type' => $request->employment_type,
                 'status' => 'active',
+                'career_level' => $request->career_level ?: ($profile['levels'][0] ?? null),
+                'career_track' => $profile['career_track'] ?? null,
                 'address' => $request->address,
                 'emergency_contact' => $request->emergency_contact,
                 'emergency_phone' => $request->emergency_phone,
             ]);
 
-            // مزامنة اسم المستخدم المرتبط فقط (بدون تعديل البريد لحماية فريد المستخدمين)
+            // مزامنة اسم المستخدم والدور حسب القسم
             if ($userId) {
                 $user = User::find($userId);
                 if ($user) {
                     $fullName = trim($request->first_name . ' ' . $request->last_name);
-                    // تحديث الاسم فقط وعدم تغيير البريد الإلكتروني لتفادي تعارض فريد users.email
                     if ($user->name !== $fullName) {
                         $user->update(['name' => $fullName]);
                     }
+                    DepartmentProfileService::applyRoleToUser($user, $roleName);
                 }
             }
 
@@ -192,29 +202,50 @@ class EmployeeController extends Controller
 
     public function edit(Employee $employee)
     {
-        $departments = Department::where('is_active', true)->get();
-        
-        return view('employees.edit', compact('employee', 'departments'));
+        if (! auth()->user()->can('edit-employees')) {
+            abort(403, 'غير مصرح لك بتعديل الموظفين');
+        }
+
+        $employee->load(['user', 'supervisor', 'department']);
+        $departments = Department::where('is_active', true)->with('parent')->orderBy('name')->get();
+        $supervisorOptions = User::query()
+            ->whereHas('employee', fn ($q) => $q->where('department_id', $employee->department_id)->where('status', 'active'))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $roleLabels = DepartmentProfileService::roleLabels();
+        $assignableRoles = DepartmentProfileService::assignableRoles();
+        $currentRole = $employee->user?->roles->first()?->name ?? 'employee';
+        $deptProfile = DepartmentProfileService::forDepartment($employee->department);
+
+        return view('employees.edit', compact(
+            'employee', 'departments', 'supervisorOptions',
+            'roleLabels', 'assignableRoles', 'currentRole', 'deptProfile'
+        ));
     }
 
     public function update(Request $request, Employee $employee)
     {
-        if (!auth()->user()->can('edit-employees')) {
+        if (! auth()->user()->can('edit-employees')) {
             abort(403, 'غير مصرح لك بتعديل الموظفين');
         }
 
         $validator = Validator::make($request->all(), [
-            'employee_id' => 'required|string|unique:employees,employee_id,' . $employee->id,
+            'employee_id' => 'required|string|unique:employees,employee_id,'.$employee->id,
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email,' . $employee->id,
+            'email' => 'required|email|unique:employees,email,'.$employee->id,
             'phone' => 'required|string|max:20',
             'department_id' => 'required|exists:departments,id',
             'position' => 'required|string|max:255',
             'salary' => 'required|numeric|min:0',
             'daily_hours' => 'required|numeric|min:1|max:12',
+            'hire_date' => 'required|date',
             'employment_type' => 'required|in:full_time,part_time,contract,intern',
-            'status' => 'required|in:active,inactive,terminated',
+            'status' => 'required|in:active,inactive,terminated,on_leave',
+            'supervisor_user_id' => 'nullable|exists:users,id',
+            'is_team_lead' => 'nullable|boolean',
+            'system_role' => 'nullable|string|max:64',
+            'career_level' => 'nullable|string|max:128',
             'address' => 'nullable|string',
             'emergency_contact' => 'nullable|string',
             'emergency_phone' => 'nullable|string',
@@ -226,7 +257,9 @@ class EmployeeController extends Controller
                 ->withInput();
         }
 
-        // تحديث بيانات الموظف
+        $department = Department::find($request->department_id);
+        $profile = DepartmentProfileService::forDepartment($department);
+
         $employee->update([
             'employee_id' => $request->employee_id,
             'first_name' => $request->first_name,
@@ -237,35 +270,42 @@ class EmployeeController extends Controller
             'position' => $request->position,
             'salary' => $request->salary,
             'daily_hours' => $request->daily_hours,
+            'hire_date' => $request->hire_date,
             'employment_type' => $request->employment_type,
             'status' => $request->status,
+            'supervisor_user_id' => $request->input('supervisor_user_id') ?: null,
+            'is_team_lead' => $request->boolean('is_team_lead'),
+            'career_level' => $request->input('career_level') ?: $employee->career_level,
+            'career_track' => $profile['career_track'] ?? $employee->career_track,
             'address' => $request->address,
             'emergency_contact' => $request->emergency_contact,
             'emergency_phone' => $request->emergency_phone,
         ]);
 
-        // مزامنة بيانات المستخدم المرتبط
         if ($employee->user_id) {
             $user = User::find($employee->user_id);
             if ($user) {
-                $fullName = trim($request->first_name . ' ' . $request->last_name);
-                
-                // التحقق من عدم استخدام البريد الإلكتروني من قبل مستخدم آخر
+                $fullName = trim($request->first_name.' '.$request->last_name);
+
                 $emailExists = User::where('email', $request->email)
                     ->where('id', '!=', $user->id)
                     ->exists();
-                
-                if (!$emailExists) {
+
+                if (! $emailExists) {
                     $user->update([
                         'name' => $fullName,
                         'email' => $request->email,
                     ]);
                 }
+
+                if ($request->filled('system_role')) {
+                    DepartmentProfileService::applyRoleToUser($user, $request->system_role);
+                }
             }
         }
 
-        return redirect()->route('employees.index')
-            ->with('success', 'تم تحديث الموظف بنجاح');
+        return redirect()->route('employees.show', $employee)
+            ->with('success', 'تم تحديث بيانات الموظف بنجاح');
     }
 
     public function destroy(Employee $employee)

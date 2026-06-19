@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\Employee;
 use App\Models\User;
 use App\Models\Notification;
+use App\Support\ProjectScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -21,11 +22,9 @@ class TaskController extends Controller
     public function index()
     {
         $query = Task::with(['project', 'assignedTo']);
-        
-        // إذا كان المستخدم لديه صلاحية view-own-tasks فقط
-        if (auth()->user()->can('view-own-tasks') && !auth()->user()->can('view-all-tasks')) {
-            // عرض المهام المخصصة للمستخدم فقط
-            $query->where('assigned_to', auth()->id());
+
+        if (! auth()->user()->can('view-all-tasks')) {
+            ProjectScope::applyToTasks($query, auth()->user());
         }
         
         $tasks = $query
@@ -42,30 +41,23 @@ class TaskController extends Controller
             ->paginate(15);
 
         $projectsQuery = Project::where('status', 'in_progress');
-        
-        // Filter projects based on permissions
-        if (auth()->user()->can('view-own-projects') && !auth()->user()->can('view-all-projects')) {
-            $projectsQuery->where(function($q) {
-                $q->where('project_manager_id', auth()->id())
-                  ->orWhereHas('teamMembers', function($teamQuery) {
-                      $teamQuery->where('user_id', auth()->id());
-                  });
-            });
+
+        if (! auth()->user()->can('view-all-projects')) {
+            ProjectScope::apply($projectsQuery, auth()->user());
         }
         
         $projects = $projectsQuery->get();
         
-        // Calculate statistics based on permissions
         $statsQuery = Task::query();
-        if (auth()->user()->can('view-own-tasks') && !auth()->user()->can('view-all-tasks')) {
-            $statsQuery->where('assigned_to', auth()->id());
+        if (! auth()->user()->can('view-all-tasks')) {
+            ProjectScope::applyToTasks($statsQuery, auth()->user());
         }
         
         $stats = [
             'total' => (clone $statsQuery)->count(),
-            'completed' => (clone $statsQuery)->where('status', 'completed')->count(),
+            'completed' => (clone $statsQuery)->whereIn('status', ['done', 'completed'])->count(),
             'in_progress' => (clone $statsQuery)->where('status', 'in_progress')->count(),
-            'pending' => (clone $statsQuery)->where('status', 'pending')->count(),
+            'pending' => (clone $statsQuery)->whereIn('status', ['backlog', 'todo', 'pending'])->count(),
         ];
 
         return view('tasks.index', compact('tasks', 'projects', 'stats'));
@@ -163,7 +155,7 @@ class TaskController extends Controller
             'project_id' => 'required|exists:projects,id',
             'assigned_to' => 'required|exists:users,id',
             'priority' => 'required|in:low,medium,high,urgent',
-            'status' => 'required|in:todo,in_progress,review,completed,cancelled',
+            'status' => 'required|in:'.implode(',', Task::allStatuses()),
             'start_date' => 'nullable|date',
             'due_date' => 'required|date',
             'estimated_hours' => 'nullable|numeric|min:0',
@@ -288,7 +280,7 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
-        $task->load(['project', 'assignedTo', 'createdBy', 'updates.user']);
+        $task->load(['project.repositories', 'milestone', 'assignedTo', 'createdBy', 'updates.user', 'gitBranches.repository', 'pullRequests']);
         
         return view('tasks.show', compact('task'));
     }
@@ -316,7 +308,7 @@ class TaskController extends Controller
             'project_id' => 'required|exists:projects,id',
             'assigned_to' => 'required|exists:users,id',
             'priority' => 'required|in:low,medium,high,urgent',
-            'status' => 'required|in:todo,in_progress,review,completed,cancelled',
+            'status' => 'required|in:'.implode(',', Task::allStatuses()),
             'due_date' => 'required|date',
             'estimated_hours' => 'nullable|numeric|min:0',
             'actual_hours' => 'nullable|numeric|min:0',

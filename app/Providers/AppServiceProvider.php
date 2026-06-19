@@ -10,6 +10,8 @@ use App\Observers\FinancialInvoiceObserver;
 use App\Observers\InvoiceObserver;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
+use App\Services\DepartmentNavContext;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -36,6 +38,10 @@ class AppServiceProvider extends ServiceProvider
 
         Route::bind('sharedDocument', function (string $value) {
             return ClientSharedDocument::where('id', $value)->firstOrFail();
+        });
+
+        View::composer('layouts.app', function ($view) {
+            $view->with('deptNav', DepartmentNavContext::forUser(auth()->guard('web')->user()));
         });
 
         $this->configurePublicAssetUrl();

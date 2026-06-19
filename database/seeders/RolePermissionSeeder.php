@@ -94,6 +94,9 @@ class RolePermissionSeeder extends Seeder
             // إضافية
             'view-assets',
 
+            // Dev Workflow & Git
+            'view-dev-workflow', 'manage-project-repos', 'create-git-branches', 'create-pull-requests', 'review-code',
+
             // بوابة العميل + ما بعد البيع
             'view-client-portal',
             'view-client-projects',
@@ -139,7 +142,8 @@ class RolePermissionSeeder extends Seeder
             'view-departments', 'create-departments', 'edit-departments',
             'view-reports', 'generate-reports', 'export-reports',
             'view-dashboard', 'view-analytics',
-            'view-settings'
+            'view-settings',
+            'view-dev-workflow', 'manage-project-repos', 'create-git-branches', 'create-pull-requests', 'review-code',
         ]);
 
         // 3. مدير مشاريع (Project Manager)
@@ -153,6 +157,7 @@ class RolePermissionSeeder extends Seeder
             'view-qa', 'create-qa', 'edit-qa',
             'view-reports', 'generate-reports',
             'view-dashboard',
+            'view-dev-workflow', 'manage-project-repos', 'create-git-branches', 'create-pull-requests', 'review-code',
             'view-training', 'create-training', 'edit-training',
             'view-meetings', 'create-meetings', 'edit-meetings'
         ]);
@@ -232,6 +237,7 @@ class RolePermissionSeeder extends Seeder
             'view-bugs', 'create-bugs', 'edit-bugs',
             'view-qa', 'create-qa', 'edit-qa',
             'view-dashboard',
+            'view-dev-workflow', 'create-git-branches', 'create-pull-requests',
             'view-training', 'create-training', 'edit-training',
             'view-meetings', 'create-meetings', 'edit-meetings'
         ]);

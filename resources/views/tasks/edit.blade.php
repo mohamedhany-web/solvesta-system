@@ -114,10 +114,9 @@
                     <select name="status" id="status" required
                             class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 @error('status') border-red-500 @enderror">
                         <option value="">اختر الحالة</option>
-                        <option value="todo" {{ old('status', $task->status) == 'todo' ? 'selected' : '' }}>للتنفيذ</option>
-                        <option value="in_progress" {{ old('status', $task->status) == 'in_progress' ? 'selected' : '' }}>قيد التنفيذ</option>
-                        <option value="review" {{ old('status', $task->status) == 'review' ? 'selected' : '' }}>قيد المراجعة</option>
-                        <option value="completed" {{ old('status', $task->status) == 'completed' ? 'selected' : '' }}>مكتمل</option>
+                        @foreach(\App\Models\Task::workflowStatuses() as $status)
+                            <option value="{{ $status }}" {{ old('status', \App\Models\Task::normalizeStatus($task->status)) == $status ? 'selected' : '' }}>{{ \App\Models\Task::statusLabelAr($status) }}</option>
+                        @endforeach
                         <option value="cancelled" {{ old('status', $task->status) == 'cancelled' ? 'selected' : '' }}>ملغي</option>
                     </select>
                     @error('status')

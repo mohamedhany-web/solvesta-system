@@ -30,6 +30,8 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->registerPolicies();
+
         // التحقق من الصلاحيات المخصصة على مستوى المستخدم قبل صلاحيات الأدوار
         Gate::before(function ($user, $ability) {
             // التحقق من وجود صلاحية مخصصة للمستخدم في جدول user_permissions

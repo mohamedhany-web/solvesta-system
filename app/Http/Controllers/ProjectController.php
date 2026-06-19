@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\User;
 use App\Models\Task;
+use App\Support\ProjectScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -19,16 +20,9 @@ class ProjectController extends Controller
         $this->authorize('viewAny', Project::class);
         // Get projects based on user permissions
         $query = Project::with(['client', 'projectManager', 'teamMembers', 'department']);
-        
-        // إذا كان المستخدم لديه صلاحية view-own-projects فقط (موظف عادي)
-        if (auth()->user()->can('view-own-projects') && !auth()->user()->can('view-all-projects')) {
-            // عرض المشاريع التي المستخدم مدير لها أو عضو في فريقها
-            $query->where(function($q) {
-                $q->where('project_manager_id', auth()->id())
-                  ->orWhereHas('teamMembers', function($teamQuery) {
-                      $teamQuery->where('user_id', auth()->id());
-                  });
-            });
+
+        if (! auth()->user()->can('view-all-projects')) {
+            ProjectScope::apply($query, auth()->user());
         }
         
         $projects = $query
@@ -53,13 +47,8 @@ class ProjectController extends Controller
 
         // Calculate statistics based on user access
         $statsQuery = Project::query();
-        if (auth()->user()->can('view-own-projects') && !auth()->user()->can('view-all-projects')) {
-            $statsQuery->where(function($q) {
-                $q->where('project_manager_id', auth()->id())
-                  ->orWhereHas('teamMembers', function($teamQuery) {
-                      $teamQuery->where('user_id', auth()->id());
-                  });
-            });
+        if (! auth()->user()->can('view-all-projects')) {
+            ProjectScope::apply($statsQuery, auth()->user());
         }
         
         $stats = [
@@ -77,13 +66,8 @@ class ProjectController extends Controller
 
         // Get recent/featured projects (latest 3) based on user access
         $featuredQuery = Project::with(['client', 'projectManager', 'teamMembers', 'tasks', 'department']);
-        if (auth()->user()->can('view-own-projects') && !auth()->user()->can('view-all-projects')) {
-            $featuredQuery->where(function($q) {
-                $q->where('project_manager_id', auth()->id())
-                  ->orWhereHas('teamMembers', function($teamQuery) {
-                      $teamQuery->where('user_id', auth()->id());
-                  });
-            });
+        if (! auth()->user()->can('view-all-projects')) {
+            ProjectScope::apply($featuredQuery, auth()->user());
         }
         $featuredProjects = $featuredQuery->orderBy('created_at', 'desc')->take(3)->get();
 
@@ -170,7 +154,7 @@ class ProjectController extends Controller
     public function show(Project $project)
     {
         $this->authorize('view', $project);
-        $project->load(['client', 'projectManager', 'teamMembers', 'tasks.milestone', 'milestones.tasks', 'milestones.assignedLead', 'contract', 'expenses']);
+        $project->load(['client', 'projectManager', 'teamMembers', 'tasks.milestone', 'milestones.tasks', 'milestones.assignedLead', 'contract', 'expenses', 'repositories']);
         
         // إحصائيات المشروع
         $stats = [

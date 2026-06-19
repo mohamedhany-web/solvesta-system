@@ -12,6 +12,10 @@ class Employee extends Model
         'user_id',
         'employee_id',
         'department_id',
+        'supervisor_user_id',
+        'is_team_lead',
+        'career_level',
+        'career_track',
         'first_name',
         'last_name',
         'email',
@@ -31,11 +35,22 @@ class Employee extends Model
     protected $casts = [
         'hire_date' => 'date',
         'salary' => 'decimal:2',
+        'is_team_lead' => 'boolean',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function supervisor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'supervisor_user_id');
+    }
+
+    public function directReports(): HasMany
+    {
+        return $this->hasMany(self::class, 'supervisor_user_id', 'user_id');
     }
 
     public function department(): BelongsTo
@@ -66,6 +81,11 @@ class Employee extends Model
     public function salaries(): HasMany
     {
         return $this->hasMany(Salary::class);
+    }
+
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(EmployeePromotion::class);
     }
 
     /**

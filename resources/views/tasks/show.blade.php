@@ -8,12 +8,18 @@
     <div class="mb-8">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-4">
+                <a href="{{ route('workspace.index') }}" class="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="مساحة عملي">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                    </svg>
+                </a>
                 <a href="{{ route('tasks.index') }}" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                     <svg class="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                 </a>
                 <div>
+                    <p class="text-sm font-mono text-blue-600 mb-1">{{ $task->task_key }}</p>
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $task->title }}</h1>
                     <p class="text-gray-600">تفاصيل المهمة ومعلوماتها الكاملة</p>
                 </div>
@@ -265,6 +271,8 @@
 
         <!-- Sidebar -->
         <div class="space-y-6">
+            @include('dev-workflow.partials.task-panel', ['task' => $task])
+
             <!-- Status & Priority -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">معلومات عامة</h3>
@@ -272,17 +280,33 @@
                     <!-- Status -->
                     <div>
                         <label class="text-sm font-medium text-gray-600 block mb-2">الحالة</label>
+                        @if((int) $task->assigned_to === (int) auth()->id() || auth()->user()->can('edit-tasks'))
+                        <form id="taskStatusForm" class="space-y-2">
+                            @csrf
+                            <select id="taskStatusSelect" name="status" class="w-full rounded-lg border-gray-300 text-sm">
+                                @foreach(\App\Models\Task::workflowStatuses() as $status)
+                                    <option value="{{ $status }}" @selected(\App\Models\Task::normalizeStatus($task->status) === $status)>
+                                        {{ \App\Models\Task::statusLabelAr($status) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                        @else
                         <span class="inline-flex items-center px-4 py-2 bg-{{ $task->status_color }}-100 text-{{ $task->status_color }}-800 rounded-lg text-sm font-medium">
                             <span class="w-2 h-2 bg-{{ $task->status_color }}-500 rounded-full ml-2"></span>
-                            @switch($task->status)
-                                @case('todo') للتنفيذ @break
-                                @case('in_progress') قيد التنفيذ @break
-                                @case('review') قيد المراجعة @break
-                                @case('completed') مكتمل @break
-                                @case('cancelled') ملغي @break
-                            @endswitch
+                            {{ $task->status_label_ar }}
+                        </span>
+                        @endif
+                    </div>
+
+                    @if($task->milestone)
+                    <div>
+                        <label class="text-sm font-medium text-gray-600 block mb-2">Epic / المرحلة</label>
+                        <span class="inline-flex items-center px-3 py-1.5 bg-violet-50 text-violet-800 rounded-lg text-sm font-medium">
+                            {{ $task->milestone->name }}
                         </span>
                     </div>
+                    @endif
 
                     <!-- Priority -->
                     <div>
@@ -471,6 +495,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+const taskStatusSelect = document.getElementById('taskStatusSelect');
+if (taskStatusSelect) {
+    taskStatusSelect.addEventListener('change', async function () {
+        const status = this.value;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        try {
+            const res = await fetch('{{ route('workspace.tasks.status', $task) }}', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ status }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'فشل التحديث');
+        } catch (e) {
+            alert(e.message || 'تعذر تحديث الحالة');
+            location.reload();
+        }
+    });
+}
 </script>
 @endpush
 
