@@ -6,7 +6,7 @@
 @section('content')
 @if(!empty($is_admin_dashboard))
     @include('dashboard.partials.admin')
-@else
+                                @else
     @include('dashboard.partials.role-default')
 @endif
 @endsection
