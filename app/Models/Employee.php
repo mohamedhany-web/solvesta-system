@@ -114,23 +114,18 @@ class Employee extends Model
     {
         $prefix = $prefix ?? \App\Helpers\SettingsHelper::getEmployeeIdPrefix();
         $length = \App\Helpers\SettingsHelper::getEmployeeIdLength();
-        
-        // الحصول على آخر رقم توظيفي
-        $lastEmployee = static::where('employee_id', 'like', $prefix . '%')
-            ->orderBy('employee_id', 'desc')
-            ->first();
-        
-        if ($lastEmployee) {
-            // استخراج الرقم من آخر employee_id
-            $lastNumber = (int) str_replace($prefix, '', $lastEmployee->employee_id);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-        
-        // تنسيق الرقم مع padding
-        $employeeId = $prefix . str_pad($newNumber, $length, '0', STR_PAD_LEFT);
-        
+
+        $maxNumber = static::query()
+            ->where('employee_id', 'like', $prefix.'%')
+            ->pluck('employee_id')
+            ->map(fn (string $id) => (int) preg_replace('/^'.preg_quote($prefix, '/').'/i', '', $id))
+            ->max() ?? 0;
+
+        do {
+            $maxNumber++;
+            $employeeId = $prefix.str_pad((string) $maxNumber, $length, '0', STR_PAD_LEFT);
+        } while (static::where('employee_id', $employeeId)->exists());
+
         return $employeeId;
     }
 

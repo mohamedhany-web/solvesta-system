@@ -55,24 +55,19 @@ class EmployeeNumberGenerator
      * @param string $prefix البادئة
      * @return string
      */
-    public static function generateSequential($prefix = 'EMP')
+    public static function generateSequential($prefix = 'EMP', $length = 6)
     {
-        // الحصول على آخر رقم توظيفي
-        $lastEmployee = Employee::where('employee_id', 'like', $prefix . '%')
-            ->orderBy('employee_id', 'desc')
-            ->first();
-        
-        if ($lastEmployee) {
-            // استخراج الرقم من آخر employee_id
-            $lastNumber = (int) str_replace($prefix, '', $lastEmployee->employee_id);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-        
-        // تنسيق الرقم مع padding
-        $employeeId = $prefix . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
-        
+        $maxNumber = Employee::query()
+            ->where('employee_id', 'like', $prefix.'%')
+            ->pluck('employee_id')
+            ->map(fn (string $id) => (int) preg_replace('/^'.preg_quote($prefix, '/').'/i', '', $id))
+            ->max() ?? 0;
+
+        do {
+            $maxNumber++;
+            $employeeId = $prefix.str_pad((string) $maxNumber, $length, '0', STR_PAD_LEFT);
+        } while (Employee::where('employee_id', $employeeId)->exists());
+
         return $employeeId;
     }
     
