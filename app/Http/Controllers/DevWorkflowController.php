@@ -23,7 +23,10 @@ class DevWorkflowController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless($request->user()->can('view-dev-workflow'), 403);
+        abort_unless(
+            $request->user()->can('view-dev-workflow') || $request->user()->can('manage-github-integration'),
+            403
+        );
 
         $user = $request->user();
         $stats = $this->workflow->pipelineStats($user);

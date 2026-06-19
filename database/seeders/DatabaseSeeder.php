@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolePermissionSeeder::class,
+            DevWorkflowPermissionSeeder::class,
+            GitHubIntegrationPermissionSeeder::class,
             DepartmentSeeder::class,
             UserEmployeeSeeder::class,
             ClientSeeder::class,

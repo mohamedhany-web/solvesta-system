@@ -334,7 +334,7 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::post('pmo/tasks/{task}/resolve-blocker', [\App\Http\Controllers\PmoController::class, 'resolveBlocker'])->name('pmo.tasks.resolve-blocker')->middleware('permission:edit-projects');
 
     // Dev Workflow — Git, Branches, Pull Requests
-    Route::get('dev-workflow', [DevWorkflowController::class, 'index'])->name('dev-workflow.index')->middleware('permission:view-dev-workflow');
+    Route::get('dev-workflow', [DevWorkflowController::class, 'index'])->name('dev-workflow.index')->middleware('permission:view-dev-workflow|manage-github-integration');
     Route::post('projects/{project}/repository', [DevWorkflowController::class, 'storeRepository'])->name('dev-workflow.repositories.store')->middleware('permission:manage-project-repos');
     Route::post('tasks/{task}/branches', [DevWorkflowController::class, 'storeBranch'])->name('dev-workflow.branches.store')->middleware('permission:create-git-branches');
     Route::post('dev-workflow/branches/{branch}/pull-requests', [DevWorkflowController::class, 'storePullRequest'])->name('dev-workflow.pull-requests.store')->middleware('permission:create-pull-requests');

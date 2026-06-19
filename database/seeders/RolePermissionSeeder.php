@@ -96,6 +96,7 @@ class RolePermissionSeeder extends Seeder
 
             // Dev Workflow & Git
             'view-dev-workflow', 'manage-project-repos', 'create-git-branches', 'create-pull-requests', 'review-code',
+            'view-github-integration', 'manage-github-integration',
 
             // بوابة العميل + ما بعد البيع
             'view-client-portal',
@@ -144,6 +145,7 @@ class RolePermissionSeeder extends Seeder
             'view-dashboard', 'view-analytics',
             'view-settings',
             'view-dev-workflow', 'manage-project-repos', 'create-git-branches', 'create-pull-requests', 'review-code',
+            'view-github-integration', 'manage-github-integration',
         ]);
 
         // 3. مدير مشاريع (Project Manager)
@@ -158,6 +160,7 @@ class RolePermissionSeeder extends Seeder
             'view-reports', 'generate-reports',
             'view-dashboard',
             'view-dev-workflow', 'manage-project-repos', 'create-git-branches', 'create-pull-requests', 'review-code',
+            'view-github-integration', 'manage-github-integration',
             'view-training', 'create-training', 'edit-training',
             'view-meetings', 'create-meetings', 'edit-meetings'
         ]);

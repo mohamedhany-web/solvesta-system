@@ -6,6 +6,7 @@ use App\Models\ClientMeetingRequest;
 use App\Models\ClientSharedDocument;
 use App\Models\FinancialInvoice;
 use App\Models\Invoice;
+use App\Models\UserGitIdentity;
 use App\Observers\FinancialInvoiceObserver;
 use App\Observers\InvoiceObserver;
 use Illuminate\Support\Facades\Route;
@@ -41,7 +42,20 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::composer('layouts.app', function ($view) {
-            $view->with('deptNav', DepartmentNavContext::forUser(auth()->guard('web')->user()));
+            $user = auth()->guard('web')->user();
+            $pendingGitHubAccessCount = 0;
+
+            if ($user?->can('manage-github-integration')) {
+                $pendingGitHubAccessCount = UserGitIdentity::query()
+                    ->where('provider', 'github')
+                    ->where('status', UserGitIdentity::STATUS_PENDING)
+                    ->count();
+            }
+
+            $view->with([
+                'deptNav' => DepartmentNavContext::forUser($user),
+                'pendingGitHubAccessCount' => $pendingGitHubAccessCount,
+            ]);
         });
 
         $this->configurePublicAssetUrl();
