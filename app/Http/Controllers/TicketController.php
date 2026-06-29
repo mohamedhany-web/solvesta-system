@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Services\ClientPortalNotifier;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -158,7 +159,7 @@ class TicketController extends Controller
         return redirect()->route('tickets.index')->with('success', 'تم حذف التذكرة بنجاح');
     }
 
-    protected function applyTicketFilters(Builder $query): Builder
+    protected function applyTicketFilters(Builder|Relation $query): Builder|Relation
     {
         return $query
             ->when(request('search'), function ($q) {
