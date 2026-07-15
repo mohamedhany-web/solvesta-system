@@ -635,16 +635,19 @@ class WebsiteController extends Controller
     {
         $job = JobPosting::query()
             ->where('slug', $slug)
-            ->published()
+            ->whereIn('status', ['published', 'closed'])
             ->with('department')
             ->firstOrFail();
 
+        $isClosed = $job->status === 'closed';
+
         $appliedCookie = 'career_applied_'.$job->id;
-        $hideApplicationForm = session($appliedCookie)
+        $hideApplicationForm = $isClosed
+            || session($appliedCookie)
             || $request->cookie($appliedCookie) === '1'
             || session('application_submitted_'.$job->id);
 
-        return view('website.career-show', compact('job', 'hideApplicationForm'));
+        return view('website.career-show', compact('job', 'hideApplicationForm', 'isClosed'));
     }
 
     private function careerAppliedCookieKey(int $jobPostingId): string
@@ -656,8 +659,14 @@ class WebsiteController extends Controller
     {
         $job = JobPosting::query()
             ->where('slug', $slug)
-            ->published()
+            ->whereIn('status', ['published', 'closed'])
             ->firstOrFail();
+
+        if ($job->status === 'closed') {
+            return redirect()
+                ->route('website.careers.show', $job->slug)
+                ->with('error', 'This position has been filled and is no longer accepting applications.');
+        }
 
         $data = $request->validate([
             'full_name' => 'required|string|max:190',

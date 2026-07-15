@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\DepartmentProfileService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -97,7 +98,7 @@ class Department extends Model
     }
 
     /**
-     * Modules visible in sidebar: own config, else inherited from parent chain.
+     * Modules visible in sidebar: DB config → parent chain → profile by code → role defaults.
      */
     public function effectiveSidebarModules(): array
     {
@@ -106,8 +107,26 @@ class Department extends Model
             return array_values($modules);
         }
 
-        if ($this->relationLoaded('parent') ? $this->parent : $this->parent()->first()) {
-            return $this->parent->effectiveSidebarModules();
+        $parent = $this->relationLoaded('parent') ? $this->parent : $this->parent()->first();
+        if ($parent) {
+            $inherited = $parent->effectiveSidebarModules();
+            if (count($inherited) > 0) {
+                return $inherited;
+            }
+        }
+
+        $code = strtoupper($this->code ?? '');
+        if ($code !== '') {
+            if (isset(DepartmentProfileService::PROFILES[$code])) {
+                $profileModules = DepartmentProfileService::PROFILES[$code]['sidebar_modules'] ?? [];
+                if (is_array($profileModules) && count($profileModules) > 0) {
+                    return $profileModules;
+                }
+            }
+
+            if (str_starts_with($code, 'DEV')) {
+                return DepartmentProfileService::devTeamSidebarModules();
+            }
         }
 
         return [];

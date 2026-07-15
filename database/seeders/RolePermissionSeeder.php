@@ -241,6 +241,7 @@ class RolePermissionSeeder extends Seeder
             'view-qa', 'create-qa', 'edit-qa',
             'view-dashboard',
             'view-dev-workflow', 'create-git-branches', 'create-pull-requests',
+            'view-github-integration',
             'view-training', 'create-training', 'edit-training',
             'view-meetings', 'create-meetings', 'edit-meetings'
         ]);

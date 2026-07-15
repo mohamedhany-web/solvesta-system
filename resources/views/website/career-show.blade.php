@@ -2,6 +2,9 @@
 
 @section('title', \App\Helpers\SettingsHelper::getCompanyName() . ' — ' . $job->title)
 
+@php
+    $isClosed = $isClosed ?? ($job->status === 'closed');
+@endphp
 
 @section('content')
 <div class="sv-os" dir="ltr">
@@ -13,6 +16,9 @@
       </a>
       <div class="max-w-3xl">
         <div class="flex flex-wrap gap-2 mb-4">
+          @if($isClosed)
+          <span class="sv-badge" style="background: linear-gradient(135deg,#ecfdf5,#fff7ed); color:#047857; border:1px solid #a7f3d0;">Hiring Completed</span>
+          @endif
           <span class="sv-badge">{{ $job->employmentTypeLabel() }}</span>
           @if($job->location)<span class="sv-badge">{{ $job->location }}</span>@endif
           @if($job->department)<span class="sv-badge">{{ $job->department->name }}</span>@endif
@@ -26,7 +32,13 @@
   </section>
 
   <section class="sv-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    @if($errors->any() && empty($hideApplicationForm))
+    @if(session('error'))
+      <div class="sv-alert-error mb-8" role="alert">
+        <p class="font-bold">{{ session('error') }}</p>
+      </div>
+    @endif
+
+    @if($errors->any() && empty($hideApplicationForm) && ! $isClosed)
       <div class="sv-alert-error mb-8" role="alert">
         <p class="font-bold mb-2">Could not submit application:</p>
         <ul class="list-disc list-inside text-sm space-y-1">
@@ -50,7 +62,29 @@
       </div>
 
       <div class="lg:col-span-2 sv-form-panel">
-        @if($hideApplicationForm)
+        @if($isClosed)
+          <div class="text-center py-8 sm:py-12">
+            <div class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-5" style="background: linear-gradient(135deg, #ecfdf5, #fff7ed)">
+              <svg class="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <p class="text-xs font-bold uppercase tracking-widest text-emerald-700 mb-2">Status</p>
+            <h2 class="text-2xl font-black sv-display text-gray-900">Hiring Completed</h2>
+            <p class="mt-3 text-gray-600 text-sm leading-relaxed max-w-md mx-auto">
+              The role <strong class="text-gray-900">{{ $job->title }}</strong> has been filled.
+              Applications are no longer being accepted for this position.
+            </p>
+            <div class="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-emerald-800" style="background: linear-gradient(135deg, #ecfdf5, #fff7ed); border: 1px solid #a7f3d0;">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Closed — process complete
+            </div>
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a href="{{ route('website.careers') }}" class="sv-btn sv-btn-primary w-full sm:w-auto">Browse Open Roles</a>
+              <a href="{{ route('website.contact') }}" class="sv-btn sv-btn-ghost w-full sm:w-auto">Contact Us</a>
+            </div>
+          </div>
+        @elseif($hideApplicationForm)
           <div class="text-center py-8 sm:py-12">
             <div class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-5" style="background: linear-gradient(135deg, #eff6ff, #fff7ed)">
               <svg class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

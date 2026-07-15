@@ -13,7 +13,7 @@
 
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/80">
         <h2 class="font-bold text-gray-900">{{ $job ? 'تعديل بيانات الوظيفة' : 'بيانات الوظيفة الجديدة' }}</h2>
-        <p class="text-xs text-gray-500 mt-1">الوظائف ذات الحالة «منشورة» تظهر تلقائياً في صفحة التوظيف العامة</p>
+        <p class="text-xs text-gray-500 mt-1">«منشورة» تظهر في الموقع · «مغلقة» تبقي نفس اللينك وتعرض رسالة اكتمال التوظيف بدون فورم تقديم</p>
     </div>
 
     <div class="p-6 space-y-6">
@@ -41,7 +41,7 @@
                 <select name="status" required class="{{ $inputClass }}" style="--tw-ring-color: {{ $themeColor }};">
                     @foreach($statuses as $st)
                         <option value="{{ $st }}" @selected(old('status', $job?->status ?? 'draft') === $st)>
-                            {{ $st === 'published' ? 'منشورة (ظاهرة في الموقع)' : ($st === 'closed' ? 'مغلقة' : 'مسودة') }}
+                            {{ $st === 'published' ? 'منشورة (ظاهرة في الموقع)' : ($st === 'closed' ? 'مغلقة (تم الاكتمال — نفس اللينك)' : 'مسودة') }}
                         </option>
                     @endforeach
                 </select>

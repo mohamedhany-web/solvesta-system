@@ -69,7 +69,7 @@ class DepartmentProfileService
             'default_position' => 'مبرمج',
             'kpi_profile' => 'developer_strict',
             'career_track' => 'technical',
-            'sidebar_modules' => null,
+            'sidebar_modules' => ['projects', 'tasks', 'dev_workflow', 'github', 'bugs', 'meetings'],
             'levels' => ['Junior مبرمج', 'مبرمج', 'Senior مبرمج', 'Tech Lead', 'مدير تقني'],
         ],
         'DEV-WEB' => [
@@ -165,6 +165,40 @@ class DepartmentProfileService
         }
 
         $user->syncRoles([$roleName]);
+    }
+
+    public static function defaultSidebarModulesForUser(\App\Models\User $user): array
+    {
+        if ($user->hasRole('developer')) {
+            return ['projects', 'tasks', 'dev_workflow', 'github', 'bugs', 'meetings'];
+        }
+
+        if ($user->hasRole('designer')) {
+            return ['projects', 'tasks', 'meetings', 'training'];
+        }
+
+        if ($user->hasRole(['project_manager', 'admin', 'super_admin'])) {
+            return array_keys(\App\Models\Department::SIDEBAR_MODULES);
+        }
+
+        if ($user->hasRole('hr')) {
+            return ['hr', 'training', 'jobs', 'promotions', 'meetings'];
+        }
+
+        if ($user->hasRole('accountant')) {
+            return ['accounting', 'clients', 'meetings'];
+        }
+
+        if ($user->hasRole('sales_rep')) {
+            return ['clients', 'meetings', 'tasks'];
+        }
+
+        return ['tasks', 'meetings', 'training'];
+    }
+
+    public static function devTeamSidebarModules(): array
+    {
+        return ['projects', 'tasks', 'dev_workflow', 'github', 'bugs', 'meetings'];
     }
 
     private static function fallback(): array
