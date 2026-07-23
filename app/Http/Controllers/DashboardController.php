@@ -7,16 +7,14 @@ use App\Models\Client;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Expense;
+use App\Models\FinancialInvoice;
 use App\Models\Invoice;
-use App\Models\Lead;
 use App\Models\Leave;
 use App\Models\Project;
 use App\Models\Sale;
 use App\Models\Task;
 use App\Models\Ticket;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -28,296 +26,378 @@ class DashboardController extends Controller
             'user_role' => $user->roles->first()?->name ?? 'employee',
         ];
 
-        if ($user->hasRole(['super_admin', 'admin', 'project_manager'])) {
-            $data = array_merge($data, $this->adminDashboardData());
-        } elseif ($user->hasRole(['employee', 'developer', 'designer'])) {
-            $data = array_merge($data, $this->employeeDashboardData($user));
-        } elseif ($user->hasRole('hr')) {
-            $data = array_merge($data, $this->hrDashboardData());
-        } elseif ($user->hasRole('accountant')) {
-            $data = array_merge($data, $this->accountantDashboardData());
-        } elseif ($user->hasRole('sales_rep')) {
-            $data = array_merge($data, $this->salesDashboardData());
-        } elseif ($user->hasRole('support')) {
-            $data = array_merge($data, $this->supportDashboardData($user));
-        }
-
-        return view('dashboard', $data);
-    }
-
-    private function adminDashboardData(): array
-    {
         $today = Carbon::today();
         $thisMonth = Carbon::now()->startOfMonth();
         $lastMonth = Carbon::now()->subMonth()->startOfMonth();
         $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
 
+        if ($user->hasRole(['super_admin', 'admin', 'project_manager'])) {
+            $data = array_merge($data, $this->adminData($today, $thisMonth, $lastMonth, $lastMonthEnd));
+        } elseif ($user->hasRole(['employee', 'developer', 'designer'])) {
+            $data = array_merge($data, $this->employeeData($user, $today, $thisMonth));
+        } elseif ($user->hasRole('hr')) {
+            $data = array_merge($data, $this->hrData($today, $thisMonth));
+        } elseif ($user->hasRole('accountant')) {
+            $data = array_merge($data, $this->accountantData($today, $thisMonth, $lastMonth, $lastMonthEnd));
+        } elseif ($user->hasRole('sales_rep')) {
+            $data = array_merge($data, $this->salesData($thisMonth));
+        } elseif ($user->hasRole('support')) {
+            $data = array_merge($data, $this->supportData($user));
+        }
+
+        return view('dashboard', $data);
+    }
+
+    private function adminData(Carbon $today, Carbon $thisMonth, Carbon $lastMonth, Carbon $lastMonthEnd): array
+    {
         $totalProjects = Project::count();
         $completedProjects = Project::where('status', 'completed')->count();
+        $activeProjects = Project::whereIn('status', ['planning', 'in_progress'])->count();
+
         $totalTasks = Task::count();
-        $completedTasks = Task::where('status', 'completed')->count();
+        $completedTasks = Task::completed()->count();
+        $pendingTasks = Task::whereIn('status', ['pending', 'todo', 'backlog'])->count();
+        $inProgressTasks = Task::where('status', 'in_progress')->count();
+        $overdueTasks = Task::overdue()->count();
 
-        $thisMonthRevenue = (float) Sale::where('stage', 'closed_won')
-            ->where('updated_at', '>=', $thisMonth)
-            ->selectRaw('COALESCE(SUM(COALESCE(actual_value, estimated_value)), 0) as t')->value('t');
-        $lastMonthRevenue = (float) Sale::where('stage', 'closed_won')
-            ->whereBetween('updated_at', [$lastMonth, $lastMonthEnd])
-            ->selectRaw('COALESCE(SUM(COALESCE(actual_value, estimated_value)), 0) as t')->value('t');
+        $totalEmployees = Employee::count();
+        $activeEmployees = Employee::where('status', 'active')->count();
 
-        $revenueGrowth = $lastMonthRevenue > 0
-            ? round((($thisMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100, 1)
-            : ($thisMonthRevenue > 0 ? 100 : 0);
+        $todayAttendance = Attendance::whereDate('date', $today)->count();
+        $todayPresent = Attendance::whereDate('date', $today)->where('status', 'present')->count();
+        $todayAbsent = Attendance::whereDate('date', $today)->where('status', 'absent')->count();
+        $todayLate = Attendance::whereDate('date', $today)->where('status', 'late')->count();
 
-        $pipeline = [
-            'leads_new' => Lead::where('status', 'new')->count(),
-            'leads_qualified' => Lead::where('status', 'qualified')->count(),
-            'sales_open' => Sale::whereNotIn('stage', ['closed_won', 'closed_lost'])->count(),
-            'closed_won' => Sale::where('stage', 'closed_won')->count(),
-            'pipeline_value' => (float) Sale::whereNotIn('stage', ['closed_won', 'closed_lost'])
-                ->selectRaw('COALESCE(SUM(COALESCE(actual_value, estimated_value)), 0) as t')->value('t'),
-            'won_value' => (float) Sale::where('stage', 'closed_won')
-                ->selectRaw('COALESCE(SUM(COALESCE(actual_value, estimated_value)), 0) as t')->value('t'),
-        ];
+        // Rate vs active employees when records exist, else vs attendance rows
+        $attendanceDenominator = max($activeEmployees, $todayAttendance);
+        $attendanceRate = $attendanceDenominator > 0
+            ? round(($todayPresent / $attendanceDenominator) * 100, 1)
+            : 0;
 
-        $alerts = [
-            'overdue_tasks' => Task::where('due_date', '<', $today)->whereNotIn('status', ['completed', 'cancelled'])->count(),
-            'overdue_projects' => Project::where('end_date', '<', $today)->whereNotIn('status', ['completed', 'cancelled'])->count(),
-            'pending_team' => Project::whereNotNull('department_id')->whereNull('project_manager_id')->count(),
-            'open_blockers' => Task::where('has_blocker', true)->whereNotIn('status', ['completed', 'cancelled'])->count(),
-        ];
+        $thisMonthProjects = Project::where('created_at', '>=', $thisMonth)->count();
+        $lastMonthProjects = Project::whereBetween('created_at', [$lastMonth, $lastMonthEnd])->count();
+        $projectGrowth = $lastMonthProjects > 0
+            ? round((($thisMonthProjects - $lastMonthProjects) / $lastMonthProjects) * 100, 1)
+            : ($thisMonthProjects > 0 ? 100 : 0);
 
-        $insights = $this->buildInsights($revenueGrowth, $alerts, $pipeline, $thisMonth, $lastMonth);
+        $totalRevenue = $this->sumRevenue();
+        $thisMonthRevenue = $this->sumRevenue($thisMonth);
+        $lastMonthRevenue = $this->sumRevenue($lastMonth, $lastMonthEnd);
 
-        return [
-            'is_admin_dashboard' => true,
-            'kpis' => [
-                ['label' => 'مشاريع نشطة', 'value' => Project::whereIn('status', ['planning', 'in_progress'])->count(), 'sub' => $totalProjects.' إجمالي', 'trend' => null, 'color' => 'primary'],
-                ['label' => 'إيراد الشهر', 'value' => number_format($thisMonthRevenue, 0), 'sub' => 'ج.م', 'trend' => $revenueGrowth, 'color' => 'emerald'],
-                ['label' => 'Pipeline', 'value' => number_format($pipeline['pipeline_value'], 0), 'sub' => 'ج.م مفتوح', 'trend' => null, 'color' => 'blue'],
-                ['label' => 'Leads جديدة', 'value' => $pipeline['leads_new'], 'sub' => $pipeline['leads_qualified'].' مؤهلة', 'trend' => null, 'color' => 'amber'],
-                ['label' => 'مهام مفتوحة', 'value' => Task::whereIn('status', ['pending', 'in_progress', 'todo', 'review'])->count(), 'sub' => $completedTasks.' مكتملة', 'trend' => $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0, 'color' => 'violet'],
-                ['label' => 'حضور اليوم', 'value' => Attendance::whereDate('date', $today)->where('status', 'present')->count(), 'sub' => Employee::where('status', 'active')->count().' موظف', 'trend' => null, 'color' => 'cyan'],
-            ],
-            'pipeline' => $pipeline,
-            'alerts' => $alerts,
-            'insights' => $insights,
-            'charts' => [
-                'revenue_monthly' => $this->monthlySeries(Sale::query()->where('stage', 'closed_won'), 'updated_at', 'COALESCE(actual_value, estimated_value)'),
-                'leads_monthly' => $this->monthlyCountSeries(Lead::query()),
-                'tasks_monthly' => $this->monthlyCountSeries(Task::query()->where('status', 'completed'), 'updated_at'),
-                'activity_daily' => $this->dailyActivitySeries(30),
-                'project_status' => $this->statusBreakdown(Project::class, 'status', [
-                    'planning' => 'تخطيط',
-                    'in_progress' => 'تنفيذ',
-                    'on_hold' => 'معلق',
-                    'completed' => 'مكتمل',
-                    'cancelled' => 'ملغي',
-                ]),
-                'task_status' => $this->statusBreakdown(Task::class, 'status', [
-                    'completed' => 'مكتملة',
-                    'in_progress' => 'قيد التنفيذ',
-                    'pending' => 'معلقة',
-                    'todo' => 'للعمل',
-                    'review' => 'مراجعة',
-                    'cancelled' => 'ملغاة',
-                ]),
-                'sales_funnel' => [
-                    'labels' => ['Leads', 'مؤهّلة', 'فرص مفتوحة', 'صفقات رابحة'],
-                    'values' => [
-                        Lead::count(),
-                        Lead::where('status', 'qualified')->count(),
-                        $pipeline['sales_open'],
-                        $pipeline['closed_won'],
-                    ],
-                ],
-                'department_load' => Department::active()
-                    ->withCount(['employees', 'projects'])
-                    ->orderByDesc('projects_count')
-                    ->take(8)
-                    ->get()
-                    ->map(fn ($d) => [
-                        'name' => $d->name,
-                        'employees' => $d->employees_count,
-                        'projects' => $d->projects_count,
-                    ]),
-            ],
-            'recent_projects' => Project::with(['client', 'department'])->latest()->take(6)->get(),
-            'recent_tasks' => Task::with(['project', 'assignedTo'])->latest()->take(8)->get(),
-            'recent_leads' => Lead::latest()->take(5)->get(),
-        ];
-    }
-
-    private function buildInsights(float $revenueGrowth, array $alerts, array $pipeline, Carbon $thisMonth, Carbon $lastMonth): array
-    {
-        $insights = [];
-
-        if ($revenueGrowth > 0) {
-            $insights[] = ['type' => 'positive', 'text' => "الإيرادات المغلقة ارتفعت {$revenueGrowth}% عن الشهر الماضي."];
-        } elseif ($revenueGrowth < 0) {
-            $insights[] = ['type' => 'warning', 'text' => 'الإيرادات المغلقة أقل من الشهر الماضي — راجع فرص التفاوض والعروض المعلقة.'];
-        }
-
-        $lastMonthEnd = $lastMonth->copy()->endOfMonth();
-        $leadsThisMonth = Lead::where('created_at', '>=', $thisMonth)->count();
-        $leadsLastMonth = Lead::whereBetween('created_at', [$lastMonth, $lastMonthEnd])->count();
-        if ($leadsThisMonth > $leadsLastMonth && $leadsLastMonth > 0) {
-            $pct = round((($leadsThisMonth - $leadsLastMonth) / $leadsLastMonth) * 100);
-            $insights[] = ['type' => 'positive', 'text' => "تدفق Leads أقوى بنسبة {$pct}% هذا الشهر ({$leadsThisMonth} lead)."];
-        }
-
-        if ($alerts['overdue_tasks'] > 0) {
-            $insights[] = ['type' => 'danger', 'text' => "{$alerts['overdue_tasks']} مهمة متأخرة — أولوية للمتابعة من PMO."];
-        }
-        if ($alerts['pending_team'] > 0) {
-            $insights[] = ['type' => 'warning', 'text' => "{$alerts['pending_team']} مشروع بانتظار تعيين فريق من رؤساء الأقسام."];
-        }
-        if ($alerts['open_blockers'] > 0) {
-            $insights[] = ['type' => 'danger', 'text' => "{$alerts['open_blockers']} Blocker مفتوح يعيق التسليم."];
-        }
-        if ($pipeline['pipeline_value'] > 0 && $pipeline['closed_won'] === 0) {
-            $insights[] = ['type' => 'info', 'text' => 'يوجد pipeline نشط — ركّز على تحويل العروض إلى عقود.'];
-        }
-
-        return array_slice($insights, 0, 5);
-    }
-
-    private function monthlySeries($query, string $dateCol, string $sumExpr): array
-    {
-        $labels = [];
-        $values = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $start = Carbon::now()->subMonths($i)->startOfMonth();
-            $end = Carbon::now()->subMonths($i)->endOfMonth();
-            $labels[] = $start->locale('ar')->translatedFormat('M Y');
-            $values[] = (float) (clone $query)
-                ->whereBetween($dateCol, [$start, $end])
-                ->selectRaw("COALESCE(SUM({$sumExpr}), 0) as t")
-                ->value('t');
-        }
-
-        return compact('labels', 'values');
-    }
-
-    private function monthlyCountSeries($query, string $dateCol = 'created_at'): array
-    {
-        $labels = [];
-        $values = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $start = Carbon::now()->subMonths($i)->startOfMonth();
-            $end = Carbon::now()->subMonths($i)->endOfMonth();
-            $labels[] = $start->locale('ar')->translatedFormat('M Y');
-            $values[] = (clone $query)->whereBetween($dateCol, [$start, $end])->count();
-        }
-
-        return compact('labels', 'values');
-    }
-
-    private function dailyActivitySeries(int $days): array
-    {
-        $start = Carbon::today()->subDays($days - 1);
-        $projects = Project::selectRaw('DATE(created_at) as d, COUNT(*) as c')
-            ->where('created_at', '>=', $start)
-            ->groupBy('d')->pluck('c', 'd');
-        $tasks = Task::selectRaw('DATE(created_at) as d, COUNT(*) as c')
-            ->where('created_at', '>=', $start)
-            ->groupBy('d')->pluck('c', 'd');
-
-        $labels = [];
-        $projectValues = [];
-        $taskValues = [];
-        for ($i = 0; $i < $days; $i++) {
-            $date = $start->copy()->addDays($i)->format('Y-m-d');
-            $labels[] = Carbon::parse($date)->locale('ar')->translatedFormat('d M');
-            $projectValues[] = (int) ($projects[$date] ?? 0);
-            $taskValues[] = (int) ($tasks[$date] ?? 0);
-        }
+        $projectCompletionRate = $totalProjects > 0
+            ? round(($completedProjects / $totalProjects) * 100, 1)
+            : 0;
+        $taskCompletionRate = $totalTasks > 0
+            ? round(($completedTasks / $totalTasks) * 100, 1)
+            : 0;
 
         return [
-            'labels' => $labels,
-            'projects' => $projectValues,
-            'tasks' => $taskValues,
+            'total_projects' => $totalProjects,
+            'active_projects' => $activeProjects,
+            'completed_projects' => $completedProjects,
+            'overdue_projects' => Project::where('end_date', '<', $today)
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->count(),
+            'project_completion_rate' => $projectCompletionRate,
+
+            'total_employees' => $totalEmployees,
+            'active_employees' => $activeEmployees,
+            'inactive_employees' => Employee::where('status', 'inactive')->count(),
+
+            'total_clients' => Client::count(),
+            'active_clients' => Client::whereHas('projects', function ($q) {
+                $q->whereIn('status', ['planning', 'in_progress']);
+            })->count(),
+
+            'total_tasks' => $totalTasks,
+            'completed_tasks' => $completedTasks,
+            'pending_tasks' => $pendingTasks,
+            'in_progress_tasks' => $inProgressTasks,
+            'overdue_tasks' => $overdueTasks,
+            'task_completion_rate' => $taskCompletionRate,
+
+            'today_attendance' => $todayAttendance,
+            'today_present' => $todayPresent,
+            'today_absent' => $todayAbsent,
+            'today_late' => $todayLate,
+            'attendance_rate' => $attendanceRate,
+
+            'this_month_projects' => $thisMonthProjects,
+            'last_month_projects' => $lastMonthProjects,
+            'project_growth' => $projectGrowth,
+            'this_month_tasks' => Task::where('created_at', '>=', $thisMonth)->count(),
+            'this_month_employees' => Employee::where('created_at', '>=', $thisMonth)->count(),
+
+            'total_revenue' => $totalRevenue,
+            'this_month_revenue' => $thisMonthRevenue,
+            'last_month_revenue' => $lastMonthRevenue,
+
+            'total_departments' => Department::where('is_active', true)->count(),
+            'department_stats' => Department::withCount(['employees', 'projects'])
+                ->where('is_active', true)
+                ->get()
+                ->map(function ($dept) {
+                    return [
+                        'name' => $dept->name,
+                        'employees_count' => $dept->employees_count,
+                        'projects_count' => $dept->projects_count,
+                        'efficiency' => $dept->projects_count > 0
+                            ? round($dept->employees_count / $dept->projects_count, 2)
+                            : 0,
+                    ];
+                }),
+
+            'recent_projects' => Project::with(['client', 'projectManager', 'tasks'])
+                ->orderByDesc('created_at')
+                ->take(5)
+                ->get(),
+            'recent_tasks' => Task::with(['project', 'assignedTo'])
+                ->orderByDesc('created_at')
+                ->take(5)
+                ->get(),
+
+            'performance_metrics' => [
+                'project_efficiency' => $projectCompletionRate,
+                'task_efficiency' => $taskCompletionRate,
+                'attendance_rate' => $attendanceRate,
+                'revenue_growth' => $lastMonthRevenue > 0
+                    ? round((($thisMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100, 1)
+                    : ($thisMonthRevenue > 0 ? 100 : 0),
+            ],
+
+            'project_timeline' => Project::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get(),
+            'task_timeline' => Task::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get(),
         ];
     }
 
-    private function statusBreakdown(string $model, string $column, array $labels): array
+    /**
+     * Revenue prefers paid financial invoices; falls back to closed-won sales.
+     */
+    private function sumRevenue(?Carbon $from = null, ?Carbon $to = null): float
     {
-        $counts = $model::select($column, DB::raw('COUNT(*) as c'))->groupBy($column)->pluck('c', $column);
-        $outLabels = [];
-        $values = [];
-        foreach ($labels as $key => $label) {
-            $outLabels[] = $label;
-            $values[] = (int) ($counts[$key] ?? 0);
+        $invoiceQuery = FinancialInvoice::query()
+            ->where('status', '!=', 'cancelled');
+
+        $salesQuery = Sale::query()->where('stage', 'closed_won');
+
+        if ($from && $to) {
+            $invoiceQuery->whereBetween('invoice_date', [$from->toDateString(), $to->toDateString()]);
+            $salesQuery->whereBetween('updated_at', [$from, $to]);
+        } elseif ($from) {
+            $invoiceQuery->where('invoice_date', '>=', $from->toDateString());
+            $salesQuery->where('updated_at', '>=', $from);
         }
 
-        return ['labels' => $outLabels, 'values' => $values];
+        $invoices = (float) $invoiceQuery->sum('paid_amount');
+        if ($invoices > 0) {
+            return round($invoices, 2);
+        }
+
+        return round((float) $salesQuery
+            ->selectRaw('COALESCE(SUM(COALESCE(actual_value, estimated_value)), 0) as t')
+            ->value('t'), 2);
     }
 
-    private function employeeDashboardData($user): array
+    private function employeeData($user, Carbon $today, Carbon $thisMonth): array
     {
-        $today = Carbon::today();
-        $thisMonth = Carbon::now()->startOfMonth();
-
-        $projectQuery = fn () => Project::where(function ($q) use ($user) {
+        $myProjectsQuery = Project::where(function ($q) use ($user) {
             $q->where('project_manager_id', $user->id)
-                ->orWhereHas('teamMembers', fn ($t) => $t->where('user_id', $user->id));
+                ->orWhereHas('teamMembers', function ($teamQuery) use ($user) {
+                    $teamQuery->where('user_id', $user->id);
+                });
         });
 
+        $myProjects = (clone $myProjectsQuery)->count();
+        $myActiveProjects = (clone $myProjectsQuery)->whereIn('status', ['planning', 'in_progress'])->count();
+        $myCompletedProjects = (clone $myProjectsQuery)->where('status', 'completed')->count();
+
+        $myTasks = Task::where('assigned_to', $user->id)->count();
+        $myCompletedTasks = Task::where('assigned_to', $user->id)->completed()->count();
+        $myPendingTasks = Task::where('assigned_to', $user->id)
+            ->whereIn('status', ['pending', 'todo', 'backlog'])
+            ->count();
+        $myInProgressTasks = Task::where('assigned_to', $user->id)->where('status', 'in_progress')->count();
+        $myOverdueTasks = Task::where('assigned_to', $user->id)->overdue()->count();
+
+        $myAttendanceThisMonth = Attendance::where('user_id', $user->id)
+            ->where('date', '>=', $thisMonth)
+            ->where('status', 'present')
+            ->count();
+        $myTotalAttendanceDays = Attendance::where('user_id', $user->id)
+            ->where('date', '>=', $thisMonth)
+            ->count();
+        $myAttendanceRate = $myTotalAttendanceDays > 0
+            ? round(($myAttendanceThisMonth / $myTotalAttendanceDays) * 100, 1)
+            : 0;
+
+        $myTaskCompletionRate = $myTasks > 0
+            ? round(($myCompletedTasks / $myTasks) * 100, 1)
+            : 0;
+        $myProjectCompletionRate = $myProjects > 0
+            ? round(($myCompletedProjects / $myProjects) * 100, 1)
+            : 0;
+
         return [
-            'my_projects' => $projectQuery()->count(),
-            'my_active_projects' => $projectQuery()->whereIn('status', ['planning', 'in_progress'])->count(),
-            'my_tasks' => Task::where('assigned_to', $user->id)->count(),
-            'my_pending_tasks' => Task::where('assigned_to', $user->id)->where('status', 'pending')->count(),
-            'my_overdue_tasks' => Task::where('assigned_to', $user->id)->where('due_date', '<', $today)->whereNotIn('status', ['completed', 'cancelled'])->count(),
+            'my_projects' => $myProjects,
+            'my_active_projects' => $myActiveProjects,
+            'my_completed_projects' => $myCompletedProjects,
+            'my_tasks' => $myTasks,
+            'my_pending_tasks' => $myPendingTasks,
+            'my_in_progress_tasks' => $myInProgressTasks,
+            'my_completed_tasks' => $myCompletedTasks,
+            'my_overdue_tasks' => $myOverdueTasks,
+            'my_task_completion_rate' => $myTaskCompletionRate,
+            'my_project_completion_rate' => $myProjectCompletionRate,
+            'my_attendance_today' => Attendance::where('user_id', $user->id)->whereDate('date', $today)->first(),
+            'my_attendance_this_month' => $myAttendanceThisMonth,
+            'my_total_attendance_days' => $myTotalAttendanceDays,
+            'my_attendance_rate' => $myAttendanceRate,
+            'recent_projects' => Project::with(['client', 'projectManager', 'tasks'])
+                ->where(function ($q) use ($user) {
+                    $q->where('project_manager_id', $user->id)
+                        ->orWhereHas('teamMembers', function ($teamQuery) use ($user) {
+                            $teamQuery->where('user_id', $user->id);
+                        });
+                })
+                ->orderByDesc('created_at')
+                ->take(5)
+                ->get(),
+            'recent_tasks' => Task::with(['project', 'assignedTo'])
+                ->where('assigned_to', $user->id)
+                ->orderByDesc('created_at')
+                ->take(5)
+                ->get(),
             'my_performance_metrics' => [
-                'task_efficiency' => Task::where('assigned_to', $user->id)->count() > 0
-                    ? round((Task::where('assigned_to', $user->id)->where('status', 'completed')->count() / Task::where('assigned_to', $user->id)->count()) * 100, 1) : 0,
-                'attendance_rate' => 0,
-                'overdue_tasks' => Task::where('assigned_to', $user->id)->where('due_date', '<', $today)->whereNotIn('status', ['completed', 'cancelled'])->count(),
+                'task_efficiency' => $myTaskCompletionRate,
+                'project_efficiency' => $myProjectCompletionRate,
+                'attendance_rate' => $myAttendanceRate,
+                'overdue_tasks' => $myOverdueTasks,
             ],
-            'recent_projects' => $projectQuery()->with('client')->latest()->take(5)->get(),
-            'recent_tasks' => Task::with('project')->where('assigned_to', $user->id)->latest()->take(5)->get(),
         ];
     }
 
-    private function hrDashboardData(): array
+    private function hrData(Carbon $today, Carbon $thisMonth): array
     {
-        $thisMonth = Carbon::now()->startOfMonth();
-
         return [
             'total_employees' => Employee::count(),
+            'active_employees' => Employee::where('status', 'active')->count(),
+            'inactive_employees' => Employee::where('status', 'inactive')->count(),
+            'new_employees_this_month' => Employee::where('created_at', '>=', $thisMonth)->count(),
+            'total_leaves' => Leave::count(),
             'pending_leaves' => Leave::where('status', 'pending')->count(),
-            'department_stats' => Department::withCount('employees')->active()->get(),
+            'approved_leaves' => Leave::where('status', 'approved')->count(),
+            'rejected_leaves' => Leave::where('status', 'rejected')->count(),
+            'department_stats' => Department::withCount(['employees'])
+                ->where('is_active', true)
+                ->get()
+                ->map(function ($dept) {
+                    return [
+                        'name' => $dept->name,
+                        'employees_count' => $dept->employees_count,
+                        'efficiency' => $dept->employees_count > 0 ? '???' : '????',
+                    ];
+                }),
+            'attendance_today' => Attendance::whereDate('date', $today)->count(),
+            'present_today' => Attendance::whereDate('date', $today)->where('status', 'present')->count(),
+            'absent_today' => Attendance::whereDate('date', $today)->where('status', 'absent')->count(),
         ];
     }
 
-    private function accountantDashboardData(): array
+    private function accountantData(Carbon $today, Carbon $thisMonth, Carbon $lastMonth, Carbon $lastMonthEnd): array
     {
-        $thisMonth = Carbon::now()->startOfMonth();
+        $paidInvoices = FinancialInvoice::where('status', 'paid')->count();
+        $pendingInvoices = FinancialInvoice::whereIn('status', ['draft', 'sent', 'partial', 'overdue'])->count();
+        $overdueInvoices = FinancialInvoice::overdue()->count();
 
         return [
-            'total_amount' => Expense::where('status', 'approved')->sum('amount'),
-            'this_month_expenses' => Expense::where('status', 'approved')->where('created_at', '>=', $thisMonth)->sum('amount'),
-            'pending_invoices' => Invoice::where('status', 'pending')->count(),
+            'total_expenses' => Expense::count(),
+            'pending_expenses' => Expense::where('status', 'pending')->count(),
+            'approved_expenses' => Expense::where('status', 'approved')->count(),
+            'rejected_expenses' => Expense::where('status', 'rejected')->count(),
+            'total_amount' => (float) Expense::where('status', 'approved')->sum('amount'),
+            'this_month_expenses' => (float) Expense::where('status', 'approved')
+                ->where('created_at', '>=', $thisMonth)
+                ->sum('amount'),
+            'last_month_expenses' => (float) Expense::where('status', 'approved')
+                ->whereBetween('created_at', [$lastMonth, $lastMonthEnd])
+                ->sum('amount'),
+            'total_invoices' => FinancialInvoice::count() ?: Invoice::count(),
+            'paid_invoices' => $paidInvoices ?: Invoice::where('status', 'paid')->count(),
+            'pending_invoices' => $pendingInvoices ?: Invoice::where('status', 'pending')->count(),
+            'overdue_invoices' => $overdueInvoices ?: Invoice::where('due_date', '<', $today)
+                ->where('status', '!=', 'paid')
+                ->count(),
+            'total_revenue' => $this->sumRevenue(),
+            'this_month_revenue' => $this->sumRevenue($thisMonth),
         ];
     }
 
-    private function salesDashboardData(): array
+    private function salesData(Carbon $thisMonth): array
     {
-        $thisMonth = Carbon::now()->startOfMonth();
+        $totalSales = Sale::count();
+        $wonSales = Sale::where('stage', 'closed_won')->count();
+        $totalSalesValue = (float) Sale::where('stage', 'closed_won')
+            ->selectRaw('COALESCE(SUM(COALESCE(actual_value, estimated_value)), 0) as t')
+            ->value('t');
+        $thisMonthSalesValue = (float) Sale::where('stage', 'closed_won')
+            ->where('updated_at', '>=', $thisMonth)
+            ->selectRaw('COALESCE(SUM(COALESCE(actual_value, estimated_value)), 0) as t')
+            ->value('t');
+        $conversionRate = $totalSales > 0 ? round(($wonSales / $totalSales) * 100, 1) : 0;
+        $newClients = Client::where('created_at', '>=', $thisMonth)->count();
 
         return [
             'total_clients' => Client::count(),
-            'won_sales' => Sale::where('stage', 'closed_won')->count(),
-            'conversion_rate' => Sale::count() > 0 ? round((Sale::where('stage', 'closed_won')->count() / Sale::count()) * 100, 1) : 0,
-            'this_month_sales_value' => Sale::where('stage', 'closed_won')->where('created_at', '>=', $thisMonth)->sum('actual_value'),
+            'new_clients_this_month' => $newClients,
+            'total_sales' => $totalSales,
+            'won_sales' => $wonSales,
+            'lost_sales' => Sale::where('stage', 'closed_lost')->count(),
+            'in_progress_sales' => Sale::whereNotIn('stage', ['closed_won', 'closed_lost'])->count(),
+            'conversion_rate' => $conversionRate,
+            'total_sales_value' => $totalSalesValue,
+            'this_month_sales_value' => $thisMonthSalesValue,
+            'sales_performance' => [
+                'conversion_rate' => $conversionRate,
+                'total_value' => $totalSalesValue,
+                'monthly_value' => $thisMonthSalesValue,
+                'new_clients' => $newClients,
+            ],
         ];
     }
 
-    private function supportDashboardData($user): array
+    private function supportData($user): array
     {
+        $myTickets = Ticket::where('assigned_to', $user->id)->count();
+        $myResolved = Ticket::where('assigned_to', $user->id)->where('status', 'resolved')->count();
+        $myOpen = Ticket::where('assigned_to', $user->id)
+            ->whereIn('status', ['open', 'in_progress'])
+            ->count();
+        $resolutionRate = $myTickets > 0 ? round(($myResolved / $myTickets) * 100, 1) : 0;
+
         return [
-            'my_tickets' => Ticket::where('assigned_to', $user->id)->count(),
-            'my_open_tickets' => Ticket::where('assigned_to', $user->id)->whereIn('status', ['open', 'in_progress'])->count(),
+            'total_tickets' => Ticket::count(),
+            'open_tickets' => Ticket::where('status', 'open')->count(),
+            'in_progress_tickets' => Ticket::where('status', 'in_progress')->count(),
+            'resolved_tickets' => Ticket::where('status', 'resolved')->count(),
+            'closed_tickets' => Ticket::where('status', 'closed')->count(),
+            'my_tickets' => $myTickets,
+            'my_open_tickets' => $myOpen,
+            'my_resolved_tickets' => $myResolved,
+            'resolution_rate' => $resolutionRate,
+            'support_performance' => [
+                'total_tickets' => $myTickets,
+                'resolved_tickets' => $myResolved,
+                'resolution_rate' => $resolutionRate,
+                'open_tickets' => $myOpen,
+            ],
         ];
     }
 }
