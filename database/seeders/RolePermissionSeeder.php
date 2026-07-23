@@ -127,7 +127,7 @@ class RolePermissionSeeder extends Seeder
             'view-sales', 'create-sales', 'edit-sales', 'delete-sales',
             'view-design', 'create-design', 'edit-design', 'delete-design', 'manage-design',
             'view-marketing', 'create-marketing', 'edit-marketing', 'delete-marketing', 'manage-marketing',
-            'view-finance', 'create-finance', 'edit-finance',
+            'view-finance', 'create-finance', 'edit-finance', 'delete-finance',
             'view-attendance', 'create-attendance', 'edit-attendance',
             'view-leaves', 'create-leaves', 'edit-leaves', 'approve-leaves',
             'view-salaries', 'create-salaries', 'edit-salaries', 'approve-salaries',

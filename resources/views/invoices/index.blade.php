@@ -221,12 +221,19 @@
                                     $invCanPay = !in_array($invoice->status, ['paid', 'cancelled']) && $invBalance > 0;
                                 @endphp
                                 <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.show', $invoice) : route('invoices.show', $invoice) }}" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded-lg hover:bg-blue-100 transition-colors duration-200">عرض</a>
+                                @can('edit-finance')
+                                @if($invoice->status !== 'paid')
+                                <a href="{{ route('financial-invoices.edit', $invoice) }}" class="text-amber-700 hover:text-amber-900 bg-amber-50 px-3 py-1 rounded-lg hover:bg-amber-100 transition-colors duration-200">تعديل</a>
+                                @endif
+                                @endcan
                                 @if($invCanPay)
                                 <a href="{{ (request()->routeIs('financial-invoices.*') ? route('financial-invoices.show', $invoice) : route('invoices.show', $invoice)) }}?pay=1" class="text-green-600 hover:text-green-800 bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 font-semibold">دفعة</a>
                                 @endif
-                                @if($invoice->status === 'draft')
-                                <button onclick="deleteInvoice({{ $invoice->id }})" class="text-red-600 hover:text-red-800 bg-red-50 px-3 py-1 rounded-lg hover:bg-red-100 transition-colors duration-200">حذف</button>
+                                @canany(['delete-finance', 'edit-finance'])
+                                @if($invoice->status !== 'paid')
+                                <button type="button" onclick="deleteInvoice({{ $invoice->id }})" class="text-red-600 hover:text-red-800 bg-red-50 px-3 py-1 rounded-lg hover:bg-red-100 transition-colors duration-200">حذف</button>
                                 @endif
+                                @endcanany
                             </div>
                         </td>
                     </tr>

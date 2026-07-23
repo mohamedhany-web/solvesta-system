@@ -19,6 +19,22 @@
                 @php
                     $canPay = !in_array($invoice->status, ['paid', 'cancelled']) && ($invoice->balance_due ?? 0) > 0;
                 @endphp
+                @can('edit-finance')
+                @if($invoice->status !== 'paid')
+                <a href="{{ route('financial-invoices.edit', $invoice) }}" class="bg-amber-500 text-white px-5 py-2.5 rounded-lg hover:bg-amber-600 text-sm font-semibold inline-flex items-center">
+                    تعديل
+                </a>
+                @endif
+                @endcan
+                @canany(['delete-finance', 'edit-finance'])
+                @if($invoice->status !== 'paid')
+                <form method="POST" action="{{ route('financial-invoices.destroy', $invoice) }}" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الفاتورة؟');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="bg-red-600 text-white px-5 py-2.5 rounded-lg hover:bg-red-700 text-sm font-semibold">حذف</button>
+                </form>
+                @endif
+                @endcanany
                 @if($canPay && (request()->routeIs('financial-invoices.*') || request()->routeIs('invoices.*')))
                 <button type="button" onclick="openPaymentModal()" class="bg-green-600 text-white px-5 py-2.5 rounded-lg hover:bg-green-700 text-sm font-semibold inline-flex items-center">
                     تسجيل دفعة

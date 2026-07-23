@@ -619,10 +619,10 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('financial-invoices/{financialInvoice}/print', [FinancialInvoiceController::class, 'print'])->name('financial-invoices.print')->middleware('permission:view-finance');
     Route::get('financial-invoices/{financialInvoice}/edit', [FinancialInvoiceController::class, 'edit'])->name('financial-invoices.edit')->middleware('permission:edit-finance');
     Route::put('financial-invoices/{financialInvoice}', [FinancialInvoiceController::class, 'update'])->name('financial-invoices.update')->middleware('permission:edit-finance');
-    Route::delete('financial-invoices/{financialInvoice}', [FinancialInvoiceController::class, 'destroy'])->name('financial-invoices.destroy')->middleware('permission:delete-finance');
-    Route::post('financial-invoices/{invoice}/mark-as-sent', [FinancialInvoiceController::class, 'markAsSent'])->name('financial-invoices.mark-as-sent')->middleware('permission:edit-finance');
+    Route::delete('financial-invoices/{financialInvoice}', [FinancialInvoiceController::class, 'destroy'])->name('financial-invoices.destroy')->middleware('permission:edit-finance|delete-finance');
+    Route::post('financial-invoices/{financialInvoice}/mark-as-sent', [FinancialInvoiceController::class, 'markAsSent'])->name('financial-invoices.mark-as-sent')->middleware('permission:edit-finance');
     Route::post('financial-invoices/{financialInvoice}/payments', [FinancialInvoiceController::class, 'recordPayment'])->name('financial-invoices.payments.store')->middleware('permission:edit-finance');
-    Route::post('financial-invoices/{invoice}/mark-as-paid', [FinancialInvoiceController::class, 'markAsPaid'])->name('financial-invoices.mark-as-paid')->middleware('permission:edit-finance');
+    Route::post('financial-invoices/{financialInvoice}/mark-as-paid', [FinancialInvoiceController::class, 'markAsPaid'])->name('financial-invoices.mark-as-paid')->middleware('permission:edit-finance');
     
     // Payments
     Route::get('payments', [PaymentController::class, 'index'])->name('payments.index')->middleware('permission:view-finance');
