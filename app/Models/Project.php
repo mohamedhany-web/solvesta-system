@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Project extends Model
 {
     use HasFactory;
+    use Concerns\HasCompanyLifecycle;
 
     protected $fillable = [
         'name',
@@ -174,6 +175,10 @@ class Project extends Model
      */
     public function getStatusNameAttribute(): string
     {
+        if ($this->relationLoaded('lifecycle') && $this->lifecycle?->currentState) {
+            return $this->lifecycle->currentState->label_ar;
+        }
+
         return match($this->status) {
             'planning' => 'قيد التخطيط',
             'in_progress' => 'قيد التنفيذ',
@@ -212,5 +217,10 @@ class Project extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
+    }
+
+    public function defaultLifecycleStateOnCreate(): string
+    {
+        return 'planning';
     }
 }

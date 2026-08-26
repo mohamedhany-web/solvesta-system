@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\DepartmentOversightController;
 use App\Http\Controllers\DevWorkflowController;
 use App\Http\Controllers\GitHubIntegrationController;
 use App\Http\Controllers\EmployeeWorkspaceController;
+use App\Http\Controllers\CompanyOsController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\SalaryController;
@@ -184,6 +185,16 @@ Route::get('/executive', [App\Http\Controllers\ExecutiveDashboardController::cla
     ->middleware(['auth', 'verified', 'verified.code'])
     ->name('executive.dashboard');
 
+Route::post('/os/transition/{type}/{id}', [CompanyOsController::class, 'transition'])
+    ->middleware(['auth', 'verified', 'verified.code'])
+    ->name('os.transition');
+Route::post('/os/work-items/{workItem}/complete', [CompanyOsController::class, 'completeWorkItem'])
+    ->middleware(['auth', 'verified', 'verified.code'])
+    ->name('os.work-items.complete');
+Route::post('/os/approvals/{approval}/decide', [CompanyOsController::class, 'decideApproval'])
+    ->middleware(['auth', 'verified', 'verified.code'])
+    ->name('os.approvals.decide');
+
 Route::get('/executive/finance', [App\Http\Controllers\ExecutiveFinanceController::class, 'index'])
     ->middleware(['auth', 'verified', 'verified.code'])
     ->name('executive.finance');
@@ -277,6 +288,9 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     Route::get('employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit')->middleware('permission:edit-employees');
     Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update')->middleware('permission:edit-employees');
     Route::delete('employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy')->middleware('permission:delete-employees');
+    Route::post('employees/{employee}/employment-contracts', [\App\Http\Controllers\EmploymentContractController::class, 'store'])->name('employees.contracts.store')->middleware('permission:edit-employees');
+    Route::post('employees/{employee}/employment-contracts/{contract}/activate', [\App\Http\Controllers\EmploymentContractController::class, 'activate'])->name('employees.contracts.activate')->middleware('permission:edit-employees');
+    Route::delete('employees/{employee}/employment-contracts/{contract}', [\App\Http\Controllers\EmploymentContractController::class, 'destroy'])->name('employees.contracts.destroy')->middleware('permission:edit-employees');
     
     // Attendance routes
     Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index')->middleware('permission:view-attendance');
@@ -351,6 +365,7 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
         Route::post('/connect', [GitHubIntegrationController::class, 'connect'])->name('connect')->middleware('permission:manage-github-integration');
         Route::post('/disconnect', [GitHubIntegrationController::class, 'disconnect'])->name('disconnect')->middleware('permission:manage-github-integration');
         Route::post('/refresh', [GitHubIntegrationController::class, 'refresh'])->name('refresh')->middleware('permission:view-github-integration|manage-github-integration');
+        Route::post('/sync-schema', [GitHubIntegrationController::class, 'syncOrgSchema'])->name('sync-schema')->middleware('permission:manage-github-integration');
         Route::post('/test', [GitHubIntegrationController::class, 'test'])->name('test')->middleware('permission:manage-github-integration');
         Route::post('/link-project', [GitHubIntegrationController::class, 'linkProject'])->name('link-project')->middleware('permission:manage-project-repos');
         Route::post('/access/{gitIdentity}/approve', [GitHubIntegrationController::class, 'approveGitAccess'])->name('access.approve')->middleware('permission:manage-github-integration');
@@ -489,6 +504,9 @@ Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
     
     // Sales & Marketing - Sales
     Route::get('sales', [SaleController::class, 'index'])->name('sales.index')->middleware('permission:view-sales');
+    Route::get('sales/dashboard', [\App\Http\Controllers\SalesDashboardController::class, 'index'])->name('sales.dashboard')->middleware('permission:view-sales');
+    Route::get('sales/kpi-targets', [\App\Http\Controllers\SalesKpiTargetController::class, 'index'])->name('sales.kpi-targets.index')->middleware('permission:edit-employees');
+    Route::post('sales/kpi-targets', [\App\Http\Controllers\SalesKpiTargetController::class, 'store'])->name('sales.kpi-targets.store')->middleware('permission:edit-employees');
     Route::get('sales/create', [SaleController::class, 'create'])->name('sales.create')->middleware('permission:create-sales');
     Route::post('sales', [SaleController::class, 'store'])->name('sales.store')->middleware('permission:create-sales');
     Route::get('sales/{sale}', [SaleController::class, 'show'])->name('sales.show')->middleware('permission:view-sales');

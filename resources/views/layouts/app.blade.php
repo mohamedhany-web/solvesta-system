@@ -659,7 +659,7 @@
                             <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
-                            لوحة CEO
+                            Control Center
                         </a>
                         <a href="{{ route('executive.finance') }}" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('executive.finance') ? 'active' : '' }}">
@@ -1146,6 +1146,24 @@
                             </a>
                             
                             @can('view-sales')
+                            @if(auth()->user()->hasRole('sales_rep') || auth()->user()->can('edit-employees'))
+                            <a href="{{ route('sales.dashboard') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('sales.dashboard') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                لوحة موظف المبيعات
+                            </a>
+                            @endif
+                            @can('edit-employees')
+                            <a href="{{ route('sales.kpi-targets.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('sales.kpi-targets.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                                أهداف KPI — المبيعات
+                            </a>
+                            @endcan
                             <a href="{{ route('leads.index') }}" 
                                class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('leads.*') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1161,7 +1179,7 @@
                                 BD — شركاء وفرص
                             </a>
                             <a href="{{ route('sales.index') }}" 
-                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('sales.*') ? 'active' : '' }}">
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('sales.index') || request()->routeIs('sales.show') || request()->routeIs('sales.create') || request()->routeIs('sales.edit') ? 'active' : '' }}">
                                 <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                 </svg>

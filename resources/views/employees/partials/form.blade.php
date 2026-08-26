@@ -10,7 +10,7 @@
     ];
 @endphp
 
-<form action="{{ $action }}" method="POST" class="space-y-6">
+<form action="{{ $action }}" method="POST" enctype="multipart/form-data" class="space-y-6">
     @csrf
     @if(($method ?? 'POST') !== 'POST')
         @method($method)
@@ -112,15 +112,17 @@
                     @error('phone')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div class="sm:col-span-2">
-                    <label for="address" class="{{ $labelClass }}">العنوان</label>
+                    <label for="address" class="{{ $labelClass }}">عنوان الإقامة الحالي</label>
                     <input type="text" name="address" id="address" value="{{ old('address') }}"
                            class="{{ $inputClass }} @error('address') border-red-500 @enderror"
-                           style="--tw-ring-color: {{ $themeColor }};" placeholder="العنوان الكامل">
+                           style="--tw-ring-color: {{ $themeColor }};" placeholder="العنوان الحالي للسكن">
                     @error('address')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
                 </div>
             </div>
         </div>
     </div>
+
+    @include('employees.partials.profile-hr-fields', ['employee' => null, 'themeColor' => $themeColor, 'inputClass' => $inputClass, 'labelClass' => $labelClass])
 
     {{-- المعلومات الوظيفية --}}
     <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">

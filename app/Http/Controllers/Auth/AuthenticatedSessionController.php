@@ -31,7 +31,27 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $user = Auth::user();
-        
+
+        // التحقق بالبريد اختياري — يُفعّل من الملف الشخصي
+        if (! $user->requiresLoginVerification()) {
+            LoginActivityLog::logActivity(
+                $user->id,
+                'login',
+                null,
+                null,
+                'success',
+                'تم تسجيل الدخول بنجاح (بدون تحقق بالبريد)'
+            );
+
+            $request->session()->put('verified', true);
+            $request->session()->forget('verification_pending');
+            $request->session()->regenerate();
+
+            return redirect()->intended(
+                $user->hasRole('sales_rep') ? route('sales.dashboard') : route('dashboard')
+            );
+        }
+
         // توليد كود التحقق
         $verificationCode = VerificationCode::createForUser($user->id, 10);
         

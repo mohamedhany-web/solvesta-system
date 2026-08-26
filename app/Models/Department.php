@@ -28,6 +28,7 @@ class Department extends Model
     protected $fillable = [
         'name',
         'code',
+        'github_team_slug',
         'description',
         'manager_id',
         'parent_id',

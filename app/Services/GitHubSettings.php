@@ -82,7 +82,7 @@ class GitHubSettings
             return null;
         }
 
-        return self::activeAccount()?->organization;
+        return self::activeAccount()?->organization ?: config('services.github.org');
     }
 
     public static function ownerSlug(): ?string

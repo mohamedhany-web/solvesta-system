@@ -32,6 +32,11 @@
     @if(session('success'))
         <div class="mb-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-tajawal">{{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm font-tajawal">{{ session('error') }}</div>
+    @endif
+
+    @include('company-os.partials.lifecycle-bar', ['entity' => $project, 'type' => 'project'])
     {{-- رأس الصفحة (نفس أسلوب المهام / قائمة المشاريع) --}}
     <div class="mb-6 sm:mb-8">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

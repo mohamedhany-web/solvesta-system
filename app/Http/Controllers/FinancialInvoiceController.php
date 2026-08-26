@@ -84,7 +84,7 @@ class FinancialInvoiceController extends Controller
             'total_amount' => $totals['total_amount'],
             'paid_amount' => 0,
             'balance_due' => $totals['total_amount'],
-            'status' => $validated['status'] ?? 'sent',
+            'status' => 'draft',
             'payment_status' => 'unpaid',
             'notes' => $validated['notes'] ?? null,
             'created_by' => auth()->id(),
@@ -114,6 +114,11 @@ class FinancialInvoiceController extends Controller
             'items',
             'payments.wallet',
             'walletTransactions.wallet',
+            'lifecycle.currentState',
+            'lifecycle.definition.states',
+            'workItems.assignee',
+            'companyEvents.actor',
+            'approvalRequests.requester',
         ]);
 
         $wallets = Wallet::where('is_active', true)->orderBy('name')->get();
@@ -222,7 +227,6 @@ class FinancialInvoiceController extends Controller
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
-            'status' => 'nullable|in:draft,sent,viewed,partial,overdue,cancelled',
         ]);
 
         $totals = $this->calculateTotals($validated);
@@ -239,7 +243,7 @@ class FinancialInvoiceController extends Controller
 
         DB::transaction(function () use ($financialInvoice, $validated, $totals, $paidAmount) {
             $balanceDue = $totals['total_amount'] - $paidAmount;
-            $status = $validated['status'] ?? $financialInvoice->status;
+            $status = $financialInvoice->status;
 
             if ($paidAmount > 0 && $balanceDue > 0) {
                 $status = 'partial';

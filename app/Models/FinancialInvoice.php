@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FinancialInvoice extends Model
 {
+    use Concerns\HasCompanyLifecycle;
     protected $table = 'financial_invoices';
     
     protected $fillable = [
@@ -131,6 +132,11 @@ class FinancialInvoice extends Model
         }
 
         return sprintf('FINV-%s%s-%04d', $year, $month, $sequence);
+    }
+
+    public function defaultLifecycleStateOnCreate(): string
+    {
+        return 'draft';
     }
 }
 

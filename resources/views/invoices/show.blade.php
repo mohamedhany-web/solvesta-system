@@ -50,6 +50,16 @@
         </div>
     </div>
 
+    @if(session('error'))
+        <div class="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">{{ session('error') }}</div>
+    @endif
+    @if(session('success'))
+        <div class="mb-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm">{{ session('success') }}</div>
+    @endif
+    @if($invoice instanceof \App\Models\FinancialInvoice)
+        @include('company-os.partials.lifecycle-bar', ['entity' => $invoice, 'type' => 'financial_invoice'])
+    @endif
+
     @include('invoices._document', ['invoice' => $invoice])
 </div>
 

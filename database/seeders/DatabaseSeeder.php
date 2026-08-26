@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             LeaveSeeder::class,
             SalarySeeder::class,
             QATestSeeder::class,
+            CompanyOsSeeder::class,
         ]);
     }
 }

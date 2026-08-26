@@ -136,7 +136,7 @@ class SalaryController extends Controller
      */
     private function generateEmployeeSalary($employee, $month, $year)
     {
-        $baseSalary = $employee->salary ?? 0;
+        $baseSalary = $employee->effectiveSalary();
         
         // Calculate working hours for the month
         $workingDays = $this->getWorkingDays($employee->id, $month, $year);

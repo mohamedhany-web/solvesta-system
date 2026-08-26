@@ -75,6 +75,14 @@ class WalletService
 
             $invoice->save();
 
+            if ($invoice->status === 'paid') {
+                try {
+                    app(\App\Services\CompanyOs\WorkflowEngine::class)->forceState($invoice, 'paid', auth()->user());
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+
             return $payment->load('wallet');
         });
     }

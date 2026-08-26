@@ -53,13 +53,17 @@
     </div>
 
     <div class="mb-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-        <h2 class="font-bold text-gray-900 mb-4 text-sm">مسار العمل الاحترافي</h2>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h2 class="font-bold text-gray-900 text-sm">مسار العمل الاحترافي</h2>
+            <a href="{{ route('github.index', ['tab' => 'schema']) }}" class="text-xs font-bold hover:underline" style="color: {{ $themeColor }};">سكيما الفرق — Solvesta-Company</a>
+        </div>
         <div class="flex flex-wrap items-center gap-2 text-xs">
             @foreach(['Task من PM/Lead', 'فرع Git', 'Commits', 'Pull Request', 'Code Review', 'QA', 'Deploy'] as $i => $step)
             <span class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 font-semibold">{{ $step }}</span>
             @if(!$loop->last)<span class="text-gray-300">→</span>@endif
             @endforeach
         </div>
+        <p class="text-[11px] text-gray-500 mt-3">الفريق على GitHub = قسم الموظف في النظام. اعتماد الحساب يضيفه للمنظمة ثم لفريق قسمه ثم لمستودعات المشروع.</p>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">

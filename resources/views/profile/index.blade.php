@@ -246,6 +246,31 @@
             </div>
         </div>
 
+        <!-- أمان الحساب — التحقق بالبريد عند الدخول -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden" style="border-color: {{ $themeColor }}30;">
+            <div class="bg-gradient-to-r px-4 md:px-6 py-3 md:py-4 border-b border-gray-200" style="background: linear-gradient(135deg, {{ $themeColor }}15 0%, {{ $themeColor }}25 100%);">
+                <div class="flex items-center gap-2 md:gap-3">
+                    <div class="p-2 rounded-xl shadow-sm" style="background: linear-gradient(135deg, {{ $themeColor }} 0%, {{ $themeColor }}dd 100%);">
+                        <svg class="h-5 w-5 md:h-6 md:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-gray-900 font-tajawal">التحقق بخطوتين (البريد)</h3>
+                </div>
+            </div>
+            <div class="p-4 md:p-8">
+                <label class="flex items-start gap-3 p-4 rounded-xl border-2 border-gray-200 cursor-pointer has-[:checked]:border-blue-400 has-[:checked]:bg-blue-50/50 transition">
+                    <input type="hidden" name="login_verification_enabled" value="0">
+                    <input type="checkbox" name="login_verification_enabled" value="1" class="mt-1 w-4 h-4 rounded text-blue-600"
+                           @checked(old('login_verification_enabled', $user->login_verification_enabled))>
+                    <div>
+                        <span class="block text-sm font-bold text-gray-900 font-tajawal">تفعيل كود التحقق بالبريد عند كل تسجيل دخول</span>
+                        <span class="text-xs text-gray-500 mt-1 block font-tajawal">عند التفعيل يُرسل كود إلى بريدك بعد كلمة المرور. موظفو المبيعات يدخلون مباشرة ما لم يفعّلوا هذا الخيار.</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+
         <!-- Account Information -->
         <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden" style="border-color: {{ $themeColor }}30;">
             <div class="bg-gradient-to-r px-4 md:px-6 py-3 md:py-4 border-b border-gray-200" style="background: linear-gradient(135deg, {{ $themeColor }}15 0%, {{ $themeColor }}25 100%);">

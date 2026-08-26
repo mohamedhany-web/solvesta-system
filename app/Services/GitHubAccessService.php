@@ -59,7 +59,7 @@ class GitHubAccessService
 
         return [
             'ok' => true,
-            'message' => 'تم الاعتماد وإرسال دعوات الوصول للمستودعات.',
+            'message' => 'تم الاعتماد وإرسال دعوات المنظمة والفرق والمستودعات.',
             'invites' => $invites,
         ];
     }
@@ -104,11 +104,57 @@ class GitHubAccessService
             return [];
         }
 
+        return array_merge(
+            $this->syncOrgTeamForUser($user, $identity->username),
+            $this->syncRepositoryInvitesForUser($user, $identity->username)
+        );
+    }
+
+    /**
+     * Invite the employee into the company org + department GitHub team.
+     *
+     * @return array<int, array{repo: string, ok: bool, message: string}>
+     */
+    public function syncOrgTeamForUser(User $user, ?string $username = null): array
+    {
+        $username = $username ?: $user->gitIdentity?->username;
+        $org = GitHubOrgSchema::org();
+        $results = [];
+
+        if (! $username || ! $this->github->isConfigured()) {
+            return $results;
+        }
+
+        $invite = $this->github->inviteOrgMember($org, $username);
+        $results[] = [
+            'repo' => $org,
+            'ok' => $invite['ok'],
+            'message' => $invite['message'],
+        ];
+
+        foreach (GitHubOrgSchema::teamSlugsForUser($user) as $slug) {
+            $added = $this->github->addTeamMembership($org, $slug, $username);
+            $results[] = [
+                'repo' => "{$org}/{$slug}",
+                'ok' => $added['ok'],
+                'message' => $added['message'],
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
+     * @return array<int, array{repo: string, ok: bool, message: string}>
+     */
+    public function syncRepositoryInvitesForUser(User $user, ?string $username = null): array
+    {
+        $username = $username ?: $user->gitIdentity?->username;
         $repositories = $this->repositoriesForUser($user);
         $results = [];
 
         foreach ($repositories as $repository) {
-            $results[] = $this->inviteToRepository($repository, $user, $identity->username);
+            $results[] = $this->inviteToRepository($repository, $user, $username);
         }
 
         return $results;

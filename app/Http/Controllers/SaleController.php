@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\Invoice;
 use App\Models\Account;
 use App\Models\JournalEntry;
+use App\Services\SalesActivityAdminAlertService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -21,12 +22,20 @@ class SaleController extends Controller
      */
     public function index()
     {
-        $sales = Sale::with(['client', 'salesRep', 'employee'])
+        $salesQuery = Sale::with(['client', 'salesRep', 'employee']);
+
+        if (auth()->user()->hasRole('sales_rep') && ! auth()->user()->can('edit-employees')) {
+            $salesQuery->where('assigned_to', auth()->id());
+        }
+
+        $sales = $salesQuery
             ->when(request('search'), function ($query) {
-                $query->where('product_service', 'like', '%' . request('search') . '%')
-                    ->orWhereHas('client', function ($q) {
-                        $q->where('name', 'like', '%' . request('search') . '%');
-                    });
+                $query->where(function ($q) {
+                    $q->where('product_service', 'like', '%'.request('search').'%')
+                        ->orWhereHas('client', function ($c) {
+                            $c->where('name', 'like', '%'.request('search').'%');
+                        });
+                });
             })
             ->when(request('stage'), function ($query) {
                 $query->where('stage', request('stage'));
@@ -103,6 +112,8 @@ class SaleController extends Controller
             }
 
             DB::commit();
+
+            app(SalesActivityAdminAlertService::class)->notifySaleCreated($sale, auth()->user());
 
             return redirect()->route('sales.index')
                 ->with('success', 'تم إنشاء عملية البيع بنجاح');
@@ -258,6 +269,8 @@ class SaleController extends Controller
             }
 
             DB::commit();
+
+            app(SalesActivityAdminAlertService::class)->notifySaleStageUpdated($sale, auth()->user(), $oldStage);
 
             return response()->json([
                 'success' => true,

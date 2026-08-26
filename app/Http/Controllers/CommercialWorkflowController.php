@@ -7,6 +7,7 @@ use App\Models\Contract;
 use App\Models\Sale;
 use App\Services\CommercialWorkflowService;
 use App\Services\PmoService;
+use App\Services\SalesActivityAdminAlertService;
 use Illuminate\Http\Request;
 
 class CommercialWorkflowController extends Controller
@@ -25,7 +26,10 @@ class CommercialWorkflowController extends Controller
             'requirement_summary' => 'nullable|string|max:20000',
         ]);
 
+        $oldStage = $sale->stage;
         $workflow->qualifySale($sale, $validated['requirement_summary'] ?? null);
+        $sale->refresh();
+        app(SalesActivityAdminAlertService::class)->notifySaleStageUpdated($sale, auth()->user(), $oldStage);
 
         return back()->with('success', 'تم تأهيل الفرصة — جاهزة لمرحلة العرض والتسعير.');
     }
@@ -36,7 +40,10 @@ class CommercialWorkflowController extends Controller
             'lost_reason' => 'required|string|max:500',
         ]);
 
+        $oldStage = $sale->stage;
         $workflow->disqualifySale($sale, $validated['lost_reason']);
+        $sale->refresh();
+        app(SalesActivityAdminAlertService::class)->notifySaleStageUpdated($sale, auth()->user(), $oldStage);
 
         return back()->with('success', 'تم تصنيف الفرصة كمفقودة.');
     }

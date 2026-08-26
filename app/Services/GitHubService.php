@@ -121,6 +121,92 @@ class GitHubService
     }
 
     /**
+     * @return array{ok: bool, message: string}
+     */
+    public function inviteOrgMember(string $org, string $username, string $role = 'direct_member'): array
+    {
+        $username = ltrim($username, '@');
+        $role = in_array($role, ['admin', 'direct_member', 'member'], true) ? $role : 'direct_member';
+        if ($role === 'member') {
+            $role = 'direct_member';
+        }
+
+        $status = $this->requestStatus('PUT', "/orgs/{$org}/memberships/{$username}", [
+            'role' => $role,
+        ]);
+
+        if (in_array($status, [200, 201], true)) {
+            return ['ok' => true, 'message' => "تمت دعوة @{$username} إلى منظمة {$org}."];
+        }
+
+        if ($status === 422) {
+            return ['ok' => false, 'message' => "تعذر دعوة @{$username} للمنظمة (تحقق من username)."];
+        }
+
+        return ['ok' => false, 'message' => "فشل دعوة المنظمة (HTTP {$status}). تحتاج صلاحية admin:org."];
+    }
+
+    /**
+     * @return array{ok: bool, message: string}
+     */
+    public function addTeamMembership(string $org, string $teamSlug, string $username, string $role = 'member'): array
+    {
+        $username = ltrim($username, '@');
+        $role = $role === 'maintainer' ? 'maintainer' : 'member';
+
+        $status = $this->requestStatus('PUT', "/orgs/{$org}/teams/{$teamSlug}/memberships/{$username}", [
+            'role' => $role,
+        ]);
+
+        if (in_array($status, [200, 201], true)) {
+            return ['ok' => true, 'message' => "أُضيف @{$username} إلى فريق {$teamSlug}."];
+        }
+
+        if ($status === 404) {
+            return ['ok' => false, 'message' => "الفريق «{$teamSlug}» غير موجود في {$org}."];
+        }
+
+        return ['ok' => false, 'message' => "فشل إضافة @{$username} للفريق {$teamSlug} (HTTP {$status})."];
+    }
+
+    /**
+     * @param  array<string, mixed>  $team
+     * @param  array<string, int>  $slugToId
+     * @return array{ok: bool, message: string, slug?: string}
+     */
+    public function ensureOrgTeam(string $org, array $team, array $slugToId = []): array
+    {
+        $slug = $team['slug'];
+        $existing = $this->get("/orgs/{$org}/teams/{$slug}");
+        $parentId = null;
+        if (! empty($team['parent']) && isset($slugToId[$team['parent']])) {
+            $parentId = $slugToId[$team['parent']];
+        }
+
+        $payload = [
+            'name' => $team['name'],
+            'description' => $team['description'] ?? '',
+            'privacy' => 'closed',
+        ];
+        if ($parentId) {
+            $payload['parent_team_id'] = $parentId;
+        }
+
+        if ($existing && isset($existing['id'])) {
+            $this->request('PATCH', "/orgs/{$org}/teams/{$slug}", $payload);
+
+            return ['ok' => true, 'message' => "تم تحديث فريق {$slug}.", 'slug' => $slug];
+        }
+
+        $created = $this->request('POST', "/orgs/{$org}/teams", $payload);
+        if (! $created || empty($created['slug'])) {
+            return ['ok' => false, 'message' => "تعذر إنشاء فريق {$slug}."];
+        }
+
+        return ['ok' => true, 'message' => "تم إنشاء فريق {$created['slug']}.", 'slug' => $created['slug']];
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     public function listRepoBranches(string $owner, string $repo, int $perPage = 30): array

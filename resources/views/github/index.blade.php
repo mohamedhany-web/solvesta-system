@@ -21,7 +21,7 @@
 <div class="w-full max-w-full font-tajawal">
     @include('partials.erp-page-header', [
         'title' => 'تكامل GitHub',
-        'subtitle' => 'عدة حسابات GitHub — وزّعها على المشاريع والمستودعات كما تريد',
+        'subtitle' => 'منظمة Solvesta-Company — الفرق مربوطة بأقسام النظام والتسليم عبر المهام وPR',
         'icon' => 'briefcase',
     ])
 
@@ -124,7 +124,7 @@
                         </div>
                         <div id="org-field" class="{{ old('account_type', 'personal') === 'organization' ? '' : 'hidden' }}">
                             <label class="block text-xs font-bold text-gray-600 mb-1">اسم Organization</label>
-                            <input name="organization" value="{{ old('organization') }}" dir="ltr" placeholder="solvesta-org" class="w-full rounded-xl border-gray-300 text-sm font-mono">
+                            <input name="organization" value="{{ old('organization', $companyOrg ?? 'Solvesta-Company') }}" dir="ltr" placeholder="Solvesta-Company" class="w-full rounded-xl border-gray-300 text-sm font-mono">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 mb-1">Personal Access Token</label>
@@ -182,20 +182,14 @@
 
         {{-- Data tabs --}}
         <div class="xl:col-span-8">
-            @if(!$connected)
-            <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center">
-                <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                <h3 class="text-lg font-bold text-gray-700 mb-2">اربط GitHub لعرض البيانات</h3>
-                <p class="text-sm text-gray-500 max-w-md mx-auto">المستودعات، الفرق، الأعضاء، Pull Requests والفروع ستظهر هنا مباشرة من Organization.</p>
-            </div>
-            @else
             <div class="flex flex-wrap gap-1 mb-4 border-b border-gray-200 pb-0">
                 @foreach(array_filter([
-                    'repos' => 'المستودعات',
-                    'teams' => $isPersonal ? null : 'الفرق',
-                    'members' => $isPersonal ? null : 'الأعضاء',
-                    'pulls' => 'Pull Requests',
-                    'branches' => 'الفروع',
+                    'schema' => 'سكيما العمل',
+                    'repos' => $connected ? 'المستودعات' : null,
+                    'teams' => ($connected && !$isPersonal) ? 'الفرق' : null,
+                    'members' => ($connected && !$isPersonal) ? 'الأعضاء' : null,
+                    'pulls' => $connected ? 'Pull Requests' : null,
+                    'branches' => $connected ? 'الفروع' : null,
                     'access' => auth()->user()->can('manage-github-integration') ? 'طلبات الوصول' : null,
                 ]) as $key => $label)
                 <a href="{{ route('github.index', ['account' => $activeAccount?->id, 'tab' => $key, 'repo' => $selectedRepo]) }}"
@@ -205,7 +199,67 @@
             </div>
 
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                @if($tab === 'repos')
+                @if($tab === 'schema')
+                <div class="p-5 border-b border-gray-100 flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h3 class="font-bold text-gray-900">سكيما العمل — {{ $companyOrg }}</h3>
+                        <p class="text-xs text-gray-500 mt-1">كل فريق GitHub يقابل قسماً في النظام. اعتماد حساب الموظف يضيفه للمنظمة ثم لفريق قسمه ثم لمستودعات مشاريعه.</p>
+                    </div>
+                    @can('manage-github-integration')
+                    <form method="POST" action="{{ route('github.sync-schema') }}">@csrf
+                        @if($activeAccount)<input type="hidden" name="account" value="{{ $activeAccount->id }}">@endif
+                        <button type="submit" class="px-4 py-2 rounded-xl text-white text-xs font-bold" style="background: {{ $themeColor }};">مزامنة الفرق مع GitHub</button>
+                    </form>
+                    @endcan
+                </div>
+
+                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/60">
+                    <p class="text-[11px] font-bold text-gray-500 mb-3">مسار التسليم</p>
+                    <ol class="grid grid-cols-2 lg:grid-cols-6 gap-2">
+                        @foreach($deliveryStages as $stage)
+                        <li class="rounded-xl bg-white border border-gray-100 p-3">
+                            <p class="text-[10px] font-bold text-gray-400">{{ $loop->iteration }}</p>
+                            <p class="text-xs font-bold text-gray-900 mt-0.5">{{ $stage['title'] }}</p>
+                            <p class="text-[10px] text-gray-500 mt-1 leading-relaxed">{{ $stage['detail'] }}</p>
+                        </li>
+                        @endforeach
+                    </ol>
+                </div>
+
+                <div class="divide-y divide-gray-100 max-h-[55vh] overflow-y-auto">
+                    @foreach($workSchema as $team)
+                    <div class="px-5 py-4 flex flex-wrap justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="font-bold text-sm text-gray-900">{{ $team['name_ar'] }}</p>
+                                <span class="text-[10px] font-mono px-2 py-0.5 rounded-lg bg-gray-100 text-gray-600" dir="ltr">{{ '@'.$companyOrg }}/{{ $team['slug'] }}</span>
+                                @if($team['parent'])
+                                <span class="text-[10px] text-gray-400">تحت {{ $team['parent'] }}</span>
+                                @endif
+                                @if($team['exists_on_github'])
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700">على GitHub</span>
+                                @else
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-800">يُنشأ بالمزامنة</span>
+                                @endif
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">{{ $team['description'] }}</p>
+                            <div class="flex flex-wrap gap-1.5 mt-2">
+                                @forelse($team['departments'] as $dept)
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800">{{ $dept->name }} ({{ $dept->code }})</span>
+                                @empty
+                                <span class="text-[10px] text-gray-400">بدون قسم ERP مباشر — يُربط بالدور: {{ implode(', ', $team['roles']) }}</span>
+                                @endforelse
+                            </div>
+                        </div>
+                        <a href="{{ $team['html_url'] }}" target="_blank" rel="noopener" class="text-xs font-bold hover:underline shrink-0" style="color: {{ $themeColor }};">الفريق</a>
+                    </div>
+                    @endforeach
+                </div>
+
+                @elseif(!$connected)
+                <div class="px-5 py-12 text-center text-gray-500 text-sm">اربط Organization <span class="font-mono" dir="ltr">{{ $companyOrg }}</span> لعرض المستودعات والأعضاء.</div>
+
+                @elseif($tab === 'repos')
                 <div class="divide-y divide-gray-100 max-h-[70vh] overflow-y-auto" id="github-repos-list">
                     @forelse($repos as $repo)
                     @php
@@ -414,7 +468,6 @@
                 @endcan
                 @endif
             </div>
-            @endif
         </div>
     </div>
 </div>

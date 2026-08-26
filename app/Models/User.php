@@ -27,6 +27,7 @@ class User extends Authenticatable
         'email',
         'password',
         'profile_picture',
+        'login_verification_enabled',
     ];
 
     /**
@@ -49,6 +50,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'login_verification_enabled' => 'boolean',
         ];
     }
 
@@ -226,5 +228,10 @@ class User extends Authenticatable
     public function gitIdentity(): HasOne
     {
         return $this->hasOne(UserGitIdentity::class);
+    }
+
+    public function requiresLoginVerification(): bool
+    {
+        return (bool) $this->login_verification_enabled;
     }
 }

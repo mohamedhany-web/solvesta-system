@@ -21,6 +21,11 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
+
+        if ($user->hasRole('sales_rep') && ! $user->can('edit-employees')) {
+            return redirect()->route('sales.dashboard');
+        }
+
         $data = [
             'user' => $user,
             'user_role' => $user->roles->first()?->name ?? 'employee',

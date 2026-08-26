@@ -8,6 +8,7 @@ use App\Models\EmployeeKpiPeriod;
 use App\Models\HrWarning;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\SalesPerformanceService;
 use Carbon\Carbon;
 
 class KpiCalculationService
@@ -143,6 +144,15 @@ class KpiCalculationService
 
     protected function calculateTaskCompletion(User $user, Carbon $start, Carbon $end): float
     {
+        $template = $this->roleTemplate($user);
+        if ($template === 'sales_strict' || $user->hasRole('sales_rep')) {
+            return app(SalesPerformanceService::class)->overallScore(
+                $user,
+                (int) $start->year,
+                (int) $start->month
+            );
+        }
+
         $tasks = Task::where('assigned_to', $user->id)
             ->whereBetween('created_at', [$start, $end])
             ->get();

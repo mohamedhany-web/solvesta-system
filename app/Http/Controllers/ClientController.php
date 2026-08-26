@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Services\SalesActivityAdminAlertService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -62,7 +63,9 @@ class ClientController extends Controller
                 ->withInput();
         }
 
-        Client::create($request->all());
+        $client = Client::create($request->all());
+
+        app(SalesActivityAdminAlertService::class)->notifyClientCreated($client, auth()->user());
 
         return redirect()->route('clients.index')
             ->with('success', 'تم إنشاء العميل بنجاح');

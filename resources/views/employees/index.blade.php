@@ -91,7 +91,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 <h3 class="text-base sm:text-lg font-semibold text-gray-900">قائمة الموظفين</h3>
                 <form method="GET" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="البحث..." class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="الاسم، الرقم القومي، الهاتف..." class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <select name="department_id" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">كل الأقسام</option>
                         @foreach($departments as $department)
@@ -119,7 +119,7 @@
                         <span class="text-base font-medium text-white">{{ substr($employee->first_name, 0, 1) }}</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold text-gray-900 truncate">{{ $employee->first_name }} {{ $employee->last_name }}</div>
+                        <div class="text-sm font-semibold text-gray-900 truncate">{{ $employee->displayName() }}</div>
                         <div class="text-xs text-gray-500 truncate">{{ $employee->email }}</div>
                         <div class="text-xs text-gray-600 mt-1">{{ $employee->position }}</div>
                     </div>
@@ -180,7 +180,7 @@
                                     <span class="text-sm font-medium text-white">{{ substr($employee->first_name, 0, 1) }}</span>
                                 </div>
                                 <div class="min-w-0">
-                                    <div class="text-sm font-medium text-gray-900 truncate">{{ $employee->first_name }} {{ $employee->last_name }}</div>
+                                    <div class="text-sm font-medium text-gray-900 truncate">{{ $employee->displayName() }}</div>
                                     <div class="text-sm text-gray-500 truncate">{{ $employee->email }}</div>
                                 </div>
                             </div>

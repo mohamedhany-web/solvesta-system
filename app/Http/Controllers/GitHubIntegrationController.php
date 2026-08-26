@@ -8,6 +8,7 @@ use App\Models\ProjectRepository;
 use App\Models\UserGitIdentity;
 use App\Services\DevWorkflowService;
 use App\Services\GitHubAccessService;
+use App\Services\GitHubOrgSchema;
 use App\Services\GitHubService;
 use App\Services\GitHubSettings;
 use Illuminate\Http\RedirectResponse;
@@ -32,15 +33,15 @@ class GitHubIntegrationController extends Controller
         $accountType = GitHubSettings::accountType();
         $org = GitHubSettings::organization();
         $ownerSlug = GitHubSettings::ownerSlug();
-        $tab = in_array($request->get('tab'), ['repos', 'teams', 'members', 'pulls', 'branches', 'access'], true)
+        $tab = in_array($request->get('tab'), ['schema', 'repos', 'teams', 'members', 'pulls', 'branches', 'access'], true)
             ? $request->get('tab')
-            : 'repos';
+            : 'schema';
 
         $dashboard = [];
         $cacheMiss = false;
 
         if ($connected && GitHubSettings::isConfigured()) {
-            $loadTab = in_array($tab, ['branches', 'access'], true) ? 'repos' : $tab;
+            $loadTab = in_array($tab, ['branches', 'access', 'schema'], true) ? 'repos' : $tab;
             $summary = $this->github->getCachedAccountSummary();
             $tabData = $this->github->getCachedTabData($loadTab);
 
@@ -97,6 +98,10 @@ class GitHubIntegrationController extends Controller
             ->take(50)
             ->get();
 
+        $workSchema = GitHubOrgSchema::blueprint($dashboard['teams'] ?? []);
+        $deliveryStages = GitHubOrgSchema::deliveryStages();
+        $companyOrg = GitHubOrgSchema::org();
+
         return view('github.index', compact(
             'accounts',
             'activeAccount',
@@ -111,7 +116,10 @@ class GitHubIntegrationController extends Controller
             'branches',
             'linkedRepos',
             'linkableProjects',
-            'accessRequests'
+            'accessRequests',
+            'workSchema',
+            'deliveryStages',
+            'companyOrg'
         ));
     }
 
@@ -343,5 +351,48 @@ class GitHubIntegrationController extends Controller
         $accounts = GitHubSettings::allAccounts();
         $active = $this->resolveActiveAccount($request, $accounts);
         GitHubSettings::setActiveAccountId($active?->id);
+    }
+
+    public function syncOrgSchema(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->can('manage-github-integration'), 403);
+
+        GitHubOrgSchema::syncDepartmentSlugs();
+
+        if (! GitHubSettings::isConfigured()) {
+            return back()->with('error', 'اربط Organization أولاً ثم أعد مزامنة الفرق.');
+        }
+
+        $this->resolveAndSetActiveAccount($request);
+        $org = GitHubOrgSchema::org();
+        $existing = $this->github->listOrgTeams($org);
+        $slugToId = [];
+        foreach ($existing as $row) {
+            if (! empty($row['slug']) && ! empty($row['id'])) {
+                $slugToId[$row['slug']] = (int) $row['id'];
+            }
+        }
+
+        $ok = 0;
+        $fail = 0;
+        $parentsFirst = collect(GitHubOrgSchema::TEAMS)->sortBy(fn ($t) => $t['parent'] ? 1 : 0);
+        foreach ($parentsFirst as $team) {
+            $result = $this->github->ensureOrgTeam($org, $team, $slugToId);
+            $result['ok'] ? $ok++ : $fail++;
+            if ($result['ok'] && empty($slugToId[$team['slug']])) {
+                foreach ($this->github->listOrgTeams($org) as $row) {
+                    if (($row['slug'] ?? '') === $team['slug']) {
+                        $slugToId[$team['slug']] = (int) $row['id'];
+                    }
+                }
+            }
+        }
+
+        $this->github->refreshOrganizationCache();
+
+        return back()->with(
+            $fail ? 'error' : 'success',
+            "مزامنة الفرق: {$ok} ناجحة".($fail ? "، {$fail} فشلت (تحقق من صلاحية admin:org)" : '').'.'
+        );
     }
 }

@@ -26,12 +26,14 @@ class ProfileController extends Controller
             'current_password' => 'nullable|required_with:password|current_password',
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'login_verification_enabled' => 'nullable|boolean',
         ]);
 
         try {
             // Update basic info
             $user->name = $request->name;
             $user->email = $request->email;
+            $user->login_verification_enabled = $request->boolean('login_verification_enabled');
 
             // Update password if provided
             if ($request->filled('password')) {

@@ -129,7 +129,6 @@ class ProjectController extends Controller
             'end_date' => 'required|date|after:start_date',
             'budget' => 'required|numeric|min:0',
             'priority' => 'required|in:low,medium,high,urgent',
-            'status' => 'required|in:planning,in_progress,on_hold,completed,cancelled',
             'project_type' => 'nullable|string|max:64',
         ]);
 
@@ -142,9 +141,10 @@ class ProjectController extends Controller
         $project = Project::create([
             ...$request->only([
                 'name', 'description', 'client_id', 'department_id',
-                'start_date', 'end_date', 'budget', 'priority', 'status', 'project_type',
+                'start_date', 'end_date', 'budget', 'priority', 'project_type',
             ]),
             'project_manager_id' => null,
+            'status' => 'planning',
         ]);
 
         return redirect()->route('projects.index')
@@ -154,7 +154,7 @@ class ProjectController extends Controller
     public function show(Project $project)
     {
         $this->authorize('view', $project);
-        $project->load(['client', 'projectManager', 'teamMembers', 'tasks.milestone', 'milestones.tasks', 'milestones.assignedLead', 'contract', 'expenses', 'repositories']);
+        $project->load(['client', 'projectManager', 'teamMembers', 'tasks.milestone', 'milestones.tasks', 'milestones.assignedLead', 'contract', 'expenses', 'repositories', 'lifecycle.currentState', 'lifecycle.definition.states', 'workItems.assignee', 'companyEvents.actor', 'approvalRequests']);
         
         // إحصائيات المشروع
         $stats = [
@@ -205,7 +205,6 @@ class ProjectController extends Controller
             'end_date' => 'required|date|after:start_date',
             'budget' => 'required|numeric|min:0',
             'priority' => 'required|in:low,medium,high,urgent',
-            'status' => 'required|in:planning,in_progress,on_hold,completed,cancelled',
             'project_type' => 'nullable|string|max:64',
         ]);
 
@@ -217,7 +216,7 @@ class ProjectController extends Controller
 
         $data = $request->only([
             'name', 'description', 'client_id', 'department_id',
-            'start_date', 'end_date', 'budget', 'priority', 'status', 'project_type',
+            'start_date', 'end_date', 'budget', 'priority', 'project_type',
         ]);
 
         if ((int) $request->department_id !== (int) $project->department_id) {

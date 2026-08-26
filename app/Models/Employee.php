@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
+    use Concerns\HasCompanyLifecycle;
     protected $fillable = [
         'user_id',
         'employee_id',
@@ -21,10 +22,31 @@ class Employee extends Model
         'email',
         'position',
         'phone',
+        'phone_secondary',
+        'whatsapp_phone',
         'national_id',
+        'full_name_ar',
+        'date_of_birth',
+        'gender',
+        'religion',
+        'marital_status',
+        'nationality',
+        'birth_place',
+        'national_id_address',
+        'id_photo_front_path',
+        'id_photo_back_path',
+        'id_issue_date',
+        'id_expiry_date',
+        'military_status',
         'address',
         'emergency_contact',
         'emergency_phone',
+        'education_level',
+        'university',
+        'faculty',
+        'major',
+        'graduation_year',
+        'education_notes',
         'hire_date',
         'salary',
         'daily_hours',
@@ -34,8 +56,12 @@ class Employee extends Model
 
     protected $casts = [
         'hire_date' => 'date',
+        'date_of_birth' => 'date',
+        'id_issue_date' => 'date',
+        'id_expiry_date' => 'date',
         'salary' => 'decimal:2',
         'is_team_lead' => 'boolean',
+        'graduation_year' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -60,7 +86,30 @@ class Employee extends Model
 
     public function sales(): HasMany
     {
-        return $this->hasMany(Sale::class, 'sales_rep_id');
+        return $this->hasMany(Sale::class, 'assigned_to', 'user_id');
+    }
+
+    public function employmentContracts(): HasMany
+    {
+        return $this->hasMany(EmploymentContract::class);
+    }
+
+    public function activeEmploymentContract(): ?EmploymentContract
+    {
+        return $this->employmentContracts()->where('status', 'active')->latest('start_date')->first();
+    }
+
+    public function effectiveSalary(): float
+    {
+        return (float) ($this->activeEmploymentContract()?->base_salary ?? $this->salary ?? 0);
+    }
+
+    public function isOnboardingProfileComplete(): bool
+    {
+        return filled($this->national_id)
+            && filled($this->full_name_ar)
+            && filled($this->id_photo_front_path)
+            && filled($this->id_photo_back_path);
     }
 
     public function tasks(): HasMany
@@ -141,5 +190,95 @@ class Employee extends Model
         } else {
             return static::generateSequentialEmployeeId();
         }
+    }
+
+    public function displayName(): string
+    {
+        return trim((string) ($this->full_name_ar ?: ($this->first_name.' '.$this->last_name)));
+    }
+
+    public static function genderLabels(): array
+    {
+        return ['male' => 'ذكر', 'female' => 'أنثى'];
+    }
+
+    public static function religionLabels(): array
+    {
+        return ['muslim' => 'مسلم', 'christian' => 'مسيحي', 'other' => 'أخرى'];
+    }
+
+    public static function maritalStatusLabels(): array
+    {
+        return [
+            'single' => 'أعزب / عزباء',
+            'married' => 'متزوج / متزوجة',
+            'divorced' => 'مطلق / مطلقة',
+            'widowed' => 'أرمل / أرملة',
+        ];
+    }
+
+    public static function militaryStatusLabels(): array
+    {
+        return [
+            'completed' => 'أدى الخدمة',
+            'exempted' => 'معافى',
+            'postponed' => 'مؤجل',
+            'not_applicable' => 'لا ينطبق',
+        ];
+    }
+
+    public static function educationLevelLabels(): array
+    {
+        return [
+            'high_school' => 'ثانوية عامة / دبلوم ثانوي',
+            'diploma' => 'دبلوم / معهد',
+            'bachelor' => 'بكالوريوس / ليسانس',
+            'master' => 'ماجستير',
+            'phd' => 'دكتوراه',
+            'other' => 'أخرى',
+        ];
+    }
+
+    public function genderLabel(): string
+    {
+        return self::genderLabels()[$this->gender] ?? ($this->gender ?: '—');
+    }
+
+    public function religionLabel(): string
+    {
+        return self::religionLabels()[$this->religion] ?? ($this->religion ?: '—');
+    }
+
+    public function maritalStatusLabel(): string
+    {
+        return self::maritalStatusLabels()[$this->marital_status] ?? ($this->marital_status ?: '—');
+    }
+
+    public function militaryStatusLabel(): string
+    {
+        return self::militaryStatusLabels()[$this->military_status] ?? ($this->military_status ?: '—');
+    }
+
+    public function educationLevelLabel(): string
+    {
+        return self::educationLevelLabels()[$this->education_level] ?? ($this->education_level ?: '—');
+    }
+
+    public function educationSummary(): string
+    {
+        $parts = array_filter([
+            $this->educationLevelLabel() !== '—' ? $this->educationLevelLabel() : null,
+            $this->faculty,
+            $this->university,
+            $this->major,
+            $this->graduation_year ? 'دفعة '.$this->graduation_year : null,
+        ]);
+
+        return $parts ? implode(' · ', $parts) : '—';
+    }
+
+    public function defaultLifecycleStateOnCreate(): string
+    {
+        return 'onboarding';
     }
 }

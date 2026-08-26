@@ -218,17 +218,15 @@
 
                 <div>
 
-                    <label class="text-xs font-bold text-gray-600 block mb-1.5">الحالة *</label>
-
-                    <select name="status" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
-
-                        @foreach($statusLabels as $value => $label)
-
-                            <option value="{{ $value }}" @selected($val('status', 'planning') === $value)>{{ $label }}</option>
-
-                        @endforeach
-
-                    </select>
+                    <label class="text-xs font-bold text-gray-600 block mb-1.5">دورة الحياة</label>
+                    <div class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-gray-50 text-gray-700">
+                        الحالة تُغيَّر من صفحة المشروع عبر محرك الـworkflow فقط.
+                        @if($isEdit)
+                            <span class="font-bold">الحالية: {{ $project->lifecycleLabelAr() }}</span>
+                        @else
+                            تبدأ تلقائياً من مرحلة التخطيط.
+                        @endif
+                    </div>
 
                 </div>
 

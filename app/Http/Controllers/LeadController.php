@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Lead;
 use App\Models\User;
 use App\Services\CommercialWorkflowService;
+use App\Services\SalesActivityAdminAlertService;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
@@ -28,6 +29,10 @@ class LeadController extends Controller
                     ->orWhere('email', 'like', $s)
                     ->orWhere('reference_code', 'like', $s);
             });
+        }
+
+        if (auth()->user()->hasRole('sales_rep') && ! auth()->user()->can('edit-employees')) {
+            $query->where('assigned_to', auth()->id());
         }
 
         $leads = $query->paginate(20)->withQueryString();
@@ -70,6 +75,8 @@ class LeadController extends Controller
             'created_by' => auth()->id(),
         ]);
 
+        app(SalesActivityAdminAlertService::class)->notifyLeadCreated($lead, auth()->user());
+
         return redirect()->route('leads.show', $lead)->with('success', 'تم تسجيل الـ Lead بنجاح.');
     }
 
@@ -88,7 +95,10 @@ class LeadController extends Controller
             'lost_reason' => 'nullable|string|max:500',
         ]);
 
+        $oldStatus = $lead->status;
         $lead->update($validated);
+
+        app(SalesActivityAdminAlertService::class)->notifyLeadStatusUpdated($lead, auth()->user(), $oldStatus);
 
         return back()->with('success', 'تم تحديث حالة الـ Lead.');
     }
@@ -100,6 +110,8 @@ class LeadController extends Controller
         ]);
 
         $sale = $workflow->convertLeadToSale($lead, (int) $validated['assigned_to']);
+
+        app(SalesActivityAdminAlertService::class)->notifyLeadConverted($lead, $sale, auth()->user());
 
         return redirect()->route('sales.show', $sale)
             ->with('success', 'تم تحويل الـ Lead إلى فرصة مبيعات. أكمل التأهيل وملخص المتطلبات.');
