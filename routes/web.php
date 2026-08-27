@@ -505,6 +505,7 @@ Route::middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])->gr
     // Sales & Marketing - Sales
     Route::get('sales', [SaleController::class, 'index'])->name('sales.index')->middleware('permission:view-sales');
     Route::get('sales/dashboard', [\App\Http\Controllers\SalesDashboardController::class, 'index'])->name('sales.dashboard')->middleware('permission:view-sales');
+    Route::get('sales/guide', [\App\Http\Controllers\SalesRepGuideController::class, 'index'])->name('sales.guide')->middleware('permission:view-sales');
     Route::get('sales/kpi-targets', [\App\Http\Controllers\SalesKpiTargetController::class, 'index'])->name('sales.kpi-targets.index')->middleware('permission:edit-employees');
     Route::post('sales/kpi-targets', [\App\Http\Controllers\SalesKpiTargetController::class, 'store'])->name('sales.kpi-targets.store')->middleware('permission:edit-employees');
     Route::get('sales/create', [SaleController::class, 'create'])->name('sales.create')->middleware('permission:create-sales');

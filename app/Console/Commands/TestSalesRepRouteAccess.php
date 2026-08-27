@@ -49,8 +49,12 @@ class TestSalesRepRouteAccess extends Command
         $failures += $this->runCase('Block BD', fn () => $this->getAs($repA, '/bd'), 403);
         $failures += $this->runCase('Block employees', fn () => $this->getAs($repA, '/employees'), 403);
         $failures += $this->runCase('Block KPI targets admin', fn () => $this->getAs($repA, '/sales/kpi-targets'), 403);
+        $failures += $this->runCase('Block contracts index', fn () => $this->getAs($repA, '/contracts'), 403);
+        $failures += $this->runCase('Block invoices index', fn () => $this->getAs($repA, '/invoices'), 403);
+        $failures += $this->runCase('Block invoice create', fn () => $this->getAs($repA, '/invoices/create'), 403);
 
         $failures += $this->runCase('Allow sales dashboard', fn () => $this->getAs($repA, '/sales/dashboard'), 200);
+        $failures += $this->runCase('Allow sales guide', fn () => $this->getAs($repA, '/sales/guide'), 200);
         $failures += $this->runCase('Allow leads index', fn () => $this->getAs($repA, '/leads'), 200);
         $failures += $this->runCase('Allow own client', fn () => $this->getAs($repA, "/clients/{$clientA->id}"), 200);
         $failures += $this->runCase('Allow own sale', fn () => $this->getAs($repA, "/sales/{$saleA->id}"), 200);

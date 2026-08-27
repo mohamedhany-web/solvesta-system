@@ -39,6 +39,10 @@ class SalesRepRouteIsolationTest extends TestCase
             'sales.kpi-targets.index',
             'accounting.index',
             'projects.index',
+            'contracts.index',
+            'contracts.create',
+            'invoices.index',
+            'invoices.create',
         ];
 
         foreach ($blocked as $route) {
@@ -56,11 +60,10 @@ class SalesRepRouteIsolationTest extends TestCase
         $allowed = [
             'dashboard',
             'sales.dashboard',
+            'sales.guide',
             'sales.index',
             'leads.index',
             'clients.index',
-            'contracts.index',
-            'invoices.index',
             'pre-sales.index',
             'workflow.sales.qualify',
             'profile.edit',

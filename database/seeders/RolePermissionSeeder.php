@@ -207,10 +207,7 @@ class RolePermissionSeeder extends Seeder
         $salesRep->syncPermissions([
             'view-clients', 'create-clients', 'edit-clients',
             'view-sales', 'create-sales', 'edit-sales',
-            'view-marketing', 'create-marketing', 'edit-marketing',
-            'view-invoices', 'create-invoices',
-            'view-contracts', 'create-contracts',
-            'view-dashboard'
+            'view-dashboard',
         ]);
 
         // 8. دعم فني (Support)

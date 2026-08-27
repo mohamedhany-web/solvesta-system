@@ -20,6 +20,8 @@ class InvoiceController extends Controller
      */
     public function index()
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
+
         $user = auth()->user();
         $baseQuery = SalesRepScope::scopeInvoices(Invoice::query(), $user);
 
@@ -62,6 +64,8 @@ class InvoiceController extends Controller
      */
     public function create()
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
+
         $user = auth()->user();
         $clients = SalesRepScope::scopeClients(Client::where('status', 'active'), $user)->orderBy('name')->get();
         $projects = Project::whereIn('status', ['in_progress', 'completed', 'active'])->orderBy('status', 'desc')->orderBy('name')->get();
@@ -75,6 +79,8 @@ class InvoiceController extends Controller
      */
     public function store(Request $request)
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
+
         try {
             $validated = $request->validate([
                 'client_id' => 'required|exists:clients,id',
@@ -265,6 +271,7 @@ class InvoiceController extends Controller
      */
     public function edit(Invoice $invoice)
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
         SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
 
         $user = auth()->user();
@@ -279,6 +286,7 @@ class InvoiceController extends Controller
      */
     public function update(Request $request, Invoice $invoice)
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
         SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
 
         $validated = $request->validate([
@@ -306,6 +314,7 @@ class InvoiceController extends Controller
      */
     public function destroy(Request $request, Invoice $invoice)
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
         SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
 
         // لا يمكن حذف الفواتير المدفوعة

@@ -32,10 +32,12 @@ class SalesRepScope
             'sales.update-stage',
             'sales.generate-invoice',
             'sales.statistics',
+            'sales.guide',
             'leads.*',
             'clients.*',
-            'contracts.*',
-            'invoices.*',
+            'contracts.show',
+            'invoices.show',
+            'invoices.print',
             'pre-sales.*',
             'workflow.*',
         ];
@@ -239,6 +241,16 @@ class SalesRepScope
         $employeeId = self::employeeId($user);
         if (! $employeeId || ! Client::where('id', $clientId)->where('assigned_to', $employeeId)->exists()) {
             abort(403, 'لا يمكنك استخدام عميل خارج محفظتك.');
+        }
+    }
+
+    /**
+     * Restricted reps manage contracts/invoices only through the sale workflow — not standalone modules.
+     */
+    public static function denyStandaloneContractInvoiceModules(): void
+    {
+        if (self::isRestricted(auth()->user())) {
+            abort(403, 'العقود والفواتير تُنشأ من داخل صفحة الفرصة (Pipeline) بعد قبول العرض. راجع «دليل النظام» من القائمة.');
         }
     }
 }

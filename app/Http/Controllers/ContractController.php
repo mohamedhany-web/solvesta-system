@@ -22,6 +22,8 @@ class ContractController extends Controller
      */
     public function index()
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
+
         $user = auth()->user();
         $contracts = SalesRepScope::scopeContracts(
             Contract::with(['client', 'project', 'createdBy', 'approvedBy']),
@@ -65,6 +67,8 @@ class ContractController extends Controller
      */
     public function create()
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
+
         $user = auth()->user();
         $clients = SalesRepScope::scopeClients(Client::where('status', 'active'), $user)->get();
         
@@ -85,6 +89,8 @@ class ContractController extends Controller
      */
     public function store(Request $request)
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -156,6 +162,7 @@ class ContractController extends Controller
      */
     public function edit(Contract $contract)
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
         SalesRepScope::authorizeContract(auth()->user(), $contract);
 
         $user = auth()->user();
@@ -178,6 +185,7 @@ class ContractController extends Controller
      */
     public function update(Request $request, Contract $contract)
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
         SalesRepScope::authorizeContract(auth()->user(), $contract);
 
         $validator = Validator::make($request->all(), [
@@ -231,6 +239,7 @@ class ContractController extends Controller
      */
     public function destroy(Contract $contract)
     {
+        SalesRepScope::denyStandaloneContractInvoiceModules();
         SalesRepScope::authorizeContract(auth()->user(), $contract);
 
         $contract->delete();
