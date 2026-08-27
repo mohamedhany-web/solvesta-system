@@ -33,6 +33,8 @@ class SalesRepScope
             'sales.generate-invoice',
             'sales.statistics',
             'sales.guide',
+            'sales.account',
+            'sales.account.payout',
             'leads.*',
             'clients.*',
             'contracts.show',

@@ -17,6 +17,8 @@ class CommercialWorkflowController extends Controller
     {
         $lead = $workflow->createLeadFromContactRequest($contactRequest);
 
+        app(SalesActivityAdminAlertService::class)->notifyLeadCreated($lead, auth()->user());
+
         return redirect()->route('leads.show', $lead)
             ->with('success', 'تم إنشاء Lead من طلب الموقع.');
     }

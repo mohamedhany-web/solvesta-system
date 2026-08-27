@@ -1,18 +1,25 @@
 @extends('layouts.app')
 
-@section('page-title', 'إدارة العملاء')
+@section('page-title', $isScopedPortfolio ? 'عملائي' : 'إدارة العملاء')
 
 @section('content')
 <div class="w-full">
-    <!-- Page Header -->
     <div class="mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">إدارة العملاء</h1>
-                <p class="text-sm sm:text-base text-gray-600">إدارة قاعدة بيانات العملاء والعلاقات التجارية</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                    {{ $isScopedPortfolio ? 'عملائي' : 'إدارة العملاء' }}
+                </h1>
+                <p class="text-sm sm:text-base text-gray-600">
+                    @if($isScopedPortfolio)
+                        محفظة عملائك المخصصة لك — لا تظهر إلا العملاء المرتبطين بك
+                    @else
+                        إدارة قاعدة بيانات العملاء والعلاقات التجارية
+                    @endif
+                </p>
             </div>
             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-            @can('view-clients')
+            @can('view-reports')
             <a href="{{ route('client-service-reports.index') }}" class="bg-violet-600 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg hover:bg-violet-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
                 <svg class="h-4 w-4 sm:h-5 sm:w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -31,14 +38,12 @@
         </div>
     </div>
 
-    <!-- Quick Stats Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-        <!-- Total Clients -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5 hover:shadow-md transition-all duration-200">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex-1">
-                    <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">إجمالي العملاء</p>
-                    <p class="text-2xl sm:text-3xl font-bold text-gray-900">{{ \App\Models\Client::count() }}</p>
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 mb-1">{{ $isScopedPortfolio ? 'عدد عملائي' : 'إجمالي العملاء' }}</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $stats['total'] }}</p>
                 </div>
                 <div class="hidden sm:block p-3 sm:p-4 bg-blue-50 rounded-lg flex-shrink-0 mt-2 sm:mt-0">
                     <svg class="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -48,13 +53,12 @@
             </div>
         </div>
 
-        <!-- Active Clients -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5 hover:shadow-md transition-all duration-200">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 mb-1">عملاء نشطين</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ \App\Models\Client::where('status', 'active')->count() }}</p>
-                    <p class="text-xs text-green-600 mt-1">{{ \App\Models\Client::count() > 0 ? round((\App\Models\Client::where('status', 'active')->count() / \App\Models\Client::count()) * 100, 1) : 0 }}% من إجمالي العملاء</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ $stats['active'] }}</p>
+                    <p class="text-xs text-green-600 mt-1">{{ $stats['active_pct'] }}% {{ $isScopedPortfolio ? 'من محفظتك' : 'من إجمالي العملاء' }}</p>
                 </div>
                 <div class="hidden sm:block p-3 sm:p-4 bg-green-50 rounded-lg flex-shrink-0 mt-2 sm:mt-0">
                     <svg class="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -64,12 +68,11 @@
             </div>
         </div>
 
-        <!-- New Clients This Month -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5 hover:shadow-md transition-all duration-200">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 mb-1">عملاء جدد</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ \App\Models\Client::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count() }}</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ $stats['new_this_month'] }}</p>
                     <p class="text-xs text-purple-600 mt-1">هذا الشهر</p>
                 </div>
                 <div class="hidden sm:block p-3 sm:p-4 bg-purple-50 rounded-lg flex-shrink-0 mt-2 sm:mt-0">
@@ -80,13 +83,12 @@
             </div>
         </div>
 
-        <!-- Total Revenue from Sales -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5 hover:shadow-md transition-all duration-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 mb-1">إجمالي الإيرادات</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ number_format(\App\Models\Sale::sumAmount()) }} ج.م</p>
-                    <p class="text-xs text-orange-600 mt-1">من جميع المبيعات</p>
+                    <p class="text-sm font-medium text-gray-600 mb-1">{{ $isScopedPortfolio ? 'إيراد صفقاتي Won' : 'إجمالي الإيرادات' }}</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['revenue']) }} ج.م</p>
+                    <p class="text-xs text-orange-600 mt-1">{{ $isScopedPortfolio ? 'من صفقاتك المغلقة' : 'من جميع المبيعات' }}</p>
                 </div>
                 <div class="hidden sm:block p-3 sm:p-4 bg-orange-50 rounded-lg flex-shrink-0 mt-2 sm:mt-0">
                     <svg class="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -97,20 +99,20 @@
         </div>
     </div>
 
-    <!-- Clients Table -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden w-full">
         <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h3 class="text-lg font-semibold text-gray-900">قائمة العملاء</h3>
-                <div class="flex items-center gap-2">
-                    <input type="text" placeholder="البحث عن عميل..." class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option>جميع العملاء</option>
-                        <option>نشط</option>
-                        <option>غير نشط</option>
-                        <option>عميل جديد</option>
+                <form method="GET" class="flex flex-wrap items-center gap-2">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="البحث عن عميل..." class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <select name="status" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">جميع العملاء</option>
+                        <option value="active" @selected(request('status') === 'active')>نشط</option>
+                        <option value="inactive" @selected(request('status') === 'inactive')>غير نشط</option>
+                        <option value="suspended" @selected(request('status') === 'suspended')>معلق</option>
                     </select>
-                </div>
+                    <button type="submit" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">بحث</button>
+                </form>
             </div>
         </div>
         <div class="overflow-x-auto w-full">
@@ -131,7 +133,7 @@
                         <td class="px-6 py-4 w-1/6">
                             <div class="flex items-center">
                                 <div class="h-10 w-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center ml-3">
-                                    <span class="text-sm font-medium text-white">{{ substr($client->name, 0, 1) }}</span>
+                                    <span class="text-sm font-medium text-white">{{ mb_substr($client->name, 0, 1) }}</span>
                                 </div>
                                 <div>
                                     <div class="text-sm font-medium text-gray-900">{{ $client->name }}</div>
@@ -190,7 +192,13 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                                 <h3 class="text-lg font-medium text-gray-900 mb-2">لا يوجد عملاء</h3>
-                                <p class="text-gray-500 mb-4">ابدأ بإضافة عميل جديد لقاعدة البيانات</p>
+                                <p class="text-gray-500 mb-4">
+                                    @if($isScopedPortfolio)
+                                        لم يُخصّص لك أي عميل بعد — أضف عميلاً جديداً أو حوّل Lead إلى فرصة
+                                    @else
+                                        ابدأ بإضافة عميل جديد لقاعدة البيانات
+                                    @endif
+                                </p>
                                 <a href="{{ route('clients.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
                                     <svg class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -204,6 +212,11 @@
                 </tbody>
             </table>
         </div>
+        @if($clients->hasPages())
+        <div class="px-6 py-4 border-t border-gray-200">
+            {{ $clients->links() }}
+        </div>
+        @endif
     </div>
 </div>
 @endsection

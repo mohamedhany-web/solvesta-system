@@ -49,6 +49,13 @@ class Employee extends Model
         'education_notes',
         'hire_date',
         'salary',
+        'preferred_payout_method',
+        'bank_name',
+        'bank_account_number',
+        'bank_account_holder',
+        'vodafone_cash_number',
+        'instapay_identifier',
+        'payout_notes',
         'daily_hours',
         'employment_type',
         'status',
@@ -262,6 +269,20 @@ class Employee extends Model
     public function educationLevelLabel(): string
     {
         return self::educationLevelLabels()[$this->education_level] ?? ($this->education_level ?: '—');
+    }
+
+    public static function payoutMethodLabels(): array
+    {
+        return [
+            'bank' => 'حساب بنكي',
+            'vodafone_cash' => 'فودافون كاش',
+            'instapay' => 'InstaPay',
+        ];
+    }
+
+    public function preferredPayoutMethodLabel(): string
+    {
+        return self::payoutMethodLabels()[$this->preferred_payout_method] ?? '—';
     }
 
     public function educationSummary(): string

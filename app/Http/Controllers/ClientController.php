@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Sale;
 use App\Services\SalesActivityAdminAlertService;
 use App\Services\SalesRepScope;
 use Illuminate\Http\Request;
@@ -16,7 +17,9 @@ class ClientController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $clients = SalesRepScope::scopeClients(Client::query(), $user)
+        $baseQuery = SalesRepScope::scopeClients(Client::query(), $user);
+
+        $clients = (clone $baseQuery)
             ->when(request('search'), function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%'.request('search').'%')
@@ -28,9 +31,32 @@ class ClientController extends Controller
                 $query->where('status', request('status'));
             })
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('clients.index', compact('clients'));
+        $total = (clone $baseQuery)->count();
+        $active = (clone $baseQuery)->where('status', 'active')->count();
+        $newThisMonth = (clone $baseQuery)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        $revenue = Sale::sumAmount(function ($query) use ($user) {
+            SalesRepScope::scopeSales($query, $user);
+            $query->where('stage', 'closed_won');
+        });
+
+        $stats = [
+            'total' => $total,
+            'active' => $active,
+            'new_this_month' => $newThisMonth,
+            'revenue' => $revenue,
+            'active_pct' => $total > 0 ? round(($active / $total) * 100, 1) : 0,
+        ];
+
+        $isScopedPortfolio = SalesRepScope::isRestricted($user);
+
+        return view('clients.index', compact('clients', 'stats', 'isScopedPortfolio'));
     }
 
     /**

@@ -55,6 +55,7 @@ class TestSalesRepRouteAccess extends Command
 
         $failures += $this->runCase('Allow sales dashboard', fn () => $this->getAs($repA, '/sales/dashboard'), 200);
         $failures += $this->runCase('Allow sales guide', fn () => $this->getAs($repA, '/sales/guide'), 200);
+        $failures += $this->runCase('Allow sales account', fn () => $this->getAs($repA, '/sales/account'), 200);
         $failures += $this->runCase('Allow leads index', fn () => $this->getAs($repA, '/leads'), 200);
         $failures += $this->runCase('Allow own client', fn () => $this->getAs($repA, "/clients/{$clientA->id}"), 200);
         $failures += $this->runCase('Allow own sale', fn () => $this->getAs($repA, "/sales/{$saleA->id}"), 200);

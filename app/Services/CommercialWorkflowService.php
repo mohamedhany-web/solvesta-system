@@ -157,7 +157,6 @@ class CommercialWorkflowService
             'client_id' => $contract->client_id,
             'contract_id' => $contract->id,
             'sale_id' => $contract->sale_id,
-            'invoice_number' => Invoice::generateInvoiceNumber(),
             'invoice_date' => now(),
             'due_date' => now()->addDays(14),
             'subtotal' => $deposit,

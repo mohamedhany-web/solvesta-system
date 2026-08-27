@@ -61,6 +61,8 @@ class SalesRepRouteIsolationTest extends TestCase
             'dashboard',
             'sales.dashboard',
             'sales.guide',
+            'sales.account',
+            'sales.account.payout',
             'sales.index',
             'leads.index',
             'clients.index',
