@@ -132,6 +132,7 @@
             </div>
 
             <!-- Sales Rep Filter -->
+            @unless(\App\Services\SalesRepScope::isRestricted(auth()->user()))
             <div>
                 <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-2">مندوب المبيعات</label>
                 <select name="assigned_to" id="assigned_to" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -143,6 +144,7 @@
                     @endforeach
                 </select>
             </div>
+            @endunless
 
             <!-- Filter Buttons -->
             <div class="md:col-span-4 flex items-end gap-2">

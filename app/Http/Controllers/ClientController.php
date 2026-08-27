@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Services\SalesActivityAdminAlertService;
+use App\Services\SalesRepScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,11 +15,14 @@ class ClientController extends Controller
      */
     public function index()
     {
-        $clients = Client::query()
+        $user = auth()->user();
+        $clients = SalesRepScope::scopeClients(Client::query(), $user)
             ->when(request('search'), function ($query) {
-                $query->where('name', 'like', '%' . request('search') . '%')
-                    ->orWhere('company_name', 'like', '%' . request('search') . '%')
-                    ->orWhere('email', 'like', '%' . request('search') . '%');
+                $query->where(function ($q) {
+                    $q->where('name', 'like', '%'.request('search').'%')
+                        ->orWhere('company_name', 'like', '%'.request('search').'%')
+                        ->orWhere('email', 'like', '%'.request('search').'%');
+                });
             })
             ->when(request('status'), function ($query) {
                 $query->where('status', request('status'));
@@ -63,7 +67,12 @@ class ClientController extends Controller
                 ->withInput();
         }
 
-        $client = Client::create($request->all());
+        $client = Client::create([
+            ...$request->all(),
+            'assigned_to' => SalesRepScope::isRestricted(auth()->user())
+                ? SalesRepScope::employeeId(auth()->user())
+                : ($request->input('assigned_to') ?: null),
+        ]);
 
         app(SalesActivityAdminAlertService::class)->notifyClientCreated($client, auth()->user());
 
@@ -76,7 +85,8 @@ class ClientController extends Controller
      */
     public function show(Client $client)
     {
-        // تحميل العلاقات مع التحقق من وجودها
+        SalesRepScope::authorizeClient(auth()->user(), $client);
+
         $client->load(['projects', 'sales', 'serviceReports.uploader']);
         
         // التحقق من أن العلاقة تعمل بشكل صحيح
@@ -92,6 +102,8 @@ class ClientController extends Controller
      */
     public function edit(Client $client)
     {
+        SalesRepScope::authorizeClient(auth()->user(), $client);
+
         return view('clients.edit', compact('client'));
     }
 
@@ -100,6 +112,8 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client)
     {
+        SalesRepScope::authorizeClient(auth()->user(), $client);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'company_name' => 'nullable|string|max:255',
@@ -132,6 +146,8 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
+        SalesRepScope::authorizeClient(auth()->user(), $client);
+
         // Check if client has projects or sales
         if ($client->projects()->count() > 0 || $client->sales()->count() > 0) {
             return redirect()->back()

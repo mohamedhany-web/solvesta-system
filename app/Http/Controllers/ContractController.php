@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Invoice;
 use App\Models\Account;
 use App\Models\JournalEntry;
+use App\Services\SalesRepScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,11 @@ class ContractController extends Controller
      */
     public function index()
     {
-        $contracts = Contract::with(['client', 'project', 'createdBy', 'approvedBy'])
+        $user = auth()->user();
+        $contracts = SalesRepScope::scopeContracts(
+            Contract::with(['client', 'project', 'createdBy', 'approvedBy']),
+            $user
+        )
             ->when(request('search'), function ($query) {
                 $query->where('title', 'like', '%' . request('search') . '%')
                     ->orWhere('contract_number', 'like', '%' . request('search') . '%')
@@ -41,7 +46,7 @@ class ContractController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        $clients = Client::where('status', 'active')->get();
+        $clients = SalesRepScope::scopeClients(Client::where('status', 'active'), $user)->get();
         
         // Get projects without permission restrictions for filtering
         $projects = Project::whereIn('status', ['planning', 'in_progress'])
@@ -60,7 +65,8 @@ class ContractController extends Controller
      */
     public function create()
     {
-        $clients = Client::where('status', 'active')->get();
+        $user = auth()->user();
+        $clients = SalesRepScope::scopeClients(Client::where('status', 'active'), $user)->get();
         
         // Get projects without permission restrictions for contract creation
         $projects = Project::whereIn('status', ['planning', 'in_progress'])
@@ -101,6 +107,8 @@ class ContractController extends Controller
                 ->withInput();
         }
 
+        SalesRepScope::assertClientIdOwned(auth()->user(), (int) $request->client_id);
+
         DB::beginTransaction();
         try {
             $contract = Contract::create([
@@ -131,6 +139,8 @@ class ContractController extends Controller
      */
     public function show(Contract $contract)
     {
+        SalesRepScope::authorizeContract(auth()->user(), $contract);
+
         $contract->load(['client', 'project', 'createdBy', 'approvedBy', 'invoices']);
         
         // Check for existing invoice
@@ -146,7 +156,10 @@ class ContractController extends Controller
      */
     public function edit(Contract $contract)
     {
-        $clients = Client::where('status', 'active')->get();
+        SalesRepScope::authorizeContract(auth()->user(), $contract);
+
+        $user = auth()->user();
+        $clients = SalesRepScope::scopeClients(Client::where('status', 'active'), $user)->get();
         
         // Get projects without permission restrictions for contract editing
         $projects = Project::whereIn('status', ['planning', 'in_progress'])
@@ -165,6 +178,8 @@ class ContractController extends Controller
      */
     public function update(Request $request, Contract $contract)
     {
+        SalesRepScope::authorizeContract(auth()->user(), $contract);
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -186,6 +201,8 @@ class ContractController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
+
+        SalesRepScope::assertClientIdOwned(auth()->user(), (int) $request->client_id);
 
         DB::beginTransaction();
         try {
@@ -214,6 +231,8 @@ class ContractController extends Controller
      */
     public function destroy(Contract $contract)
     {
+        SalesRepScope::authorizeContract(auth()->user(), $contract);
+
         $contract->delete();
 
         return redirect()->route('contracts.index')
@@ -274,6 +293,8 @@ class ContractController extends Controller
      */
     public function generateInvoice(Contract $contract)
     {
+        SalesRepScope::authorizeContract(auth()->user(), $contract);
+
         if ($contract->status !== 'active') {
             return redirect()->back()
                 ->with('error', 'يمكن إنشاء فاتورة فقط للعقود النشطة');
@@ -338,6 +359,8 @@ class ContractController extends Controller
      */
     public function renew(Contract $contract)
     {
+        SalesRepScope::authorizeContract(auth()->user(), $contract);
+
         if ($contract->status !== 'active' && $contract->status !== 'expired') {
             return redirect()->back()
                 ->withErrors(['error' => 'يمكن تجديد العقود النشطة أو المنتهية الصلاحية فقط']);
@@ -372,13 +395,16 @@ class ContractController extends Controller
      */
     public function getStatistics()
     {
-        $totalContracts = Contract::count();
-        $activeContracts = Contract::active()->count();
-        $expiredContracts = Contract::expired()->count();
-        $expiringSoon = Contract::expiringSoon(30)->count();
-        
-        $totalValue = Contract::where('status', 'active')->sum('value');
-        $monthlyValue = Contract::where('status', 'active')
+        $user = auth()->user();
+        $baseQuery = SalesRepScope::scopeContracts(Contract::query(), $user);
+
+        $totalContracts = (clone $baseQuery)->count();
+        $activeContracts = (clone $baseQuery)->active()->count();
+        $expiredContracts = (clone $baseQuery)->expired()->count();
+        $expiringSoon = (clone $baseQuery)->expiringSoon(30)->count();
+
+        $totalValue = (clone $baseQuery)->where('status', 'active')->sum('value');
+        $monthlyValue = (clone $baseQuery)->where('status', 'active')
             ->whereMonth('start_date', now()->month)
             ->whereYear('start_date', now()->year)
             ->sum('value');
@@ -390,7 +416,7 @@ class ContractController extends Controller
             'expiring_soon' => $expiringSoon,
             'total_value' => $totalValue,
             'monthly_value' => $monthlyValue,
-            'renewal_rate' => $totalContracts > 0 ? round((Contract::where('status', 'renewed')->count() / $totalContracts) * 100, 2) : 0
+            'renewal_rate' => $totalContracts > 0 ? round((clone $baseQuery)->where('status', 'renewed')->count() / $totalContracts * 100, 2) : 0,
         ]);
     }
 }

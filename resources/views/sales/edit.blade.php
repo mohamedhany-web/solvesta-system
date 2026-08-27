@@ -75,6 +75,7 @@
                 </div>
 
                 <!-- Assigned To -->
+                @unless(\App\Services\SalesRepScope::isRestricted(auth()->user()))
                 <div>
                     <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-2">مندوب المبيعات <span class="text-red-500">*</span></label>
                     <select name="assigned_to" id="assigned_to" required
@@ -95,6 +96,9 @@
                         </p>
                     @enderror
                 </div>
+                @else
+                <input type="hidden" name="assigned_to" value="{{ auth()->id() }}">
+                @endunless
 
                 <!-- Estimated Value -->
                 <div>

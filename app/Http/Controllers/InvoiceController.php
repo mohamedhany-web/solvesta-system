@@ -9,6 +9,7 @@ use App\Models\Project;
 use Carbon\Carbon;
 use App\Models\Wallet;
 use App\Services\Accounting\AccountingPostingService;
+use App\Services\SalesRepScope;
 use App\Services\WalletService;
 use Illuminate\Support\Facades\DB;
 
@@ -19,19 +20,25 @@ class InvoiceController extends Controller
      */
     public function index()
     {
+        $user = auth()->user();
+        $baseQuery = SalesRepScope::scopeInvoices(Invoice::query(), $user);
+
         // إحصائيات الفواتير
-        $totalInvoices = Invoice::count();
-        $paidInvoices = Invoice::where('status', 'paid')->count();
-        $pendingInvoices = Invoice::whereIn('status', ['sent', 'viewed', 'draft'])->count();
-        $overdueInvoices = Invoice::overdue()->count();
-        
+        $totalInvoices = (clone $baseQuery)->count();
+        $paidInvoices = (clone $baseQuery)->where('status', 'paid')->count();
+        $pendingInvoices = (clone $baseQuery)->whereIn('status', ['sent', 'viewed', 'draft'])->count();
+        $overdueInvoices = (clone $baseQuery)->overdue()->count();
+
         // إجمالي الإيرادات
-        $totalRevenue = Invoice::where('status', 'paid')->sum('total_amount');
-        $monthlyRevenue = Invoice::currentMonth()->where('status', 'paid')->sum('total_amount');
-        $pendingAmount = Invoice::whereIn('status', ['sent', 'viewed'])->sum('balance_amount');
-        
+        $totalRevenue = (clone $baseQuery)->where('status', 'paid')->sum('total_amount');
+        $monthlyRevenue = (clone $baseQuery)->currentMonth()->where('status', 'paid')->sum('total_amount');
+        $pendingAmount = (clone $baseQuery)->whereIn('status', ['sent', 'viewed'])->sum('balance_amount');
+
         // الفواتير
-        $invoices = Invoice::with(['client', 'project', 'contract'])
+        $invoices = SalesRepScope::scopeInvoices(
+            Invoice::with(['client', 'project', 'contract']),
+            $user
+        )
             ->when(request('contract_id'), function ($query) {
                 $query->where('contract_id', request('contract_id'));
             })
@@ -55,7 +62,8 @@ class InvoiceController extends Controller
      */
     public function create()
     {
-        $clients = Client::where('status', 'active')->orderBy('name')->get();
+        $user = auth()->user();
+        $clients = SalesRepScope::scopeClients(Client::where('status', 'active'), $user)->orderBy('name')->get();
         $projects = Project::whereIn('status', ['in_progress', 'completed', 'active'])->orderBy('status', 'desc')->orderBy('name')->get();
         $invoiceNumber = Invoice::generateInvoiceNumber();
         
@@ -92,7 +100,9 @@ class InvoiceController extends Controller
             if ($subtotal <= 0) {
                 return back()->withErrors(['items' => 'يجب أن يكون إجمالي العناصر أكبر من صفر'])->withInput();
             }
-            
+
+            SalesRepScope::assertClientIdOwned(auth()->user(), (int) $validated['client_id']);
+
             $taxRate = $validated['tax_rate'] ?? 0;
             $taxAmount = ($subtotal * $taxRate) / 100;
             $discountAmount = $validated['discount_amount'] ?? 0;
@@ -183,6 +193,8 @@ class InvoiceController extends Controller
      */
     public function show(Invoice $invoice)
     {
+        SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
+
         $invoice->load([
             'client',
             'project',
@@ -199,6 +211,8 @@ class InvoiceController extends Controller
 
     public function print(Invoice $invoice)
     {
+        SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
+
         $invoice->load(['client', 'project', 'contract', 'payments.wallet']);
 
         return view('invoices.print', [
@@ -209,6 +223,8 @@ class InvoiceController extends Controller
 
     public function recordPayment(Request $request, Invoice $invoice, WalletService $walletService)
     {
+        SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
+
         if (in_array($invoice->status, ['paid', 'cancelled'], true) || $invoice->balance_due <= 0) {
             return response()->json([
                 'success' => false,
@@ -249,7 +265,10 @@ class InvoiceController extends Controller
      */
     public function edit(Invoice $invoice)
     {
-        $clients = Client::where('status', 'active')->orderBy('name')->get();
+        SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
+
+        $user = auth()->user();
+        $clients = SalesRepScope::scopeClients(Client::where('status', 'active'), $user)->orderBy('name')->get();
         $projects = Project::whereIn('status', ['in_progress', 'completed', 'active'])->orderBy('status', 'desc')->orderBy('name')->get();
         
         return view('invoices.edit', compact('invoice', 'clients', 'projects'));
@@ -260,6 +279,8 @@ class InvoiceController extends Controller
      */
     public function update(Request $request, Invoice $invoice)
     {
+        SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
+
         $validated = $request->validate([
             'status' => 'sometimes|in:draft,sent,viewed,partial,paid,overdue,cancelled',
             'payment_method' => 'nullable|string',
@@ -285,6 +306,8 @@ class InvoiceController extends Controller
      */
     public function destroy(Request $request, Invoice $invoice)
     {
+        SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
+
         // لا يمكن حذف الفواتير المدفوعة
         if ($invoice->status === 'paid') {
             if ($request->expectsJson() || $request->ajax()) {
@@ -326,6 +349,8 @@ class InvoiceController extends Controller
      */
     public function markAsSent(Invoice $invoice)
     {
+        SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
+
         $invoice->update(['status' => 'sent']);
         // ترحيل قيد الاعتراف بالإيراد
         try {
@@ -342,6 +367,8 @@ class InvoiceController extends Controller
      */
     public function markAsPaid(Invoice $invoice)
     {
+        SalesRepScope::authorizeInvoice(auth()->user(), $invoice);
+
         try {
             $invoice->update([
                 'status' => 'paid',

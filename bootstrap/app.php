@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'block.suspicious' => \App\Http\Middleware\BlockSuspiciousActivity::class,
             'department.manager' => \App\Http\Middleware\EnsureDepartmentManager::class,
             'client.section' => \App\Http\Middleware\EnsureClientPortalSection::class,
+            'sales.rep.routes' => \App\Http\Middleware\EnsureRestrictedSalesRepRouteAccess::class,
         ]);
         
         // Global security middleware

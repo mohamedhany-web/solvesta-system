@@ -178,36 +178,36 @@ Route::prefix('client')->name('client.')->group(function () {
 });
 
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', 'verified.code'])
+    ->middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])
     ->name('dashboard');
 
 Route::get('/executive', [App\Http\Controllers\ExecutiveDashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', 'verified.code'])
+    ->middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])
     ->name('executive.dashboard');
 
 Route::post('/os/transition/{type}/{id}', [CompanyOsController::class, 'transition'])
-    ->middleware(['auth', 'verified', 'verified.code'])
+    ->middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])
     ->name('os.transition');
 Route::post('/os/work-items/{workItem}/complete', [CompanyOsController::class, 'completeWorkItem'])
-    ->middleware(['auth', 'verified', 'verified.code'])
+    ->middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])
     ->name('os.work-items.complete');
 Route::post('/os/approvals/{approval}/decide', [CompanyOsController::class, 'decideApproval'])
-    ->middleware(['auth', 'verified', 'verified.code'])
+    ->middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])
     ->name('os.approvals.decide');
 
 Route::get('/executive/finance', [App\Http\Controllers\ExecutiveFinanceController::class, 'index'])
-    ->middleware(['auth', 'verified', 'verified.code'])
+    ->middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])
     ->name('executive.finance');
 
 // Profile routes
-Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
+Route::middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile/picture', [ProfileController::class, 'deleteProfilePicture'])->name('profile.delete-picture');
 });
 
 // All authenticated routes
-Route::middleware(['auth', 'verified', 'verified.code'])->group(function () {
+Route::middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])->group(function () {
     // =========================
     // Client Portal (بوابة العميل)
     // =========================
@@ -812,12 +812,6 @@ Route::prefix('client')->name('client.')->middleware('auth:client')->group(funct
         Route::get('/tickets/{ticket}', [ClientSupportTicketController::class, 'show'])->name('tickets.show');
         Route::post('/tickets/{ticket}/feedback', [ClientSupportTicketController::class, 'storeFeedback'])->name('tickets.feedback');
     });
-});
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 require __DIR__.'/auth.php';

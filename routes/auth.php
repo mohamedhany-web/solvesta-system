@@ -45,7 +45,7 @@ Route::middleware('auth')->group(function () {
         ->name('verification.show');
     
     Route::post('verify-code', [App\Http\Controllers\Auth\VerificationController::class, 'verify'])
-        ->name('verification.verify')
+        ->name('verification.code.verify')
         ->middleware(['throttle:5,10', 'block.suspicious']); // 5 attempts per 10 minutes
     
     Route::post('resend-code', [App\Http\Controllers\Auth\VerificationController::class, 'resend'])

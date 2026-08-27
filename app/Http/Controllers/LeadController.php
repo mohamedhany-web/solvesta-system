@@ -6,14 +6,18 @@ use App\Models\Lead;
 use App\Models\User;
 use App\Services\CommercialWorkflowService;
 use App\Services\SalesActivityAdminAlertService;
+use App\Services\SalesRepScope;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Lead::with(['assignee', 'convertedClient', 'convertedSale'])
-            ->orderByDesc('created_at');
+        $user = auth()->user();
+        $query = SalesRepScope::scopeLeads(
+            Lead::with(['assignee', 'convertedClient', 'convertedSale']),
+            $user
+        )->orderByDesc('created_at');
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -31,16 +35,13 @@ class LeadController extends Controller
             });
         }
 
-        if (auth()->user()->hasRole('sales_rep') && ! auth()->user()->can('edit-employees')) {
-            $query->where('assigned_to', auth()->id());
-        }
-
         $leads = $query->paginate(20)->withQueryString();
 
+        $statsQuery = SalesRepScope::scopeLeads(Lead::query(), $user);
         $stats = [
-            'new' => Lead::where('status', 'new')->count(),
-            'qualified' => Lead::where('status', 'qualified')->count(),
-            'converted' => Lead::where('status', 'converted')->count(),
+            'new' => (clone $statsQuery)->where('status', 'new')->count(),
+            'qualified' => (clone $statsQuery)->where('status', 'qualified')->count(),
+            'converted' => (clone $statsQuery)->where('status', 'converted')->count(),
         ];
 
         return view('leads.index', compact('leads', 'stats'));
@@ -48,7 +49,9 @@ class LeadController extends Controller
 
     public function create()
     {
-        $users = User::whereHas('employee')->orderBy('name')->get(['id', 'name']);
+        $users = SalesRepScope::isRestricted(auth()->user())
+            ? collect()
+            : User::whereHas('employee')->orderBy('name')->get(['id', 'name']);
 
         return view('leads.create', compact('users'));
     }
@@ -71,7 +74,9 @@ class LeadController extends Controller
             ...$validated,
             'reference_code' => Lead::generateReferenceCode(),
             'status' => 'new',
-            'assigned_to' => $validated['assigned_to'] ?? auth()->id(),
+            'assigned_to' => SalesRepScope::isRestricted(auth()->user())
+                ? auth()->id()
+                : ($validated['assigned_to'] ?? auth()->id()),
             'created_by' => auth()->id(),
         ]);
 
@@ -82,14 +87,19 @@ class LeadController extends Controller
 
     public function show(Lead $lead)
     {
+        SalesRepScope::authorizeLead(auth()->user(), $lead);
+
         $lead->load(['assignee', 'creator', 'contactRequest', 'convertedClient', 'convertedSale.client']);
-        $users = User::whereHas('employee')->orderBy('name')->get(['id', 'name']);
+        $users = SalesRepScope::isRestricted(auth()->user())
+            ? collect()
+            : User::whereHas('employee')->orderBy('name')->get(['id', 'name']);
 
         return view('leads.show', compact('lead', 'users'));
     }
 
     public function updateStatus(Request $request, Lead $lead)
     {
+        SalesRepScope::authorizeLead(auth()->user(), $lead);
         $validated = $request->validate([
             'status' => 'required|in:new,contacted,qualified,lost,on_hold',
             'lost_reason' => 'nullable|string|max:500',
@@ -105,11 +115,13 @@ class LeadController extends Controller
 
     public function convertToSale(Request $request, Lead $lead, CommercialWorkflowService $workflow)
     {
-        $validated = $request->validate([
-            'assigned_to' => 'required|exists:users,id',
-        ]);
+        SalesRepScope::authorizeLead(auth()->user(), $lead);
 
-        $sale = $workflow->convertLeadToSale($lead, (int) $validated['assigned_to']);
+        $assignedTo = SalesRepScope::isRestricted(auth()->user())
+            ? auth()->id()
+            : $request->validate(['assigned_to' => 'required|exists:users,id'])['assigned_to'];
+
+        $sale = $workflow->convertLeadToSale($lead, (int) $assignedTo);
 
         app(SalesActivityAdminAlertService::class)->notifyLeadConverted($lead, $sale, auth()->user());
 

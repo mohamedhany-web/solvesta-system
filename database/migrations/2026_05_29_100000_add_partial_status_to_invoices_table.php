@@ -12,6 +12,10 @@ return new class extends Migration
             return;
         }
 
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE `invoices` MODIFY COLUMN `status` ENUM(
             'draft', 'sent', 'viewed', 'partial', 'paid', 'overdue', 'cancelled'
         ) NOT NULL DEFAULT 'draft'");
@@ -24,6 +28,10 @@ return new class extends Migration
         }
 
         DB::table('invoices')->where('status', 'partial')->update(['status' => 'sent']);
+
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
 
         DB::statement("ALTER TABLE `invoices` MODIFY COLUMN `status` ENUM(
             'draft', 'sent', 'viewed', 'paid', 'overdue', 'cancelled'

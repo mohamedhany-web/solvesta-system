@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\SalesPerformanceService;
+use App\Services\SalesRepScope;
 use Illuminate\Http\Request;
 
 class SalesDashboardController extends Controller
@@ -19,7 +20,9 @@ class SalesDashboardController extends Controller
         $month = (int) $request->input('month', now()->month);
 
         $repUser = $user;
-        if ($canViewAll && $request->filled('user_id')) {
+        if (SalesRepScope::isRestricted($user)) {
+            $repUser = $user;
+        } elseif ($canViewAll && $request->filled('user_id')) {
             $repUser = User::findOrFail((int) $request->input('user_id'));
         } elseif (! $user->hasRole('sales_rep') && ! $canViewAll) {
             abort(403, 'غير مصرح لك بعرض لوحة المبيعات.');

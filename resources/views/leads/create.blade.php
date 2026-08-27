@@ -26,6 +26,7 @@
             <div><label class="text-sm font-bold">ميزانية تقديرية</label><input name="estimated_budget" type="number" step="0.01" value="{{ old('estimated_budget') }}" class="w-full border rounded-lg px-3 py-2 mt-1"></div>
         </div>
         <div><label class="text-sm font-bold">ملاحظات</label><textarea name="notes" rows="4" class="w-full border rounded-lg px-3 py-2 mt-1">{{ old('notes') }}</textarea></div>
+        @unless(\App\Services\SalesRepScope::isRestricted(auth()->user()))
         <div>
             <label class="text-sm font-bold">مسند إلى</label>
             <select name="assigned_to" class="w-full border rounded-lg px-3 py-2 mt-1">
@@ -33,6 +34,9 @@
                 @foreach($users as $u)<option value="{{ $u->id }}" @selected(old('assigned_to')==$u->id)>{{ $u->name }}</option>@endforeach
             </select>
         </div>
+        @else
+        <input type="hidden" name="assigned_to" value="{{ auth()->id() }}">
+        @endunless
         <button class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold">حفظ</button>
     </form>
 </div>

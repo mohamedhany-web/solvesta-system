@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Services\CommercialWorkflowService;
 use App\Services\PmoService;
 use App\Services\SalesActivityAdminAlertService;
+use App\Services\SalesRepScope;
 use Illuminate\Http\Request;
 
 class CommercialWorkflowController extends Controller
@@ -22,6 +23,8 @@ class CommercialWorkflowController extends Controller
 
     public function qualifySale(Request $request, Sale $sale, CommercialWorkflowService $workflow)
     {
+        SalesRepScope::authorizeSale(auth()->user(), $sale);
+
         $validated = $request->validate([
             'requirement_summary' => 'nullable|string|max:20000',
         ]);
@@ -36,6 +39,8 @@ class CommercialWorkflowController extends Controller
 
     public function disqualifySale(Request $request, Sale $sale, CommercialWorkflowService $workflow)
     {
+        SalesRepScope::authorizeSale(auth()->user(), $sale);
+
         $validated = $request->validate([
             'lost_reason' => 'required|string|max:500',
         ]);
@@ -50,6 +55,8 @@ class CommercialWorkflowController extends Controller
 
     public function createContract(Sale $sale, CommercialWorkflowService $workflow)
     {
+        SalesRepScope::authorizeSale(auth()->user(), $sale);
+
         $accepted = $sale->proposals()->where('status', 'accepted')->exists();
         if (! $accepted) {
             return back()->withErrors(['error' => 'يجب موافقة العميل على العرض (Proposal) قبل إنشاء العقد.']);
@@ -65,6 +72,8 @@ class CommercialWorkflowController extends Controller
 
     public function createDepositInvoice(Contract $contract, CommercialWorkflowService $workflow)
     {
+        SalesRepScope::authorizeContract(auth()->user(), $contract);
+
         $invoice = $workflow->createDepositInvoice($contract);
 
         return redirect()->route('invoices.show', $invoice)
@@ -73,6 +82,8 @@ class CommercialWorkflowController extends Controller
 
     public function kickoffProject(Contract $contract, CommercialWorkflowService $workflow, PmoService $pmo)
     {
+        SalesRepScope::authorizeContract(auth()->user(), $contract);
+
         $project = $workflow->createProjectAfterDepositPaid($contract);
 
         if (! $project) {

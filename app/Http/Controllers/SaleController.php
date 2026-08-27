@@ -11,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Services\SalesActivityAdminAlertService;
+use App\Services\SalesRepScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -22,11 +23,11 @@ class SaleController extends Controller
      */
     public function index()
     {
-        $salesQuery = Sale::with(['client', 'salesRep', 'employee']);
-
-        if (auth()->user()->hasRole('sales_rep') && ! auth()->user()->can('edit-employees')) {
-            $salesQuery->where('assigned_to', auth()->id());
-        }
+        $user = auth()->user();
+        $salesQuery = SalesRepScope::scopeSales(
+            Sale::with(['client', 'salesRep', 'employee']),
+            $user
+        );
 
         $sales = $salesQuery
             ->when(request('search'), function ($query) {
@@ -43,7 +44,7 @@ class SaleController extends Controller
             ->when(request('client_id'), function ($query) {
                 $query->where('client_id', request('client_id'));
             })
-            ->when(request('assigned_to'), function ($query) {
+            ->when(request('assigned_to') && ! SalesRepScope::isRestricted($user), function ($query) {
                 $query->where('assigned_to', request('assigned_to'));
             })
             ->orderBy('created_at', 'desc')
@@ -53,8 +54,10 @@ class SaleController extends Controller
         $saleIds = $sales->pluck('id');
         $invoices = Invoice::whereIn('sale_id', $saleIds)->pluck('id', 'sale_id');
 
-        $clients = Client::where('status', 'active')->get();
-        $users = User::whereHas('employee')->get();
+        $clients = SalesRepScope::scopeClients(Client::where('status', 'active'), $user)->get();
+        $users = SalesRepScope::isRestricted($user)
+            ? collect()
+            : User::whereHas('employee')->get();
         $stages = ['lead', 'prospect', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
 
         return view('sales.index', compact('sales', 'clients', 'users', 'stages', 'invoices'));
@@ -65,8 +68,11 @@ class SaleController extends Controller
      */
     public function create()
     {
-        $clients = Client::where('status', 'active')->get();
-        $users = User::whereHas('employee')->get();
+        $user = auth()->user();
+        $clients = SalesRepScope::scopeClients(Client::where('status', 'active'), $user)->get();
+        $users = SalesRepScope::isRestricted($user)
+            ? collect()
+            : User::whereHas('employee')->get();
         $projects = Project::where('status', 'active')->get();
         $stages = ['lead', 'prospect', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
         $leadSources = ['website', 'referral', 'cold_call', 'email', 'social_media', 'advertisement', 'event', 'other'];
@@ -102,9 +108,15 @@ class SaleController extends Controller
                 ->withInput();
         }
 
+        SalesRepScope::assertClientIdOwned(auth()->user(), (int) $request->client_id);
+
         DB::beginTransaction();
         try {
-            $sale = Sale::create($request->all());
+            $data = $request->all();
+            if (SalesRepScope::isRestricted(auth()->user())) {
+                $data['assigned_to'] = auth()->id();
+            }
+            $sale = Sale::create($data);
 
             // If sale is closed won, create accounting entries
             if ($request->stage === 'closed_won') {
@@ -130,6 +142,8 @@ class SaleController extends Controller
      */
     public function show(Sale $sale)
     {
+        SalesRepScope::authorizeSale(auth()->user(), $sale);
+
         $sale->load(['client', 'salesRep', 'lead', 'contracts', 'costEstimations', 'proposals']);
         
         // التحقق من وجود فاتورة مسبقة للبيع
@@ -143,8 +157,13 @@ class SaleController extends Controller
      */
     public function edit(Sale $sale)
     {
-        $clients = Client::where('status', 'active')->get();
-        $users = User::whereHas('employee')->get();
+        SalesRepScope::authorizeSale(auth()->user(), $sale);
+
+        $user = auth()->user();
+        $clients = SalesRepScope::scopeClients(Client::where('status', 'active'), $user)->get();
+        $users = SalesRepScope::isRestricted($user)
+            ? collect()
+            : User::whereHas('employee')->get();
         $projects = Project::where('status', 'active')->get();
         $stages = ['lead', 'prospect', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
         $leadSources = ['website', 'referral', 'cold_call', 'email', 'social_media', 'advertisement', 'event', 'other'];
@@ -157,18 +176,23 @@ class SaleController extends Controller
      */
     public function update(Request $request, Sale $sale)
     {
+        SalesRepScope::authorizeSale(auth()->user(), $sale);
+
         $validator = Validator::make($request->all(), [
-            'deal_name' => 'required|string|max:255',
             'product_service' => 'required|string|max:255',
             'client_id' => 'required|exists:clients,id',
-            'sales_rep_id' => 'required|exists:employees,id',
-            'amount' => 'required|numeric|min:0',
-            'currency' => 'required|string|max:3',
-            'status' => 'required|in:lead,qualified,proposal,sold,lost',
-            'probability' => 'required|numeric|min:0|max:100',
-            'expected_close_date' => 'required|date',
+            'assigned_to' => 'required|exists:users,id',
+            'estimated_value' => 'required|numeric|min:0',
+            'actual_value' => 'nullable|numeric|min:0',
+            'stage' => 'required|in:lead,prospect,proposal,negotiation,closed_won,closed_lost',
+            'probability_percentage' => 'required|numeric|min:0|max:100',
+            'expected_close_date' => 'nullable|date',
             'actual_close_date' => 'nullable|date',
+            'lead_source' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
+            'competitors' => 'nullable|array',
+            'decision_makers' => 'nullable|array',
+            'project_id' => 'nullable|exists:projects,id',
         ]);
 
         if ($validator->fails()) {
@@ -177,7 +201,14 @@ class SaleController extends Controller
                 ->withInput();
         }
 
-        $sale->update($request->all());
+        SalesRepScope::assertClientIdOwned(auth()->user(), (int) $request->client_id);
+
+        $data = $validator->validated();
+        if (SalesRepScope::isRestricted(auth()->user())) {
+            $data['assigned_to'] = auth()->id();
+        }
+
+        $sale->update($data);
 
         return redirect()->route('sales.index')
             ->with('success', 'تم تحديث عملية البيع بنجاح');
@@ -188,6 +219,8 @@ class SaleController extends Controller
      */
     public function destroy(Sale $sale)
     {
+        SalesRepScope::authorizeSale(auth()->user(), $sale);
+
         $sale->delete();
 
         return redirect()->route('sales.index')
@@ -248,6 +281,8 @@ class SaleController extends Controller
      */
     public function updateStage(Request $request, Sale $sale)
     {
+        SalesRepScope::authorizeSale(auth()->user(), $sale);
+
         $validator = Validator::make($request->all(), [
             'stage' => 'required|in:lead,prospect,proposal,negotiation,closed_won,closed_lost',
             'actual_value' => 'nullable|numeric|min:0',
@@ -290,6 +325,8 @@ class SaleController extends Controller
      */
     public function generateInvoice(Sale $sale)
     {
+        SalesRepScope::authorizeSale(auth()->user(), $sale);
+
         if ($sale->stage !== 'closed_won') {
             return redirect()->back()
                 ->withErrors(['error' => 'يمكن إنشاء فاتورة فقط للمبيعات المكتملة']);
@@ -340,19 +377,22 @@ class SaleController extends Controller
      */
     public function getStatistics()
     {
-        $totalSales = Sale::count();
-        $wonSales = Sale::where('stage', 'closed_won')->count();
-        $lostSales = Sale::where('stage', 'closed_lost')->count();
-        $activeSales = Sale::whereNotIn('stage', ['closed_won', 'closed_lost'])->count();
-        
-        $totalRevenue = Sale::where('stage', 'closed_won')->sum('actual_value') ?? 
-                       Sale::where('stage', 'closed_won')->sum('estimated_value');
-        
-        $monthlyRevenue = Sale::where('stage', 'closed_won')
+        $user = auth()->user();
+        $baseQuery = SalesRepScope::scopeSales(Sale::query(), $user);
+
+        $totalSales = (clone $baseQuery)->count();
+        $wonSales = (clone $baseQuery)->where('stage', 'closed_won')->count();
+        $lostSales = (clone $baseQuery)->where('stage', 'closed_lost')->count();
+        $activeSales = (clone $baseQuery)->whereNotIn('stage', ['closed_won', 'closed_lost'])->count();
+
+        $totalRevenue = (clone $baseQuery)->where('stage', 'closed_won')->sum('actual_value')
+            ?: (clone $baseQuery)->where('stage', 'closed_won')->sum('estimated_value');
+
+        $monthlyRevenue = (clone $baseQuery)->where('stage', 'closed_won')
             ->whereMonth('actual_close_date', now()->month)
             ->whereYear('actual_close_date', now()->year)
-            ->sum('actual_value') ?? 
-            Sale::where('stage', 'closed_won')
+            ->sum('actual_value')
+            ?: (clone $baseQuery)->where('stage', 'closed_won')
                 ->whereMonth('actual_close_date', now()->month)
                 ->whereYear('actual_close_date', now()->year)
                 ->sum('estimated_value');
@@ -364,7 +404,7 @@ class SaleController extends Controller
             'active_sales' => $activeSales,
             'total_revenue' => $totalRevenue,
             'monthly_revenue' => $monthlyRevenue,
-            'conversion_rate' => $totalSales > 0 ? round(($wonSales / $totalSales) * 100, 2) : 0
+            'conversion_rate' => $totalSales > 0 ? round(($wonSales / $totalSales) * 100, 2) : 0,
         ]);
     }
 }

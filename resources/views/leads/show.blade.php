@@ -52,9 +52,14 @@
                 @csrf
                 <h3 class="font-bold text-blue-900">تحويل إلى Sales</h3>
                 <p class="text-xs text-blue-800">ينشئ عميلاً وفرصة مبيعات تلقائياً.</p>
+                @unless(\App\Services\SalesRepScope::isRestricted(auth()->user()))
                 <select name="assigned_to" required class="w-full border rounded-lg px-3 py-2 text-sm">
                     @foreach($users as $u)<option value="{{ $u->id }}">{{ $u->name }}</option>@endforeach
                 </select>
+                @else
+                <input type="hidden" name="assigned_to" value="{{ auth()->id() }}">
+                <p class="text-xs text-gray-600">ستُسند الفرصة إليك تلقائياً.</p>
+                @endunless
                 <button class="w-full py-2.5 rounded-xl font-bold text-white" style="background: linear-gradient(135deg, {{ $themeColor }} 0%, {{ $themeColor }}dd 100%);">تحويل لـ Sales →</button>
             </form>
             @endcan

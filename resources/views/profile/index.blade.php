@@ -5,36 +5,24 @@
 @section('content')
 @php
     $themeColor = \App\Helpers\SettingsHelper::getThemeColor();
+    $homeRoute = \App\Services\SalesRepScope::isRestricted(auth()->user())
+        ? route('sales.dashboard')
+        : route('dashboard');
+    $roleLabel = $user->roles->first()
+        ? \App\Helpers\RoleHelper::getRoleName($user->roles->first()->name)
+        : 'مستخدم';
 @endphp
 
-<!-- Header Section -->
-<div class="rounded-2xl p-6 md:p-8 text-white mb-6 md:mb-8 shadow-xl relative overflow-hidden" style="background: linear-gradient(135deg, {{ $themeColor }} 0%, {{ $themeColor }}dd 100%); border: 2px solid {{ $themeColor }}30;">
-    <div class="absolute top-0 left-0 w-full h-full opacity-10">
-        <div class="absolute top-10 right-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-        <div class="absolute bottom-10 left-10 w-96 h-96 bg-white rounded-full blur-3xl opacity-50"></div>
-    </div>
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between relative z-10 gap-4">
-        <div class="flex items-center gap-3 md:gap-4 w-full md:w-auto">
-            <div class="p-3 md:p-4 bg-white/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex-shrink-0 shadow-lg">
-                <svg class="h-8 w-8 md:h-10 md:w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-            </div>
-            <div class="flex-1 min-w-0">
-                <h1 class="text-2xl md:text-3xl font-bold mb-1 md:mb-2 truncate font-tajawal">الملف الشخصي</h1>
-                <p class="text-white/90 text-sm md:text-lg font-tajawal">إدارة معلوماتك الشخصية وإعدادات الحساب</p>
-            </div>
-        </div>
-        <a href="{{ route('dashboard') }}" class="bg-white/20 backdrop-blur-sm text-white px-4 py-2 md:px-6 md:py-3 rounded-xl hover:bg-white/30 transition-all duration-200 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-1 w-full md:w-auto justify-center gap-2 font-tajawal">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            <span class="font-semibold text-sm md:text-base">العودة</span>
-        </a>
-    </div>
-</div>
+<div class="w-full max-w-full px-2 sm:px-0 font-tajawal">
+    @include('partials.erp-page-header', [
+        'title' => 'الملف الشخصي',
+        'subtitle' => $user->name.' · '.$roleLabel,
+        'icon' => 'users',
+    ])
 
-<div class="max-w-5xl mx-auto">
+    @if(session('success'))
+    <div class="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl font-tajawal">{{ session('success') }}</div>
+    @endif
 
     <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
@@ -311,7 +299,7 @@
                                 <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
-                                <p class="text-sm md:text-base text-gray-900 font-medium font-tajawal">{{ $user->roles->first()->name ?? 'لا يوجد دور' }}</p>
+                                <p class="text-sm md:text-base text-gray-900 font-medium font-tajawal">{{ $roleLabel }}</p>
                             </div>
                         </div>
                         <div>
@@ -331,7 +319,7 @@
         <!-- Action Buttons -->
         <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 md:p-6" style="border-color: {{ $themeColor }}30;">
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-4 border-t border-gray-200">
-                <a href="{{ route('dashboard') }}" class="px-6 py-3 text-sm md:text-base font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center gap-2 font-tajawal">
+                <a href="{{ $homeRoute }}" class="px-6 py-3 text-sm md:text-base font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center gap-2 font-tajawal">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -348,8 +336,6 @@
         </div>
     </form>
 </div>
-
-<!-- Delete Profile Picture Form -->
 <form id="deleteProfilePictureForm" action="{{ route('profile.delete-picture') }}" method="POST" class="hidden">
     @csrf
     @method('DELETE')

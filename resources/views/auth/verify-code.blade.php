@@ -188,7 +188,7 @@
             @endif
 
             <!-- Verification Form -->
-            <form method="POST" action="{{ route('verification.verify') }}" class="space-y-6">
+            <form method="POST" action="{{ route('verification.code.verify') }}" class="space-y-6">
                 @csrf
 
                 <!-- Code Input Field -->

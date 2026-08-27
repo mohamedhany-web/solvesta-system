@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\Lead;
 use App\Models\Project;
 use App\Models\Sale;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class CommercialWorkflowService
@@ -46,6 +47,9 @@ class CommercialWorkflowService
         }
 
         return DB::transaction(function () use ($lead, $assignedTo) {
+            $assignee = User::with('employee')->find($assignedTo);
+            $clientAssigneeId = $assignee?->employee?->id;
+
             $client = $lead->converted_client_id
                 ? Client::find($lead->converted_client_id)
                 : Client::create([
@@ -54,8 +58,13 @@ class CommercialWorkflowService
                     'phone' => $lead->phone,
                     'company_name' => $lead->company,
                     'status' => 'active',
+                    'assigned_to' => $clientAssigneeId,
                     'notes' => 'أُنشئ تلقائياً من '.$lead->reference_code,
                 ]);
+
+            if ($client && $clientAssigneeId && ! $client->assigned_to) {
+                $client->update(['assigned_to' => $clientAssigneeId]);
+            }
 
             $sale = Sale::create([
                 'lead_id' => $lead->id,

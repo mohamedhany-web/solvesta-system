@@ -23,7 +23,7 @@ class EnsureVerifiedCode
 
         // السماح بالوصول إلى صفحة التحقق من الكود وإعادة الإرسال
         $routeName = $request->route()->getName();
-        if (in_array($routeName, ['verification.show', 'verification.verify', 'verification.resend'])) {
+        if (in_array($routeName, ['verification.show', 'verification.code.verify', 'verification.resend'])) {
             return $next($request);
         }
 
