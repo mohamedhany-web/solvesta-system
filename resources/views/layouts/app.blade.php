@@ -107,9 +107,20 @@
         .sidebar-link {
             background: transparent;
             color: #94a3b8;
-            border-radius: 8px;
-            margin: 2px 0;
+            border-radius: 10px;
+            margin: 3px 0;
             transition: all 0.2s ease;
+        }
+
+        #sidebar .sidebar-link {
+            font-size: 15px;
+            padding-top: 0.875rem;
+            padding-bottom: 0.875rem;
+        }
+
+        #sidebar .sidebar-link svg {
+            width: 1.25rem;
+            height: 1.25rem;
         }
         
         .sidebar-link:hover {
@@ -125,52 +136,55 @@
         
         .sidebar-section-title {
             color: #64748b;
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin: 16px 0 8px 0;
+            margin: 18px 0 10px 0;
         }
 
         .sidebar-nav-group {
-            margin-top: 6px;
+            margin-top: 8px;
         }
 
         .sidebar-group-toggle {
-            color: #94a3b8;
+            color: #cbd5e1;
             background: transparent;
             border: none;
             cursor: pointer;
             text-align: right;
+            font-size: 15px;
+            font-weight: 600;
+            min-height: 48px;
         }
 
         .sidebar-group-toggle:hover {
-            color: #e2e8f0;
+            color: #f1f5f9;
             background: rgba(51, 65, 85, 0.45);
         }
 
         .sidebar-group-toggle-active {
-            color: #f1f5f9;
-            background: rgba(59, 130, 246, 0.12);
+            color: #ffffff;
+            background: rgba(59, 130, 246, 0.15);
         }
 
         .sidebar-group-body {
-            margin-right: 6px;
-            padding-right: 8px;
+            margin-right: 8px;
+            padding-right: 10px;
             border-right: 2px solid rgba(100, 116, 139, 0.35);
         }
 
         .sidebar-link-nested {
-            padding-right: 2.25rem !important;
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-            font-size: 13px;
+            padding-right: 2rem !important;
+            padding-top: 0.65rem !important;
+            padding-bottom: 0.65rem !important;
+            font-size: 14px;
         }
 
         .sidebar-link-nested .sidebar-link-icon {
-            width: 1rem;
-            height: 1rem;
-            margin-left: 0.625rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-left: 0.75rem;
         }
 
         /* بوابة العميل — عناصر المنيو بلون أبيض (السايدبار يبقى داكن) */
@@ -631,7 +645,7 @@
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
         
         <!-- Sidebar -->
-        <div class="w-72 sidebar-bg border-l border-slate-700 shadow-xl flex flex-col {{ $isClientGuard ? 'client-portal-sidebar' : '' }}" id="sidebar" style="background-color: {{ \App\Helpers\SettingsHelper::getSidebarColor() }}">
+        <div class="w-80 sidebar-bg border-l border-slate-700 shadow-xl flex flex-col {{ $isClientGuard ? 'client-portal-sidebar' : '' }}" id="sidebar" style="background-color: {{ \App\Helpers\SettingsHelper::getSidebarColor() }}">
             <!-- Logo -->
             <div class="p-6 border-b border-slate-700 bg-slate-800 shadow-sm">
                 <div class="flex items-center">
@@ -676,16 +690,16 @@
             </div>
 
             @if($webUser && $deptNav->departmentLabel())
-            <div class="px-4 py-3 border-b border-slate-700/80 bg-slate-800/60">
-                <p class="text-[10px] uppercase tracking-wider text-slate-400 mb-1">قسمك</p>
-                <p class="text-sm font-semibold text-white leading-snug">{{ $deptNav->departmentLabel() }}</p>
+            <div class="px-5 py-3.5 border-b border-slate-700/80 bg-slate-800/60">
+                <p class="text-xs uppercase tracking-wider text-slate-400 mb-1">قسمك</p>
+                <p class="text-base font-semibold text-white leading-snug">{{ $deptNav->departmentLabel() }}</p>
             </div>
             @endif
             
             <!-- Navigation - Scrollable -->
             <nav class="flex-1 overflow-y-auto sidebar-scroll sidebar-nav-bg">
-                <div class="p-3">
-                    <div class="space-y-1">
+                <div class="p-4">
+                    <div class="space-y-1.5">
                         <!-- Dashboard (web users only) -->
                         @if(!$isClientGuard)
                         @php
