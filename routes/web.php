@@ -692,9 +692,19 @@ Route::middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])->gr
     // Notifications routes
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
-    Route::post('notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
+    Route::post('notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    // البريد الرسمي (Hostinger inbox)
+    Route::get('official-mail', [\App\Http\Controllers\OfficialMailController::class, 'index'])->name('official-mail.index');
+    Route::post('official-mail/sync', [\App\Http\Controllers\OfficialMailController::class, 'sync'])->name('official-mail.sync');
+    Route::get('official-mail/compose', [\App\Http\Controllers\OfficialMailController::class, 'compose'])->name('official-mail.compose');
+    Route::post('official-mail/send', [\App\Http\Controllers\OfficialMailController::class, 'send'])->name('official-mail.send');
+    Route::get('official-mail/{mailMessage}', [\App\Http\Controllers\OfficialMailController::class, 'show'])->name('official-mail.show');
+    Route::post('official-mail/{mailMessage}/reply', [\App\Http\Controllers\OfficialMailController::class, 'reply'])->name('official-mail.reply');
+    Route::post('official-mail/{mailMessage}/mark-read', [\App\Http\Controllers\OfficialMailController::class, 'markRead'])->name('official-mail.mark-read');
 
     // Messages routes
     // Messages Routes

@@ -438,6 +438,52 @@
             </div>
         </div>
 
+        <!-- Official Mail Forward Settings -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8 mb-6">
+            <div class="flex items-center mb-6">
+                <div class="h-12 w-12 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center ml-4">
+                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-900">البريد الرسمي والتحويل</h3>
+                    <p class="text-xs sm:text-sm text-gray-600">استقبال بريد {{ env('MAIL_FROM_ADDRESS', 'info@s0lvesta.com') }} داخل النظام وتحويل نسخة لإيميل خارجي</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">تفعيل التحويل التلقائي</label>
+                    <div class="flex gap-4">
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="radio" name="mail_forward_enabled" value="1"
+                                   {{ \App\Models\SystemSetting::get('mail_forward_enabled', '0') === '1' ? 'checked' : '' }}>
+                            مفعّل
+                        </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="radio" name="mail_forward_enabled" value="0"
+                                   {{ \App\Models\SystemSetting::get('mail_forward_enabled', '0') !== '1' ? 'checked' : '' }}>
+                            متوقف
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">عند التفعيل: كل رسالة تصل للبريد الرسمي تُحوَّل أيضاً للإيميل أدناه</p>
+                </div>
+                <div>
+                    <label for="mail_forward_to" class="block text-sm font-medium text-gray-700 mb-2">إيميل التحويل الخارجي</label>
+                    <input type="email"
+                           id="mail_forward_to"
+                           name="mail_forward_to"
+                           value="{{ old('mail_forward_to', \App\Models\SystemSetting::get('mail_forward_to', 'loransmogay@gmail.com')) }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="loransmogay@gmail.com">
+                </div>
+            </div>
+            <div class="mt-4">
+                <a href="{{ route('official-mail.index') }}" class="inline-flex items-center text-sm font-semibold text-indigo-600 hover:underline">فتح صندوق البريد الرسمي ←</a>
+            </div>
+        </div>
+
         <!-- WhatsApp Settings -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8 mb-6">
             <div class="flex items-center mb-6">

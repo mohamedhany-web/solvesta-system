@@ -39,9 +39,12 @@ class LeadController extends Controller
 
         $statsQuery = SalesRepScope::scopeLeads(Lead::query(), $user);
         $stats = [
+            'total' => (clone $statsQuery)->count(),
             'new' => (clone $statsQuery)->where('status', 'new')->count(),
+            'contacted' => (clone $statsQuery)->where('status', 'contacted')->count(),
             'qualified' => (clone $statsQuery)->where('status', 'qualified')->count(),
             'converted' => (clone $statsQuery)->where('status', 'converted')->count(),
+            'lost' => (clone $statsQuery)->where('status', 'lost')->count(),
         ];
 
         return view('leads.index', compact('leads', 'stats'));

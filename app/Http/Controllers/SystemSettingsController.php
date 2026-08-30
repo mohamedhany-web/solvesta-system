@@ -140,6 +140,24 @@ class SystemSettingsController extends Controller
                 SystemSetting::set('whatsapp_auto_open', $request->whatsapp_auto_open, 'boolean', 'whatsapp', 'فتح الواتساب تلقائياً عند الإرسال', true);
             }
 
+            // تحويل البريد الرسمي
+            SystemSetting::set(
+                'mail_forward_enabled',
+                $request->input('mail_forward_enabled', '0'),
+                'boolean',
+                'mail',
+                'تفعيل تحويل البريد الرسمي لإيميل خارجي',
+                true
+            );
+            SystemSetting::set(
+                'mail_forward_to',
+                (string) $request->input('mail_forward_to', ''),
+                'string',
+                'mail',
+                'البريد الخارجي لاستقبال نسخة من الرسائل الواردة',
+                true
+            );
+
             // مسح الكاش بشكل شامل
             SystemSetting::clearCache();
             \Cache::flush();

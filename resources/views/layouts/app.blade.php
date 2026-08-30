@@ -818,30 +818,45 @@
                         
                         <!-- الرسائل والإشعارات -->
                         @if(!$isSalesRepHome && !$isClientGuard)
-                        @php ob_start(); @endphp
-                        <a href="{{ route('messages.index') }}"
-                           class="sidebar-link sidebar-link-nested flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('messages.*') ? 'active' : '' }}">
-                            <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            الرسائل
-                            <span id="unread-messages-count" class="mr-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
-                        </a>
-                        <a href="{{ route('notifications.index') }}"
-                           class="sidebar-link sidebar-link-nested flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
-                            <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                            الإشعارات
-                            <span id="unread-notifications-count" class="mr-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
-                        </a>
-                        @php $commNav = trim(ob_get_clean()); @endphp
-                        @include('layouts.partials.sidebar-nav-group', [
-                            'title' => 'التواصل',
-                            'icon' => 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
-                            'routes' => ['messages.*', 'notifications.*'],
-                            'content' => $commNav,
-                        ])
+                        <div class="mt-6">
+                            <h3 class="sidebar-section-title px-4">التواصل</h3>
+                            <a href="{{ route('messages.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('messages.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                الرسائل
+                                <span id="unread-messages-count" class="mr-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
+                            </a>
+                            <a href="{{ route('notifications.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                                الإشعارات
+                                <span id="unread-notifications-count" class="mr-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
+                            </a>
+                            @if(auth()->user()?->hasAnyRole(['super_admin', 'admin']) || auth()->user()?->can('view-settings'))
+                            <a href="{{ route('official-mail.index') }}"
+                               class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('official-mail.*') ? 'active' : '' }}">
+                                <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                البريد الرسمي
+                                @php
+                                    $officialUnread = 0;
+                                    try {
+                                        if (\Illuminate\Support\Facades\Schema::hasTable('mail_messages')) {
+                                            $officialUnread = \App\Models\MailMessage::where('direction','inbound')->where('is_read',false)->count();
+                                        }
+                                    } catch (\Throwable $e) {}
+                                @endphp
+                                @if($officialUnread > 0)
+                                <span class="mr-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">{{ $officialUnread }}</span>
+                                @endif
+                            </a>
+                            @endif
+                        </div>
                         @endif
                         
                         @if(!$isSalesRepHome)
@@ -1133,8 +1148,38 @@
             </header>
             
             <!-- Page Content -->
-            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-                <div class="{{ request()->routeIs('dashboard') || request()->routeIs('messages.*') || request()->routeIs('notifications.*') || request()->routeIs('users.*') || request()->routeIs('employees.*') || request()->routeIs('system-monitoring.*') || request()->routeIs('system-settings.*') || request()->routeIs('client-service-reports.*') || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*', 'client.system-features.*') || request()->routeIs('client-website-issues.*') || request()->routeIs('client-meeting-requests.*') || request()->routeIs('client-system-projects.*') || request()->routeIs('client-system-features.*') || request()->routeIs('projects.*') || request()->routeIs('job-postings.*') || request()->routeIs('admin.department-oversight.*') || request()->routeIs('admin.department-reports.*') || request()->routeIs('dev-workflow.*') || request()->routeIs('workspace.*') || request()->routeIs('daily-reports.*') || request()->routeIs('github.*') ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6' }}">
+            @php
+                $isOfficialMailShell = request()->routeIs('official-mail.index', 'official-mail.show');
+                $isFullWidthPage = request()->routeIs('dashboard')
+                    || request()->routeIs('messages.*')
+                    || request()->routeIs('notifications.*')
+                    || request()->routeIs('official-mail.*')
+                    || request()->routeIs('executive.*')
+                    || request()->routeIs('leads.*')
+                    || request()->routeIs('bugs.*')
+                    || request()->routeIs('kpi.*')
+                    || request()->routeIs('users.*')
+                    || request()->routeIs('employees.*')
+                    || request()->routeIs('system-monitoring.*')
+                    || request()->routeIs('system-settings.*')
+                    || request()->routeIs('client-service-reports.*')
+                    || request()->routeIs('client.dashboard', 'client.projects', 'client.invoices', 'client.service-reports', 'client.service-reports.download', 'client.notifications*', 'client.documents*', 'client.calendar', 'client.help', 'client.support.*', 'client.website-issues.*', 'client.meeting-requests.*', 'client.system-features.*')
+                    || request()->routeIs('client-website-issues.*')
+                    || request()->routeIs('client-meeting-requests.*')
+                    || request()->routeIs('client-system-projects.*')
+                    || request()->routeIs('client-system-features.*')
+                    || request()->routeIs('projects.*')
+                    || request()->routeIs('job-postings.*')
+                    || request()->routeIs('admin.department-oversight.*')
+                    || request()->routeIs('admin.department-reports.*')
+                    || request()->routeIs('dev-workflow.*')
+                    || request()->routeIs('workspace.*')
+                    || request()->routeIs('daily-reports.*')
+                    || request()->routeIs('github.*');
+            @endphp
+            <main class="flex-1 min-h-0 bg-gray-50 {{ $isOfficialMailShell ? 'overflow-hidden flex flex-col' : 'overflow-x-hidden overflow-y-auto' }}">
+                <div class="{{ $isOfficialMailShell ? 'w-full max-w-full px-0 py-0 min-h-0 flex-1 flex flex-col' : ($isFullWidthPage ? 'w-full max-w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 min-h-0' : 'container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6') }}">
+                    @unless($isOfficialMailShell)
                     @if(session('success'))
                         <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded-r-lg shadow-sm">
                             {{ session('success') }}
@@ -1145,6 +1190,7 @@
                             {{ session('error') }}
                         </div>
                     @endif
+                    @endunless
                     @yield('content')
                 </div>
             </main>
@@ -1801,11 +1847,15 @@
                                     const iconColor = notification.type === 'task' ? 'from-green-500 to-emerald-600' : 
                                                      notification.type === 'project' ? 'from-blue-500 to-indigo-600' : 
                                                      notification.type === 'message' ? 'from-purple-500 to-pink-600' : 
+                                                     notification.type === 'official_mail' ? 'from-sky-500 to-blue-600' :
                                                      'from-gray-500 to-gray-600';
                                     
                                     const isUnread = !notification.is_read;
+                                    const showUrl = `{{ url('/notifications') }}/${notification.id}`;
+                                    const safeTitle = String(notification.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                    const safeMessage = String(notification.message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                     notificationsHTML += `
-                                        <div class="p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${isUnread ? 'bg-blue-50 border-r-4 border-r-blue-500' : ''}">
+                                        <a href="${showUrl}" class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${isUnread ? 'bg-blue-50 border-r-4 border-r-blue-500' : ''}">
                                             <div class="flex items-start gap-3">
                                                 <div class="flex-shrink-0 relative">
                                                     <div class="h-10 w-10 bg-gradient-to-br ${iconColor} rounded-xl flex items-center justify-center shadow-lg">
@@ -1813,23 +1863,23 @@
                                                             '<svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>' :
                                                             notification.type === 'project' ?
                                                             '<svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>' :
-                                                            notification.type === 'message' ?
-                                                            '<svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>' :
+                                                            notification.type === 'message' || notification.type === 'official_mail' ?
+                                                            '<svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>' :
                                                             '<svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>'
                                                         }
                                                     </div>
                                                     ${isUnread ? '<div class="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></div>' : ''}
                                                 </div>
-                                                <div class="flex-1">
-                                                    <h4 class="text-sm font-bold text-gray-900 mb-1">${notification.title}</h4>
-                                                    <p class="text-xs text-gray-600 leading-relaxed">${notification.message}</p>
+                                                <div class="flex-1 min-w-0">
+                                                    <h4 class="text-sm font-bold text-gray-900 mb-1 truncate">${safeTitle}</h4>
+                                                    <p class="text-xs text-gray-600 leading-relaxed line-clamp-2">${safeMessage}</p>
                                                     <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
                                                         <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                                         ${formatTime(new Date(notification.created_at))}
                                                     </p>
                                                 </div>
                                             </div>
-                                        </div>`;
+                                        </a>`;
                                 });
                             } else {
                                 notificationsHTML += `
