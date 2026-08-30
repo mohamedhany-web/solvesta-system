@@ -597,7 +597,18 @@ class WebsiteController extends Controller
 
         $cvPath = null;
         if ($request->hasFile('cv') && $request->file('cv')->isValid()) {
-            $cvPath = $request->file('cv')->store('internships/cv', 'public');
+            try {
+                $cvPath = app(\App\Services\CvStorageService::class)->store($request->file('cv'), 'internships/cv');
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Internship CV upload failed', [
+                    'training_id' => $training->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return back()
+                    ->withInput()
+                    ->withErrors(['cv' => 'Failed to upload CV. Please try again in a moment.']);
+            }
         }
 
         InternshipApplication::create([
@@ -680,9 +691,12 @@ class WebsiteController extends Controller
             'linkedin_url' => 'nullable|string|max:500',
             'portfolio_url' => 'nullable|string|max:500',
             'message' => 'nullable|string|max:5000',
-            'cv' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'cv' => 'required|file|mimes:pdf,doc,docx|max:10240',
         ], [
             'email.unique' => 'An application with this email already exists for this position.',
+            'cv.required' => 'Please upload your CV (PDF or DOC).',
+            'cv.mimes' => 'CV must be a PDF, DOC, or DOCX file.',
+            'cv.max' => 'CV must not exceed 10MB.',
         ]);
 
         foreach (['linkedin_url', 'portfolio_url'] as $urlField) {
@@ -696,12 +710,20 @@ class WebsiteController extends Controller
             }
         }
 
-        $cvPath = null;
-        if ($request->hasFile('cv') && $request->file('cv')->isValid()) {
-            $cvPath = $request->file('cv')->store('careers/cv', 'public');
+        try {
+            $cvPath = app(\App\Services\CvStorageService::class)->store($request->file('cv'), 'careers/cv');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Career CV upload failed', [
+                'job_id' => $job->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['cv' => 'Failed to upload CV. Please try again in a moment.']);
         }
 
-        JobApplication::create([
+        $application = JobApplication::create([
             'job_posting_id' => $job->id,
             'full_name' => $data['full_name'],
             'email' => $data['email'],
@@ -711,7 +733,19 @@ class WebsiteController extends Controller
             'message' => $data['message'] ?? null,
             'cv_path' => $cvPath,
             'status' => 'pending',
+            'stage' => 'applied',
+            'parse_status' => 'pending',
         ]);
+
+        try {
+            app(\App\Services\Ats\AtsEvaluationService::class)->ensureCriteria($job);
+            \App\Jobs\ProcessJobApplicationAtsJob::dispatchSync($application->id);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('ATS processing deferred/failed after apply', [
+                'application_id' => $application->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         $cookieKey = $this->careerAppliedCookieKey($job->id);
         session([

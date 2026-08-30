@@ -50,7 +50,7 @@
                             </td>
                             <td class="px-6 py-4 text-sm">
                                 @if($a->cv_path)
-                                    <a class="text-blue-600 font-bold hover:underline" href="{{ asset('storage/' . $a->cv_path) }}" target="_blank" rel="noopener">تحميل</a>
+                                    <a class="text-blue-600 font-bold hover:underline" href="{{ $a->cvUrl() }}" target="_blank" rel="noopener">تحميل</a>
                                 @else
                                     <span class="text-gray-500">—</span>
                                 @endif

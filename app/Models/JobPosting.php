@@ -93,6 +93,11 @@ class JobPosting extends Model
         return $this->hasMany(JobApplication::class);
     }
 
+    public function atsCriteria(): HasMany
+    {
+        return $this->hasMany(JobAtsCriterion::class);
+    }
+
     public function scopePublished($query)
     {
         return $query->where('status', 'published');

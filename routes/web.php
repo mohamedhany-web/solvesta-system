@@ -746,6 +746,10 @@ Route::middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])->gr
     Route::put('job-postings/{jobPosting}', [JobPostingController::class, 'update'])->name('job-postings.update')->middleware('permission:edit-jobs');
     Route::delete('job-postings/{jobPosting}', [JobPostingController::class, 'destroy'])->name('job-postings.destroy')->middleware('permission:delete-jobs');
     Route::get('job-postings/{jobPosting}/applications', [JobPostingController::class, 'applications'])->name('job-postings.applications')->middleware('permission:view-jobs');
+    Route::get('job-postings/{jobPosting}/applications/{application}', [JobPostingController::class, 'showApplication'])->name('job-postings.applications.show')->middleware('permission:view-jobs');
+    Route::get('job-postings/{jobPosting}/applications/{application}/cv', [JobPostingController::class, 'streamCv'])->name('job-postings.applications.cv')->middleware('permission:view-jobs');
+    Route::post('job-postings/{jobPosting}/applications/{application}/reprocess-ats', [JobPostingController::class, 'reprocessAts'])->name('job-postings.applications.reprocess-ats')->middleware('permission:edit-jobs');
+    Route::post('job-postings/{jobPosting}/applications/{application}/ats-scores', [JobPostingController::class, 'saveAtsScores'])->name('job-postings.applications.ats-scores')->middleware('permission:edit-jobs');
     Route::patch('job-postings/applications/{application}/status', [JobPostingController::class, 'updateApplicationStatus'])->name('job-postings.applications.status')->middleware('permission:edit-jobs');
     
     // Meetings & Conferences

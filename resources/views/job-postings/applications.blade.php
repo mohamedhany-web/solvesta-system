@@ -1,35 +1,35 @@
 @extends('layouts.app')
 
-@section('page-title', 'طلبات التوظيف')
+@section('page-title', 'طلبات التوظيف — ATS')
 
 @section('content')
 @php $themeColor = \App\Helpers\SettingsHelper::getThemeColor(); @endphp
 <div class="w-full max-w-full font-tajawal">
-    @include('partials.erp-page-header', [
-        'title' => 'طلبات التوظيف',
-        'subtitle' => 'الوظيفة: ' . $jobPosting->title,
-        'icon' => 'briefcase',
-    ])
-
-    <div class="flex flex-wrap justify-end gap-3 mb-6">
-        <a href="{{ route('website.careers.show', $jobPosting->slug) }}" target="_blank" rel="noopener"
-           class="inline-flex items-center gap-2 border border-gray-300 bg-white px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm">
-            رابط التقديم
-        </a>
-        <a href="{{ route('job-postings.show', $jobPosting) }}"
-           class="inline-flex items-center gap-2 border border-gray-300 bg-white px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-            تفاصيل الوظيفة
-        </a>
+    <div class="mb-6">
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 sm:p-6 border border-blue-100">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">ATS — طلبات التوظيف</h1>
+                    <p class="text-sm text-gray-600 mt-1">{{ $jobPosting->title }} · متوسط التقييم {{ $appStats['avg_score'] ?: '—' }}%</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="{{ route('website.careers.show', $jobPosting->slug) }}" target="_blank" rel="noopener"
+                       class="px-4 py-2.5 rounded-xl border bg-white text-sm font-bold text-gray-700 hover:bg-gray-50">رابط التقديم</a>
+                    <a href="{{ route('job-postings.show', $jobPosting) }}"
+                       class="px-4 py-2.5 rounded-xl bg-gray-600 text-white text-sm font-bold hover:bg-gray-700">تفاصيل الوظيفة</a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         @foreach([
             ['الإجمالي', $appStats['total'], $themeColor],
             ['جديدة', $appStats['pending'], '#3b82f6'],
-            ['قيد المراجعة', $appStats['reviewing'], '#d97706'],
-            ['قائمة مختصرة', $appStats['shortlisted'], '#7c3aed'],
-            ['تم التوظيف', $appStats['hired'], '#059669'],
+            ['مراجعة', $appStats['reviewing'], '#d97706'],
+            ['مختصرة', $appStats['shortlisted'], '#7c3aed'],
+            ['توظيف', $appStats['hired'], '#059669'],
+            ['متوسط ATS', ($appStats['avg_score'] ?: 0).'%', '#0f766e'],
         ] as [$label, $val, $color])
         <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm text-center">
             <p class="text-[10px] text-gray-500">{{ $label }}</p>
@@ -38,104 +38,111 @@
         @endforeach
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-        <div class="px-6 py-4 border-b border-gray-100">
-            <h2 class="font-bold text-gray-900">قائمة المتقدمين <span class="text-gray-400 font-normal text-sm">({{ $applications->total() }})</span></h2>
+    <form method="GET" class="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 mb-6 shadow-sm">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3 items-end">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">بحث</label>
+                <input name="search" value="{{ request('search') }}" class="w-full border rounded-xl px-3 py-2.5 text-sm" placeholder="اسم / بريد / هاتف">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">الحالة</label>
+                <select name="status" class="w-full border rounded-xl px-3 py-2.5 text-sm">
+                    <option value="">الكل</option>
+                    @foreach(\App\Models\JobApplication::STATUSES as $st)
+                        <option value="{{ $st }}" @selected(request('status')===$st)>{{ (new \App\Models\JobApplication(['status'=>$st]))->statusLabelAr() }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">مرحلة ATS</label>
+                <select name="stage" class="w-full border rounded-xl px-3 py-2.5 text-sm">
+                    <option value="">الكل</option>
+                    @foreach(config('ats.stages') as $code => $label)
+                        <option value="{{ $code }}" @selected(request('stage')===$code)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">حد أدنى للدرجة</label>
+                <input type="number" min="0" max="100" name="min_score" value="{{ request('min_score') }}" class="w-full border rounded-xl px-3 py-2.5 text-sm" placeholder="مثلاً 70">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">مهارة</label>
+                <input name="skill" value="{{ request('skill') }}" class="w-full border rounded-xl px-3 py-2.5 text-sm" placeholder="laravel / react">
+            </div>
+            <div class="flex gap-2">
+                <button class="flex-1 px-4 py-2.5 rounded-xl text-white text-sm font-bold" style="background:{{ $themeColor }};">تصفية</button>
+                <a href="{{ route('job-postings.applications', $jobPosting) }}" class="px-4 py-2.5 rounded-xl border text-sm font-semibold">مسح</a>
+            </div>
         </div>
+    </form>
+
+    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm min-w-[900px]">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-right font-semibold text-gray-600">المتقدم</th>
-                        <th class="px-4 py-3 text-right font-semibold text-gray-600">التواصل</th>
-                        <th class="px-4 py-3 text-right font-semibold text-gray-600">السيرة</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">مهارات مستخرجة</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">ATS</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600">المرحلة</th>
                         <th class="px-4 py-3 text-right font-semibold text-gray-600">الحالة</th>
-                        <th class="px-4 py-3 text-right font-semibold text-gray-600">التاريخ</th>
                         <th class="px-4 py-3 text-right font-semibold text-gray-600"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($applications as $a)
-                    @php
-                        $appBadge = match($a->status) {
-                            'hired' => 'bg-emerald-100 text-emerald-800',
-                            'shortlisted' => 'bg-violet-100 text-violet-800',
-                            'reviewing' => 'bg-amber-100 text-amber-800',
-                            'rejected' => 'bg-red-100 text-red-800',
-                            default => 'bg-blue-100 text-blue-800',
-                        };
-                    @endphp
-                    <tr class="hover:bg-blue-50/40 transition-colors align-top">
-                        <td class="px-4 py-3">
-                            <div class="font-bold text-gray-900">{{ $a->full_name }}</div>
-                            @if($a->message)
-                                <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ Str::limit($a->message, 80) }}</p>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 text-xs text-gray-600">
-                            <div>{{ $a->email }}</div>
-                            <div class="text-gray-400">{{ $a->phone ?? '—' }}</div>
-                        </td>
-                        <td class="px-4 py-3">
-                            @if($a->cv_path)
-                                <a class="inline-flex items-center gap-1 text-xs font-bold hover:underline" style="color: {{ $themeColor }};"
-                                   href="{{ asset('storage/'.$a->cv_path) }}" target="_blank" rel="noopener">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                    تحميل CV
-                                </a>
-                            @else
-                                <span class="text-gray-400 text-xs">—</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3">
-                            <span class="text-xs font-bold px-2 py-1 rounded-full {{ $appBadge }}">{{ $a->statusLabelAr() }}</span>
-                        </td>
-                        <td class="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{{ $a->created_at->format('Y/m/d') }}</td>
-                        <td class="px-4 py-3">
-                            @can('edit-jobs')
-                            <form method="POST" action="{{ route('job-postings.applications.status', $a) }}" class="flex flex-wrap items-center gap-2">
-                                @csrf
-                                @method('PATCH')
-                                <select name="status" class="border border-gray-300 rounded-lg px-2 py-1.5 text-xs min-w-[7rem]">
-                                    @php
-                                        $statusLabels = [
-                                            'pending' => 'جديد',
-                                            'reviewing' => 'قيد المراجعة',
-                                            'shortlisted' => 'قائمة مختصرة',
-                                            'rejected' => 'مرفوض',
-                                            'hired' => 'تم التوظيف',
-                                        ];
-                                    @endphp
-                                    @foreach(\App\Models\JobApplication::STATUSES as $st)
-                                        <option value="{{ $st }}" @selected($a->status === $st)>{{ $statusLabels[$st] ?? $st }}</option>
-                                    @endforeach
-                                </select>
-                                <button type="submit" class="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-bold hover:bg-black">حفظ</button>
-                            </form>
-                            @endcan
-                        </td>
-                    </tr>
-                    @if($a->message)
-                    <tr class="bg-gray-50/80">
-                        <td colspan="6" class="px-4 py-3 text-xs text-gray-700 whitespace-pre-wrap border-b border-gray-100">
-                            <span class="font-bold text-gray-500">رسالة المتقدم:</span> {{ $a->message }}
-                        </td>
-                    </tr>
-                    @endif
+                        @php
+                            $scoreColor = match(true) {
+                                ($a->ats_score ?? 0) >= 85 => '#059669',
+                                ($a->ats_score ?? 0) >= 70 => '#2563eb',
+                                ($a->ats_score ?? 0) >= 55 => '#d97706',
+                                default => '#dc2626',
+                            };
+                        @endphp
+                        <tr class="hover:bg-blue-50/40">
+                            <td class="px-4 py-3">
+                                <a href="{{ route('job-postings.applications.show', [$jobPosting, $a]) }}" class="font-bold text-gray-900 hover:underline">{{ $a->full_name }}</a>
+                                <div class="text-xs text-gray-500 mt-0.5">{{ $a->email }}</div>
+                                @if($a->years_experience)
+                                    <div class="text-[11px] text-gray-400 mt-0.5">خبرة ≈ {{ $a->years_experience }} سنة</div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-1 max-w-xs">
+                                    @forelse(array_slice($a->extracted_skills ?? [], 0, 6) as $skill)
+                                        <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-semibold">{{ $skill }}</span>
+                                    @empty
+                                        <span class="text-xs text-gray-400">—</span>
+                                    @endforelse
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                @if($a->ats_score !== null)
+                                    <div class="font-bold text-lg" style="color:{{ $scoreColor }};">{{ $a->ats_score }}%</div>
+                                    <div class="text-[11px] text-gray-500">Grade {{ $a->ats_grade }}</div>
+                                @else
+                                    <span class="text-xs text-amber-600">قيد التحليل</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-xs font-semibold">{{ $a->stageLabelAr() }}</td>
+                            <td class="px-4 py-3">
+                                <span class="text-xs font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ $a->statusLabelAr() }}</span>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <a href="{{ route('job-postings.applications.show', [$jobPosting, $a]) }}"
+                                   class="inline-flex px-3 py-1.5 rounded-lg text-xs font-bold text-white"
+                                   style="background:{{ $themeColor }};">عرض ATS</a>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="6" class="px-4 py-14 text-center text-gray-500">
-                            <p class="font-bold text-lg mb-1">لا توجد طلبات بعد</p>
-                            <a href="{{ route('website.careers.show', $jobPosting->slug) }}" target="_blank" rel="noopener"
-                               class="font-semibold hover:underline" style="color: {{ $themeColor }};">رابط التقديم على الموقع</a>
-                        </td>
-                    </tr>
+                        <tr><td colspan="6" class="px-4 py-14 text-center text-gray-500">لا توجد طلبات مطابقة للفلاتر</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
         @if($applications->hasPages())
-        <div class="px-4 py-3 border-t border-gray-100">{{ $applications->links() }}</div>
+            <div class="px-4 py-3 border-t">{{ $applications->links() }}</div>
         @endif
     </div>
 </div>

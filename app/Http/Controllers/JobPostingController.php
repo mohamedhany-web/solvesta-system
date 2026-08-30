@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Department;
 use App\Models\JobApplication;
+use App\Models\JobAtsCriterion;
 use App\Models\JobPosting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -61,12 +62,14 @@ class JobPostingController extends Controller
             ? Str::slug($request->slug)
             : JobPosting::uniqueSlug($data['title']);
 
-        JobPosting::create([
+        $job = JobPosting::create([
             ...$data,
             'slug' => $slug,
             'created_by' => auth()->id(),
             'published_at' => $data['status'] === 'published' ? now() : null,
         ]);
+
+        app(\App\Services\Ats\AtsEvaluationService::class)->ensureCriteria($job);
 
         return redirect()->route('job-postings.index')
             ->with('success', 'تم إنشاء الوظيفة بنجاح');
@@ -133,13 +136,48 @@ class JobPostingController extends Controller
             ->with('success', 'تم حذف الوظيفة');
     }
 
-    public function applications(JobPosting $jobPosting)
+    public function applications(Request $request, JobPosting $jobPosting)
     {
         abort_unless(auth()->user()->can('view-jobs'), 403);
 
-        $applications = $jobPosting->applications()
-            ->latest()
-            ->paginate(20);
+        app(\App\Services\Ats\AtsEvaluationService::class)->ensureCriteria($jobPosting);
+
+        $query = $jobPosting->applications()->with(['atsScores.criterion']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('stage')) {
+            $query->where('stage', $request->stage);
+        }
+        if ($request->filled('min_score')) {
+            $query->where('ats_score', '>=', (int) $request->min_score);
+        }
+        if ($request->filled('skill')) {
+            $skill = strtolower(trim($request->skill));
+            $query->where(function ($q) use ($skill) {
+                $q->where('extracted_skills', 'like', '%'.$skill.'%')
+                    ->orWhere('cv_text', 'like', '%'.$skill.'%')
+                    ->orWhere('message', 'like', '%'.$skill.'%');
+            });
+        }
+        if ($request->filled('search')) {
+            $s = '%'.$request->search.'%';
+            $query->where(function ($q) use ($s) {
+                $q->where('full_name', 'like', $s)
+                    ->orWhere('email', 'like', $s)
+                    ->orWhere('phone', 'like', $s);
+            });
+        }
+
+        $sort = $request->get('sort', 'ats_score');
+        if ($sort === 'newest') {
+            $query->latest('id');
+        } else {
+            $query->orderByDesc('ats_score')->orderByDesc('id');
+        }
+
+        $applications = $query->paginate(20)->withQueryString();
 
         $appStats = [
             'total' => $jobPosting->applications()->count(),
@@ -147,9 +185,115 @@ class JobPostingController extends Controller
             'reviewing' => $jobPosting->applications()->where('status', 'reviewing')->count(),
             'shortlisted' => $jobPosting->applications()->where('status', 'shortlisted')->count(),
             'hired' => $jobPosting->applications()->where('status', 'hired')->count(),
+            'avg_score' => round((float) $jobPosting->applications()->whereNotNull('ats_score')->avg('ats_score'), 1),
         ];
 
         return view('job-postings.applications', compact('jobPosting', 'applications', 'appStats'));
+    }
+
+    public function showApplication(JobPosting $jobPosting, JobApplication $application)
+    {
+        abort_unless(auth()->user()->can('view-jobs'), 403);
+        abort_unless($application->job_posting_id === $jobPosting->id, 404);
+
+        app(\App\Services\Ats\AtsEvaluationService::class)->ensureCriteria($jobPosting);
+
+        $application->load(['atsScores.criterion', 'reviewer']);
+        $criteria = $jobPosting->atsCriteria()->where('is_active', true)->orderBy('sort_order')->get();
+
+        return view('job-postings.application-show', compact('jobPosting', 'application', 'criteria'));
+    }
+
+    public function streamCv(JobPosting $jobPosting, JobApplication $application)
+    {
+        abort_unless(auth()->user()->can('view-jobs'), 403);
+        abort_unless($application->job_posting_id === $jobPosting->id, 404);
+        abort_unless($application->cv_path, 404);
+
+        $disk = app(\App\Services\CvStorageService::class)->diskName();
+        $path = $application->cv_path;
+
+        if (! \Illuminate\Support\Facades\Storage::disk($disk)->exists($path)
+            && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            $disk = 'public';
+        }
+
+        $mime = match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
+            'pdf' => 'application/pdf',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            default => 'application/octet-stream',
+        };
+
+        $stream = \Illuminate\Support\Facades\Storage::disk($disk)->readStream($path);
+        abort_unless(is_resource($stream), 404);
+
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }, 200, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="'.basename($path).'"',
+            'Cache-Control' => 'private, max-age=60',
+        ]);
+    }
+
+    public function reprocessAts(JobPosting $jobPosting, JobApplication $application)
+    {
+        abort_unless(auth()->user()->can('edit-jobs'), 403);
+        abort_unless($application->job_posting_id === $jobPosting->id, 404);
+
+        \App\Jobs\ProcessJobApplicationAtsJob::dispatchSync($application->id);
+
+        return back()->with('success', 'تم إعادة تحليل السيرة وتحديث تقييم ATS');
+    }
+
+    public function saveAtsScores(Request $request, JobPosting $jobPosting, JobApplication $application)
+    {
+        abort_unless(auth()->user()->can('edit-jobs'), 403);
+        abort_unless($application->job_posting_id === $jobPosting->id, 404);
+
+        $data = $request->validate([
+            'scores' => 'required|array',
+            'scores.*.criterion_id' => 'required|exists:job_ats_criteria,id',
+            'scores.*.score' => 'required|integer|min:0|max:100',
+            'scores.*.notes' => 'nullable|string|max:1000',
+            'stage' => 'nullable|in:'.implode(',', JobApplication::STAGES),
+        ]);
+
+        foreach ($data['scores'] as $row) {
+            $criterion = JobAtsCriterion::query()
+                ->where('job_posting_id', $jobPosting->id)
+                ->where('id', $row['criterion_id'])
+                ->first();
+            if (! $criterion) {
+                continue;
+            }
+
+            \App\Models\ApplicationAtsScore::updateOrCreate(
+                [
+                    'job_application_id' => $application->id,
+                    'job_ats_criterion_id' => $criterion->id,
+                ],
+                [
+                    'score' => (int) $row['score'],
+                    'max_score' => 100,
+                    'notes' => $row['notes'] ?? null,
+                    'source' => $criterion->type === 'manual' ? 'reviewer' : 'system',
+                    'scored_by' => auth()->id(),
+                ]
+            );
+        }
+
+        if (! empty($data['stage'])) {
+            $application->update(['stage' => $data['stage']]);
+        }
+
+        app(\App\Services\Ats\AtsEvaluationService::class)->evaluate($application->fresh(['jobPosting', 'atsScores']));
+
+        return back()->with('success', 'تم حفظ تقييمات ATS');
     }
 
     public function updateApplicationStatus(Request $request, JobApplication $application)
@@ -160,8 +304,11 @@ class JobPostingController extends Controller
             'status' => 'required|in:'.implode(',', JobApplication::STATUSES),
         ]);
 
+        $stage = config('ats.status_to_stage.'.$request->status);
+
         $application->update([
             'status' => $request->status,
+            'stage' => $stage ?: $application->stage,
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
         ]);

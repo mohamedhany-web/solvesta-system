@@ -37,5 +37,10 @@ class InternshipApplication extends Model
     {
         return $this->belongsTo(User::class, 'reviewed_by');
     }
+
+    public function cvUrl(): ?string
+    {
+        return app(\App\Services\CvStorageService::class)->url($this->cv_path);
+    }
 }
 
