@@ -263,29 +263,29 @@ class JobPostingController extends Controller
             return back()->with('error', 'لا توجد سير ذاتية للتحليل.');
         }
 
-        $queue = (string) config('queue.default');
-        $useSync = in_array($queue, ['sync', 'null'], true) || request()->boolean('sync');
+        @set_time_limit(0);
+        @ini_set('max_execution_time', '0');
 
+        $ok = 0;
+        $failed = 0;
         foreach ($ids as $id) {
-            if ($useSync) {
-                // Avoid gateway timeouts on large batches when queue is sync.
-                if ($ids->count() > 8) {
-                    \App\Jobs\ProcessJobApplicationAtsJob::dispatch($id);
-                } else {
-                    @set_time_limit(300);
-                    \App\Jobs\ProcessJobApplicationAtsJob::dispatchSync($id);
-                }
-            } else {
-                \App\Jobs\ProcessJobApplicationAtsJob::dispatch($id);
+            try {
+                \App\Jobs\ProcessJobApplicationAtsJob::dispatchSync($id);
+                $ok++;
+            } catch (\Throwable $e) {
+                $failed++;
+                \Illuminate\Support\Facades\Log::error('Bulk ATS reprocess failed', [
+                    'application_id' => $id,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 
-        $count = $ids->count();
-        if ($useSync && $count <= 8) {
-            return back()->with('success', "تم تحليل {$count} سيرة ذاتية بنجاح (ATS + OCR).");
+        if ($failed === 0) {
+            return back()->with('success', "تم تحليل {$ok} سيرة ذاتية بنجاح (ATS + OCR).");
         }
 
-        return back()->with('success', "تم جدولة تحليل {$count} سيرة ذاتية. تأكد أن عامل الـ Queue شغال: php artisan queue:work --queue=default --tries=3");
+        return back()->with('success', "تم تحليل {$ok} سيرة، وفشل {$failed}. راجع السجلات للتفاصيل.");
     }
 
     public function saveAtsScores(Request $request, JobPosting $jobPosting, JobApplication $application)
