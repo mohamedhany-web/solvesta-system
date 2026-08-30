@@ -100,7 +100,22 @@ class AtsEvaluationService
             }
 
             $text = trim((string) ($parsed['text'] ?? ''));
-            $isScanned = $this->looksLikeScannedCv($text, strlen($binary));
+            $usedOcr = (bool) ($parsed['ocr'] ?? false);
+
+            $parseStatus = 'empty';
+            $parseError = $usedOcr
+                ? 'تعذر قراءة نص كافٍ عبر OCR من صورة السيرة. أعد المحاولة أو ارفع PDF أوضح.'
+                : 'No extractable text found in CV';
+
+            if (filled($text) && mb_strlen($text) >= 40) {
+                $parseStatus = 'parsed';
+                $parseError = $usedOcr
+                    ? 'تم استخراج البيانات عبر OCR من سيرة ممسوحة.'
+                    : null;
+            } elseif (filled($text)) {
+                $parseStatus = 'parsed';
+                $parseError = 'تم استخراج نص محدود من السيرة — راجع الحقول المستخرجة.';
+            }
 
             $application->update([
                 'cv_text' => Str::limit($text, 50000, ''),
@@ -109,15 +124,18 @@ class AtsEvaluationService
                     'phones' => $parsed['phones'],
                     'summary' => $parsed['summary'],
                     'links' => $parsed['links'],
-                    'scanned' => $isScanned,
+                    'universities' => $parsed['universities'] ?? [],
+                    'national_ids' => $parsed['national_ids'] ?? [],
+                    'candidate_name' => $parsed['candidate_name'] ?? null,
+                    'scanned' => $usedOcr,
+                    'ocr' => $usedOcr,
+                    'text_length' => mb_strlen($text),
                 ],
                 'extracted_skills' => $parsed['skills'],
                 'years_experience' => $parsed['years_experience'],
                 'education_level' => $parsed['education_level'],
-                'parse_status' => $isScanned ? 'scanned' : (filled($text) ? 'parsed' : 'empty'),
-                'parse_error' => $isScanned
-                    ? 'السيرة ممسوحة ضوئياً (صورة/CamScanner) بدون نص قابل للاستخراج. التقييم يعتمد على بيانات النموذج + المراجعة اليدوية.'
-                    : (filled($text) ? null : 'No extractable text found in CV'),
+                'parse_status' => $parseStatus,
+                'parse_error' => $parseError,
                 'parsed_at' => now(),
             ]);
         } catch (\Throwable $e) {

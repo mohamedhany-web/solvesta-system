@@ -248,6 +248,46 @@ class JobPostingController extends Controller
         return back()->with('success', 'تم إعادة تحليل السيرة وتحديث تقييم ATS');
     }
 
+    public function reprocessAllAts(JobPosting $jobPosting)
+    {
+        abort_unless(auth()->user()->can('edit-jobs'), 403);
+
+        app(\App\Services\Ats\AtsEvaluationService::class)->ensureCriteria($jobPosting);
+
+        $ids = $jobPosting->applications()
+            ->whereNotNull('cv_path')
+            ->where('cv_path', '!=', '')
+            ->pluck('id');
+
+        if ($ids->isEmpty()) {
+            return back()->with('error', 'لا توجد سير ذاتية للتحليل.');
+        }
+
+        $queue = (string) config('queue.default');
+        $useSync = in_array($queue, ['sync', 'null'], true) || request()->boolean('sync');
+
+        foreach ($ids as $id) {
+            if ($useSync) {
+                // Avoid gateway timeouts on large batches when queue is sync.
+                if ($ids->count() > 8) {
+                    \App\Jobs\ProcessJobApplicationAtsJob::dispatch($id);
+                } else {
+                    @set_time_limit(300);
+                    \App\Jobs\ProcessJobApplicationAtsJob::dispatchSync($id);
+                }
+            } else {
+                \App\Jobs\ProcessJobApplicationAtsJob::dispatch($id);
+            }
+        }
+
+        $count = $ids->count();
+        if ($useSync && $count <= 8) {
+            return back()->with('success', "تم تحليل {$count} سيرة ذاتية بنجاح (ATS + OCR).");
+        }
+
+        return back()->with('success', "تم جدولة تحليل {$count} سيرة ذاتية. تأكد أن عامل الـ Queue شغال: php artisan queue:work --queue=default --tries=3");
+    }
+
     public function saveAtsScores(Request $request, JobPosting $jobPosting, JobApplication $application)
     {
         abort_unless(auth()->user()->can('edit-jobs'), 403);

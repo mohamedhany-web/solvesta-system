@@ -127,4 +127,23 @@ return [
         'دبلوم' => 'دبلوم',
         'diploma' => 'دبلوم',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | OCR for scanned / CamScanner CVs
+    |--------------------------------------------------------------------------
+    */
+    'ocr' => [
+        'enabled' => env('ATS_OCR_ENABLED', true),
+        'max_pages' => (int) env('ATS_OCR_MAX_PAGES', 4),
+        'psm' => (int) env('ATS_OCR_PSM', 6),
+        'tesseract_path' => env('TESSERACT_PATH', ''),
+        'tessdata_dir' => env('TESSDATA_DIR', storage_path('app/tessdata')),
+        'tesseract_lang' => env('TESSERACT_LANG', 'eng+ara'),
+        // Fallback cloud OCR when Tesseract is unavailable or weak
+        'api_enabled' => env('OCR_SPACE_ENABLED', true),
+        'api_key' => env('OCR_SPACE_API_KEY', ''),
+        'api_language' => env('OCR_SPACE_LANG', 'eng'),
+        'api_timeout' => (int) env('OCR_SPACE_TIMEOUT', 90),
+    ],
 ];

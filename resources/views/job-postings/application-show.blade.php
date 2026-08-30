@@ -126,11 +126,11 @@
                 </div>
                 <div class="p-4 sm:p-5 space-y-4">
                     @if($application->parse_error)
-                        <div class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3">{{ $application->parse_error }}</div>
+                        <div class="rounded-xl {{ ($application->parsed_cv['ocr'] ?? false) && $application->parse_status === 'parsed' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-200 text-amber-800' }} border text-sm px-4 py-3">{{ $application->parse_error }}</div>
                     @endif
-                    @if(($application->parsed_cv['scanned'] ?? false) || $application->parse_status === 'scanned')
+                    @if(($application->parsed_cv['ocr'] ?? false) && $application->parse_status === 'parsed')
                         <div class="rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3">
-                            هذا الملف صورة ممسوحة. لاستخراج مهارات تلقائياً ارفع CV نصي (PDF قابل للنسخ) أو أكمل التقييم اليدوي من بطاقة الـ Scorecard.
+                            تم سحب البيانات من صورة السيرة عبر OCR. راجع المهارات والإيميل والهاتف قبل الاعتماد في قاعدة البيانات.
                         </div>
                     @endif
 
@@ -146,6 +146,10 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        <div class="rounded-xl bg-gray-50 border px-4 py-3 sm:col-span-2">
+                            <p class="text-xs text-gray-500">الاسم من المستند</p>
+                            <p class="font-semibold mt-1">{{ $application->parsed_cv['candidate_name'] ?? '—' }}</p>
+                        </div>
                         <div class="rounded-xl bg-gray-50 border px-4 py-3">
                             <p class="text-xs text-gray-500">إيميلات من الـ CV</p>
                             <p class="font-semibold mt-1">{{ implode(' · ', $application->parsed_cv['emails'] ?? []) ?: '—' }}</p>
@@ -154,7 +158,22 @@
                             <p class="text-xs text-gray-500">هواتف من الـ CV</p>
                             <p class="font-semibold mt-1">{{ implode(' · ', $application->parsed_cv['phones'] ?? []) ?: '—' }}</p>
                         </div>
+                        <div class="rounded-xl bg-gray-50 border px-4 py-3">
+                            <p class="text-xs text-gray-500">جامعات / كليات</p>
+                            <p class="font-semibold mt-1">{{ implode(' · ', $application->parsed_cv['universities'] ?? []) ?: '—' }}</p>
+                        </div>
+                        <div class="rounded-xl bg-gray-50 border px-4 py-3">
+                            <p class="text-xs text-gray-500">رقم قومي (إن وُجد)</p>
+                            <p class="font-semibold mt-1">{{ implode(' · ', $application->parsed_cv['national_ids'] ?? []) ?: '—' }}</p>
+                        </div>
                     </div>
+
+                    @if($application->cv_text)
+                        <div>
+                            <p class="text-xs font-bold text-gray-500 mb-2">النص المستخرج (قاعدة البيانات)</p>
+                            <pre class="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap max-h-64 overflow-auto rounded-xl bg-slate-50 border p-3">{{ \Illuminate\Support\Str::limit($application->cv_text, 4000) }}</pre>
+                        </div>
+                    @endif
 
                     @if(!empty($application->parsed_cv['links']))
                         <div>

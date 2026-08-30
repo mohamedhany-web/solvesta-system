@@ -17,6 +17,15 @@
                        class="px-4 py-2.5 rounded-xl border bg-white text-sm font-bold text-gray-700 hover:bg-gray-50">رابط التقديم</a>
                     <a href="{{ route('job-postings.show', $jobPosting) }}"
                        class="px-4 py-2.5 rounded-xl bg-gray-600 text-white text-sm font-bold hover:bg-gray-700">تفاصيل الوظيفة</a>
+                    @can('edit-jobs')
+                    <form method="POST" action="{{ route('job-postings.applications.reprocess-all-ats', $jobPosting) }}"
+                          onsubmit="return confirm('تحليل كل السير الذاتية لهذه الوظيفة؟ قد يستغرق وقتاً خاصة مع ملفات CamScanner.');">
+                        @csrf
+                        <button type="submit" class="px-4 py-2.5 rounded-xl text-white text-sm font-bold hover:opacity-90" style="background:{{ $themeColor }};">
+                            تحليل الكل (ATS + OCR)
+                        </button>
+                    </form>
+                    @endcan
                 </div>
             </div>
         </div>

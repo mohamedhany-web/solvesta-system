@@ -9,16 +9,49 @@ use Smalot\PdfParser\Parser as PdfParser;
 
 class CvTextExtractor
 {
+    public bool $usedOcr = false;
+
+    public function __construct(private ?CvOcrService $ocr = null) {}
+
     public function extractFromContents(string $binary, string $extension): string
     {
+        $this->usedOcr = false;
         $extension = Str::lower($extension);
 
-        return match ($extension) {
+        $text = match ($extension) {
             'pdf' => $this->fromPdf($binary),
             'docx' => $this->fromDocx($binary),
             'doc' => $this->fromDoc($binary),
             default => $this->fromPlain($binary),
         };
+
+        // Scanned / image PDFs: run OCR to populate ATS fields.
+        if ($extension === 'pdf' && $this->needsOcr($text, strlen($binary)) && config('ats.ocr.enabled', true)) {
+            $ocr = $this->ocr ?: app(CvOcrService::class);
+            $ocrText = $ocr->extractTextFromPdf($binary);
+            if (mb_strlen(trim($ocrText)) > mb_strlen(trim($text))) {
+                $this->usedOcr = true;
+                Log::info('OCR extracted CV text', ['chars' => mb_strlen($ocrText)]);
+
+                return $this->normalize($ocrText);
+            }
+        }
+
+        return $text;
+    }
+
+    private function needsOcr(string $text, int $bytes): bool
+    {
+        $clean = trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
+        if ($clean === '') {
+            return $bytes > 2000;
+        }
+
+        if (Str::contains(Str::lower($clean), ['camscanner', 'cam scanner', 'scanned by'])) {
+            return true;
+        }
+
+        return mb_strlen($clean) < 80 && $bytes > 15000;
     }
 
     public function extractFromDisk(string $disk, string $path): string
