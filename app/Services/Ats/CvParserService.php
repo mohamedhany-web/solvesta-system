@@ -20,14 +20,21 @@ class CvParserService
      *   links:array<int,string>
      * }
      */
-    public function parseFromDisk(string $disk, string $path): array
+    public function parseFromDisk(string $disk, string $path, array $extraSkills = []): array
     {
         $text = $this->extractor->extractFromDisk($disk, $path);
 
-        return $this->parseText($text);
+        return $this->parseText($text, $extraSkills);
     }
 
-    public function parseText(string $text): array
+    public function parseFromContents(string $binary, string $extension, array $extraSkills = []): array
+    {
+        $text = $this->extractor->extractFromContents($binary, $extension);
+
+        return $this->parseText($text, $extraSkills);
+    }
+
+    public function parseText(string $text, array $extraSkills = []): array
     {
         $lower = Str::lower($text);
 
@@ -35,7 +42,7 @@ class CvParserService
             'text' => $text,
             'emails' => $this->extractEmails($text),
             'phones' => $this->extractPhones($text),
-            'skills' => $this->extractSkills($lower),
+            'skills' => $this->extractSkills($lower, $extraSkills),
             'years_experience' => $this->extractYears($lower),
             'education_level' => $this->extractEducation($lower),
             'summary' => $this->extractSummary($text),
@@ -67,12 +74,16 @@ class CvParserService
     }
 
     /** @return array<int, string> */
-    private function extractSkills(string $lower): array
+    private function extractSkills(string $lower, array $extraSkills = []): array
     {
+        $dictionary = array_merge(config('ats.skills_dictionary', []), $extraSkills);
         $found = [];
-        foreach (config('ats.skills_dictionary', []) as $skill) {
-            $skill = Str::lower((string) $skill);
-            $pattern = '/(?<![a-z0-9])'.preg_quote($skill, '/').'(?![a-z0-9])/i';
+        foreach ($dictionary as $skill) {
+            $skill = Str::lower(trim((string) $skill));
+            if ($skill === '' || mb_strlen($skill) < 2) {
+                continue;
+            }
+            $pattern = '/(?<![a-z0-9])'.preg_quote($skill, '/').'(?![a-z0-9])/iu';
             if (preg_match($pattern, $lower)) {
                 $found[] = $skill;
             }

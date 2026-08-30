@@ -9,10 +9,9 @@ use Smalot\PdfParser\Parser as PdfParser;
 
 class CvTextExtractor
 {
-    public function extractFromDisk(string $disk, string $path): string
+    public function extractFromContents(string $binary, string $extension): string
     {
-        $binary = Storage::disk($disk)->get($path);
-        $extension = Str::lower(pathinfo($path, PATHINFO_EXTENSION));
+        $extension = Str::lower($extension);
 
         return match ($extension) {
             'pdf' => $this->fromPdf($binary),
@@ -20,6 +19,18 @@ class CvTextExtractor
             'doc' => $this->fromDoc($binary),
             default => $this->fromPlain($binary),
         };
+    }
+
+    public function extractFromDisk(string $disk, string $path): string
+    {
+        // Prefer direct R2/public read via CvStorageService when possible.
+        try {
+            $binary = app(\App\Services\CvStorageService::class)->get($path);
+        } catch (\Throwable) {
+            $binary = Storage::disk($disk)->get($path);
+        }
+
+        return $this->extractFromContents($binary, pathinfo($path, PATHINFO_EXTENSION));
     }
 
     public function fromPdf(string $binary): string

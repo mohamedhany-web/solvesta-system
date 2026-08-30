@@ -210,12 +210,13 @@ class JobPostingController extends Controller
         abort_unless($application->job_posting_id === $jobPosting->id, 404);
         abort_unless($application->cv_path, 404);
 
-        $disk = app(\App\Services\CvStorageService::class)->diskName();
         $path = $application->cv_path;
+        $cvStorage = app(\App\Services\CvStorageService::class);
 
-        if (! \Illuminate\Support\Facades\Storage::disk($disk)->exists($path)
-            && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
-            $disk = 'public';
+        try {
+            $binary = $cvStorage->get($path);
+        } catch (\Throwable) {
+            abort(404);
         }
 
         $mime = match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
@@ -225,19 +226,16 @@ class JobPostingController extends Controller
             default => 'application/octet-stream',
         };
 
-        $stream = \Illuminate\Support\Facades\Storage::disk($disk)->readStream($path);
-        abort_unless(is_resource($stream), 404);
+        $tmp = tempnam(sys_get_temp_dir(), 'solvesta-cv-');
+        file_put_contents($tmp, $binary);
 
-        return response()->stream(function () use ($stream) {
-            fpassthru($stream);
-            if (is_resource($stream)) {
-                fclose($stream);
-            }
-        }, 200, [
+        return response()->file($tmp, [
             'Content-Type' => $mime,
             'Content-Disposition' => 'inline; filename="'.basename($path).'"',
             'Cache-Control' => 'private, max-age=60',
-        ]);
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Content-Security-Policy' => "frame-ancestors 'self'",
+        ])->deleteFileAfterSend(true);
     }
 
     public function reprocessAts(JobPosting $jobPosting, JobApplication $application)

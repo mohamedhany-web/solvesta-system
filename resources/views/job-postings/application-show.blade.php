@@ -13,7 +13,7 @@
         default => '#dc2626',
     };
     $cvViewUrl = $application->cv_path
-        ? route('job-postings.applications.cv', [$jobPosting, $application])
+        ? route('job-postings.applications.cv', [$jobPosting, $application], absolute: false)
         : null;
 @endphp
 
@@ -73,13 +73,46 @@
                         <a href="{{ $cvViewUrl }}" target="_blank" class="text-xs font-bold" style="color:{{ $themeColor }};">فتح / تحميل</a>
                     @endif
                 </div>
-                <div class="bg-slate-100">
+                <div class="bg-slate-100 relative" id="cv-viewer-wrap">
                     @if($cvViewUrl && $application->isPdfCv())
-                        <iframe src="{{ $cvViewUrl }}" class="w-full border-0" style="min-height:70vh;" title="CV Viewer"></iframe>
+                        <div id="cv-viewer-loading" class="absolute inset-0 flex items-center justify-center bg-slate-100 z-10">
+                            <p class="text-sm text-gray-500 font-semibold">جاري تحميل السيرة...</p>
+                        </div>
+                        <iframe id="cv-viewer-frame" class="w-full border-0 bg-white" style="min-height:70vh;" title="CV Viewer"></iframe>
+                        <div id="cv-viewer-error" class="hidden p-10 text-center">
+                            <p class="text-sm text-gray-600 mb-4">تعذّر عرض المعاينة داخل الصفحة. افتح الملف في تاب جديد.</p>
+                            <a href="{{ $cvViewUrl }}" target="_blank" rel="noopener" class="inline-flex px-5 py-2.5 rounded-xl text-white text-sm font-bold" style="background:{{ $themeColor }};">فتح / تحميل CV</a>
+                        </div>
+                        <script>
+                            (function () {
+                                const url = @json($cvViewUrl);
+                                const frame = document.getElementById('cv-viewer-frame');
+                                const loading = document.getElementById('cv-viewer-loading');
+                                const errorBox = document.getElementById('cv-viewer-error');
+                                const showError = () => {
+                                    if (loading) loading.classList.add('hidden');
+                                    if (frame) frame.classList.add('hidden');
+                                    if (errorBox) errorBox.classList.remove('hidden');
+                                };
+                                fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/pdf' } })
+                                    .then(function (res) {
+                                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                                        return res.blob();
+                                    })
+                                    .then(function (blob) {
+                                        if (!blob || blob.size < 100) throw new Error('empty');
+                                        const type = blob.type || 'application/pdf';
+                                        const pdfBlob = type.includes('pdf') ? blob : new Blob([blob], { type: 'application/pdf' });
+                                        frame.src = URL.createObjectURL(pdfBlob);
+                                        if (loading) loading.classList.add('hidden');
+                                    })
+                                    .catch(showError);
+                            })();
+                        </script>
                     @elseif($cvViewUrl)
                         <div class="p-10 text-center">
                             <p class="text-sm text-gray-600 mb-4">معاينة مباشرة متاحة لملفات PDF. هذا الملف DOC/DOCX — افتحه من الرابط.</p>
-                            <a href="{{ $cvViewUrl }}" target="_blank" class="inline-flex px-5 py-2.5 rounded-xl text-white text-sm font-bold" style="background:{{ $themeColor }};">فتح الملف</a>
+                            <a href="{{ $cvViewUrl }}" target="_blank" rel="noopener" class="inline-flex px-5 py-2.5 rounded-xl text-white text-sm font-bold" style="background:{{ $themeColor }};">فتح الملف</a>
                         </div>
                     @else
                         <div class="p-10 text-center text-gray-500">لا يوجد ملف CV</div>
@@ -94,6 +127,11 @@
                 <div class="p-4 sm:p-5 space-y-4">
                     @if($application->parse_error)
                         <div class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3">{{ $application->parse_error }}</div>
+                    @endif
+                    @if(($application->parsed_cv['scanned'] ?? false) || $application->parse_status === 'scanned')
+                        <div class="rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3">
+                            هذا الملف صورة ممسوحة. لاستخراج مهارات تلقائياً ارفع CV نصي (PDF قابل للنسخ) أو أكمل التقييم اليدوي من بطاقة الـ Scorecard.
+                        </div>
                     @endif
 
                     <div>
