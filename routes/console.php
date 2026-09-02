@@ -12,3 +12,4 @@ Schedule::command('client-portal:invoice-due-reminders')->dailyAt('08:00');
 Schedule::command('client-services:generate-invoices')->dailyAt('06:30');
 Schedule::command('solvesta:scan-sla')->hourly();
 Schedule::command('mail:sync')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('meetings:send-reminders')->everyFiveMinutes()->withoutOverlapping();

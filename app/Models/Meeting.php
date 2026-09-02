@@ -24,11 +24,17 @@ class Meeting extends Model
         'meeting_link',
         'organizer_id',
         'department_id',
+        'send_email_reminders',
+        'reminder_1d_sent_at',
+        'reminder_1h_sent_at',
     ];
 
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
+        'send_email_reminders' => 'boolean',
+        'reminder_1d_sent_at' => 'datetime',
+        'reminder_1h_sent_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -47,7 +53,31 @@ class Meeting extends Model
     {
         return $this->belongsTo(Department::class);
     }
+
+    /**
+     * Unique recipient emails: organizer + participants.
+     *
+     * @return array<int, string>
+     */
+    public function reminderRecipientEmails(): array
+    {
+        $this->loadMissing(['organizer', 'participants.user']);
+
+        $emails = [];
+        if ($this->organizer?->email) {
+            $emails[] = strtolower(trim($this->organizer->email));
+        }
+        foreach ($this->participants as $participant) {
+            $email = $participant->user?->email;
+            if ($email) {
+                $emails[] = strtolower(trim($email));
+            }
+        }
+
+        return array_values(array_unique(array_filter($emails, fn ($e) => filter_var($e, FILTER_VALIDATE_EMAIL))));
+    }
 }
+
 
 
 

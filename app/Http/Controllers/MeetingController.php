@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\MeetingParticipant;
 use App\Models\Department;
 use App\Models\Notification;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -23,10 +24,14 @@ class MeetingController extends Controller
         }
 
         $user = auth()->user();
+        $scope = request('scope', 'upcoming');
+
         $meetings = Meeting::with(['organizer', 'participants', 'department'])
             ->when(request('search'), function ($query) {
-                $query->where('title', 'like', '%' . request('search') . '%')
-                    ->orWhere('description', 'like', '%' . request('search') . '%');
+                $query->where(function ($q) {
+                    $q->where('title', 'like', '%' . request('search') . '%')
+                        ->orWhere('description', 'like', '%' . request('search') . '%');
+                });
             })
             ->when(request('status'), function ($query) {
                 $query->where('status', request('status'));
@@ -34,17 +39,49 @@ class MeetingController extends Controller
             ->when(request('type'), function ($query) {
                 $query->where('type', request('type'));
             })
+            ->when(request('mine') === '1', function ($query) use ($user) {
+                $query->where('organizer_id', $user->id);
+            })
+            ->when($scope === 'today', function ($query) {
+                $query->whereDate('start_time', today());
+            })
+            ->when($scope === 'upcoming', function ($query) {
+                $query->where('start_time', '>=', now())
+                    ->whereIn('status', ['scheduled', 'ongoing']);
+            })
             // فلترة حسب القسم للموظفين العاديين
             ->when($user->hasRole('employee') && $user->employee, function ($query) use ($user) {
                 $query->where('department_id', $user->employee->department_id);
             })
-            ->orderBy('start_time', 'desc')
-            ->paginate(15);
+            ->when($scope === 'upcoming' || $scope === 'today', function ($query) {
+                $query->orderBy('start_time', 'asc');
+            }, function ($query) {
+                $query->orderBy('start_time', 'desc');
+            })
+            ->paginate(15)
+            ->withQueryString();
 
         $statuses = ['scheduled', 'ongoing', 'completed', 'cancelled'];
         $types = ['internal', 'external', 'online', 'in-person', 'hybrid'];
 
-        return view('meetings.index', compact('meetings', 'statuses', 'types'));
+        $stats = [
+            'today' => Meeting::query()
+                ->when($user->hasRole('employee') && $user->employee, fn ($q) => $q->where('department_id', $user->employee->department_id))
+                ->whereDate('start_time', today())
+                ->count(),
+            'upcoming' => Meeting::query()
+                ->when($user->hasRole('employee') && $user->employee, fn ($q) => $q->where('department_id', $user->employee->department_id))
+                ->where('start_time', '>=', now())
+                ->whereIn('status', ['scheduled', 'ongoing'])
+                ->count(),
+            'mine' => Meeting::query()
+                ->where('organizer_id', $user->id)
+                ->where('start_time', '>=', now())
+                ->whereIn('status', ['scheduled', 'ongoing'])
+                ->count(),
+        ];
+
+        return view('meetings.index', compact('meetings', 'statuses', 'types', 'scope', 'stats'));
     }
 
     /**
@@ -83,6 +120,7 @@ class MeetingController extends Controller
             'participants' => 'nullable|array',
             'participants.*' => 'exists:users,id',
             'department_id' => 'required|exists:departments,id',
+            'send_email_reminders' => 'nullable|boolean',
         ], [
             'title.required' => 'يجب إدخال عنوان الاجتماع',
             'type.required' => 'يجب اختيار نوع الاجتماع',
@@ -111,6 +149,7 @@ class MeetingController extends Controller
                 'meeting_link' => $request->meeting_link,
                 'organizer_id' => auth()->id(),
                 'department_id' => $request->department_id,
+                'send_email_reminders' => $request->boolean('send_email_reminders', true),
             ]);
 
             // إضافة المشاركين إذا تم تحديدهم
@@ -145,6 +184,21 @@ class MeetingController extends Controller
                             'start_time' => $meeting->start_time->format('Y-m-d H:i'),
                         ],
                         'is_read' => false,
+                    ]);
+                }
+            }
+
+            // تأكيد فوري بالإيميل للمنظم + المشاركين عند تفعيل التذكير
+            if ($meeting->send_email_reminders) {
+                try {
+                    app(EmailService::class)->sendMeetingRemindersToRecipients(
+                        $meeting->fresh(['organizer', 'participants.user']),
+                        'تم جدولة اجتماع جديد'
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Meeting confirmation email failed', [
+                        'meeting_id' => $meeting->id,
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
@@ -231,6 +285,7 @@ class MeetingController extends Controller
             'participants' => 'nullable|array',
             'participants.*' => 'exists:users,id',
             'department_id' => 'required|exists:departments,id',
+            'send_email_reminders' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -238,6 +293,8 @@ class MeetingController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
+
+        $startChanged = $meeting->start_time?->format('Y-m-d H:i') !== \Carbon\Carbon::parse($request->start_time)->format('Y-m-d H:i');
 
         $meeting->update([
             'title' => $request->title,
@@ -249,7 +306,16 @@ class MeetingController extends Controller
             'location' => $request->location,
             'meeting_link' => $request->meeting_link,
             'department_id' => $request->department_id,
+            'send_email_reminders' => $request->boolean('send_email_reminders', true),
         ]);
+
+        // إذا تغيّر الموعد، أعد تفعيل نوافذ التذكير
+        if ($startChanged) {
+            $meeting->update([
+                'reminder_1d_sent_at' => null,
+                'reminder_1h_sent_at' => null,
+            ]);
+        }
 
         // تحديث المشاركين
         if ($request->has('participants')) {

@@ -225,6 +225,11 @@ class User extends Authenticatable
         return $this->hasMany(TrainingParticipant::class, 'user_id');
     }
 
+    public function meetingParticipants(): HasMany
+    {
+        return $this->hasMany(MeetingParticipant::class);
+    }
+
     public function gitIdentity(): HasOne
     {
         return $this->hasOne(UserGitIdentity::class);

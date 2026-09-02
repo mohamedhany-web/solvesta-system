@@ -3,16 +3,16 @@
 @section('page-title', 'إدارة الاجتماعات والمؤتمرات')
 
 @section('content')
-<div class="w-full">
-    <!-- Page Header -->
+@php $themeColor = \App\Helpers\SettingsHelper::getThemeColor(); @endphp
+<div class="w-full font-tajawal">
     <div class="mb-8">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">إدارة الاجتماعات والمؤتمرات</h1>
-                <p class="text-gray-600">إدارة الاجتماعات والمؤتمرات والمواعيد</p>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">جدولة الاجتماعات</h1>
+                <p class="text-gray-600">جدول مواعيدك مع تذكير تلقائي بالإيميل قبل 24 ساعة وقبل ساعة</p>
             </div>
             @can('create-meetings')
-            <a href="{{ route('meetings.create') }}" class="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all duration-200 flex items-center shadow-sm">
+            <a href="{{ route('meetings.create') }}" class="inline-flex items-center px-6 py-3 rounded-xl text-white font-bold shadow-sm" style="background:{{ $themeColor }};">
                 <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
@@ -28,92 +28,128 @@
         </div>
     @endif
 
-    <!-- Filters -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        <a href="{{ route('meetings.index', ['scope' => 'today'] + request()->except('scope', 'page')) }}"
+           class="rounded-2xl border p-4 {{ ($scope ?? '') === 'today' ? 'bg-teal-50 border-teal-300' : 'bg-white border-gray-200' }}">
+            <p class="text-xs text-gray-500">اليوم</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['today'] ?? 0 }}</p>
+        </a>
+        <a href="{{ route('meetings.index', ['scope' => 'upcoming'] + request()->except('scope', 'page')) }}"
+           class="rounded-2xl border p-4 {{ ($scope ?? 'upcoming') === 'upcoming' ? 'bg-teal-50 border-teal-300' : 'bg-white border-gray-200' }}">
+            <p class="text-xs text-gray-500">القادمة</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['upcoming'] ?? 0 }}</p>
+        </a>
+        <a href="{{ route('meetings.index', ['scope' => 'all', 'mine' => 1] + request()->except('scope', 'mine', 'page')) }}"
+           class="rounded-2xl border p-4 {{ request('mine') === '1' ? 'bg-teal-50 border-teal-300' : 'bg-white border-gray-200' }}">
+            <p class="text-xs text-gray-500">مواعيدي القادمة</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['mine'] ?? 0 }}</p>
+        </a>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-4">
+        @foreach([
+            'upcoming' => 'القادمة',
+            'today' => 'اليوم',
+            'all' => 'الكل',
+        ] as $key => $label)
+            <a href="{{ route('meetings.index', ['scope' => $key] + request()->except('scope', 'page')) }}"
+               class="px-4 py-2 rounded-full text-sm font-bold border {{ ($scope ?? 'upcoming') === $key ? 'text-white border-transparent' : 'bg-white text-gray-700 border-gray-200' }}"
+               @if(($scope ?? 'upcoming') === $key) style="background:{{ $themeColor }};" @endif>
+                {{ $label }}
+            </a>
+        @endforeach
+    </div>
+
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-        <form method="GET" action="{{ route('meetings.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="GET" action="{{ route('meetings.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <input type="hidden" name="scope" value="{{ $scope ?? 'upcoming' }}">
             <div>
                 <label for="search" class="block text-sm font-medium text-gray-700 mb-2">البحث</label>
-                <input type="text" name="search" id="search" value="{{ request('search') }}" 
-                       placeholder="البحث في العناوين والأوصاف..."
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                <input type="text" name="search" id="search" value="{{ request('search') }}"
+                       placeholder="العنوان أو الوصف..."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
             </div>
             <div>
                 <label for="status" class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
-                <select name="status" id="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                <select name="status" id="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                     <option value="">جميع الحالات</option>
-                    <option value="scheduled" {{ request('status') == 'scheduled' ? 'selected' : '' }}>مجدول</option>
-                    <option value="ongoing" {{ request('status') == 'ongoing' ? 'selected' : '' }}>قيد التنفيذ</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
-                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
+                    <option value="scheduled" @selected(request('status')==='scheduled')>مجدول</option>
+                    <option value="ongoing" @selected(request('status')==='ongoing')>قيد التنفيذ</option>
+                    <option value="completed" @selected(request('status')==='completed')>مكتمل</option>
+                    <option value="cancelled" @selected(request('status')==='cancelled')>ملغي</option>
                 </select>
             </div>
             <div>
                 <label for="type" class="block text-sm font-medium text-gray-700 mb-2">النوع</label>
-                <select name="type" id="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                <select name="type" id="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                     <option value="">جميع الأنواع</option>
-                    <option value="internal" {{ request('type') == 'internal' ? 'selected' : '' }}>داخلي</option>
-                    <option value="external" {{ request('type') == 'external' ? 'selected' : '' }}>خارجي</option>
-                    <option value="online" {{ request('type') == 'online' ? 'selected' : '' }}>أونلاين</option>
-                    <option value="in-person" {{ request('type') == 'in-person' ? 'selected' : '' }}>حضوري</option>
-                    <option value="hybrid" {{ request('type') == 'hybrid' ? 'selected' : '' }}>هجين</option>
+                    <option value="internal" @selected(request('type')==='internal')>داخلي</option>
+                    <option value="external" @selected(request('type')==='external')>خارجي</option>
+                    <option value="online" @selected(request('type')==='online')>أونلاين</option>
+                    <option value="in-person" @selected(request('type')==='in-person')>حضوري</option>
+                    <option value="hybrid" @selected(request('type')==='hybrid')>هجين</option>
                 </select>
             </div>
-            <div class="flex items-end">
-                <button type="submit" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                    تصفية
-                </button>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">المنظم</label>
+                <label class="flex items-center gap-2 h-[42px] px-3 border rounded-lg cursor-pointer">
+                    <input type="checkbox" name="mine" value="1" @checked(request('mine')==='1')>
+                    <span class="text-sm">مواعيدي فقط</span>
+                </label>
+            </div>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 text-white px-4 py-2 rounded-lg font-bold" style="background:{{ $themeColor }};">تصفية</button>
+                <a href="{{ route('meetings.index') }}" class="px-4 py-2 rounded-lg border text-sm font-semibold">مسح</a>
             </div>
         </form>
     </div>
 
-    <!-- Meetings List -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         @if($meetings->count() > 0)
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">العنوان</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النوع</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المنظم</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وقت البدء</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الموقع</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المشاركون</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العنوان</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت البدء</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المنظم</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموقع</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تذكير إيميل</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($meetings as $meeting)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $meeting->title }}</div>
+                        @php $isMine = $meeting->organizer_id === auth()->id(); @endphp
+                        <tr class="hover:bg-gray-50 {{ $isMine ? 'bg-teal-50/40' : '' }}">
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                    {{ $meeting->title }}
+                                    @if($isMine)
+                                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 font-bold">لي</span>
+                                    @endif
+                                </div>
                                 @if($meeting->description)
-                                <div class="text-sm text-gray-500 mt-1">{{ Str::limit($meeting->description, 50) }}</div>
+                                    <div class="text-sm text-gray-500 mt-1">{{ \Illuminate\Support\Str::limit($meeting->description, 50) }}</div>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                    @if($meeting->type == 'internal') داخلي
-                                    @elseif($meeting->type == 'external') خارجي
-                                    @elseif($meeting->type == 'online') أونلاين
-                                    @elseif($meeting->type == 'in-person') حضور
-                                    @elseif($meeting->type == 'hybrid') هجين
-                                    @else {{ $meeting->type }}
-                                    @endif
-                                </span>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                {{ $meeting->start_time?->format('Y-m-d H:i') }}
+                                <div class="text-xs text-gray-500 font-normal">حتى {{ $meeting->end_time?->format('H:i') }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $meeting->organizer->name ?? 'غير محدد' }}
+                                {{ $meeting->organizer->name ?? '—' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $meeting->start_time->format('Y-m-d H:i') }}
+                                {{ $meeting->location ?? ($meeting->meeting_link ? 'أونلاين' : '—') }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $meeting->location ?? ($meeting->meeting_link ? 'أونلاين' : 'غير محدد') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $meeting->participants->count() }} مشارك
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                @if($meeting->send_email_reminders)
+                                    <span class="px-2 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800">مفعّل</span>
+                                @else
+                                    <span class="px-2 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-600">متوقف</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full
@@ -154,20 +190,10 @@
             </div>
         @else
             <div class="p-12 text-center">
-                <div class="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد اجتماعات</h3>
-                <p class="text-gray-600 mb-6">ابدأ بإنشاء أول اجتماع</p>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد اجتماعات في هذا العرض</h3>
+                <p class="text-gray-600 mb-6">أنشئ اجتماعاً جديداً وسيصلك تذكير بالإيميل تلقائياً</p>
                 @can('create-meetings')
-                <a href="{{ route('meetings.create') }}" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors inline-flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    اجتماع جديد
-                </a>
+                <a href="{{ route('meetings.create') }}" class="inline-flex px-6 py-3 rounded-lg text-white font-bold" style="background:{{ $themeColor }};">اجتماع جديد</a>
                 @endcan
             </div>
         @endif

@@ -174,6 +174,18 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <div class="md:col-span-2">
+                    <label class="flex items-start gap-3 p-4 rounded-xl border border-teal-200 bg-teal-50/60 cursor-pointer">
+                        <input type="hidden" name="send_email_reminders" value="0">
+                        <input type="checkbox" name="send_email_reminders" value="1" class="mt-1"
+                               @checked(old('send_email_reminders', '1') == '1')>
+                        <span>
+                            <span class="block text-sm font-bold text-gray-900">إرسال تذكير بالإيميل</span>
+                            <span class="block text-xs text-gray-600 mt-1">تأكيد عند الإنشاء + تذكير قبل 24 ساعة وقبل ساعة للمنظم والمشاركين</span>
+                        </span>
+                    </label>
+                </div>
             </div>
 
             <!-- Form Actions -->

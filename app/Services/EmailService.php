@@ -214,4 +214,57 @@ class EmailService
             return false;
         }
     }
+
+    /**
+     * Send meeting reminder / confirmation email.
+     */
+    public function sendMeetingReminder(
+        \App\Models\Meeting $meeting,
+        string $toEmail,
+        string $whenLabel,
+        ?string $recipientName = null
+    ): bool {
+        $meeting->loadMissing(['organizer', 'participants.user']);
+
+        $body = view('emails.meeting-reminder', [
+            'meeting' => $meeting,
+            'whenLabel' => $whenLabel,
+            'recipientName' => $recipientName,
+        ])->render();
+
+        $subject = $whenLabel.' — '.$meeting->title;
+
+        return $this->sendEmail($toEmail, $subject, $body);
+    }
+
+    /**
+     * Send reminder emails to organizer + participants. Returns count sent.
+     */
+    public function sendMeetingRemindersToRecipients(\App\Models\Meeting $meeting, string $whenLabel): int
+    {
+        $sent = 0;
+        $meeting->loadMissing(['organizer', 'participants.user']);
+
+        $targets = [];
+        if ($meeting->organizer?->email) {
+            $targets[strtolower($meeting->organizer->email)] = $meeting->organizer->name;
+        }
+        foreach ($meeting->participants as $participant) {
+            $email = $participant->user?->email;
+            if ($email) {
+                $targets[strtolower($email)] = $participant->user->name ?? null;
+            }
+        }
+
+        foreach ($targets as $email => $name) {
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+            if ($this->sendMeetingReminder($meeting, $email, $whenLabel, $name)) {
+                $sent++;
+            }
+        }
+
+        return $sent;
+    }
 }
