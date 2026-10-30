@@ -77,8 +77,8 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-semibold text-purple-700 mb-1">إجمالي الإيرادات</p>
-                    <p class="text-3xl font-bold text-purple-900">{{ number_format($totalRevenue) }}</p>
-                    <p class="text-xs text-purple-600 mt-1">{{ number_format($monthlyRevenue) }} ج.م هذا الشهر</p>
+                    <p class="text-3xl font-bold text-purple-900">{{ number_format($totalRevenue, 2) }} <span class="text-base font-bold">ج.م</span></p>
+                    <p class="text-xs text-purple-600 mt-1">محصّل (يشمل الجزئي) · {{ number_format($monthlyRevenue, 2) }} ج.م هذا الشهر</p>
                 </div>
                 <div class="p-4 bg-purple-500 rounded-xl">
                     <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

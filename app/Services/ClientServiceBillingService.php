@@ -64,7 +64,7 @@ class ClientServiceBillingService
 
             FinancialInvoiceItem::create([
                 'invoice_id' => $invoice->id,
-                'item_name' => $service->title,
+                'item_name' => mb_substr((string) $service->title, 0, 255),
                 'description' => 'اشتراك / خدمة شهرية — '.$periodLabel,
                 'quantity' => 1,
                 'unit_price' => $amount,

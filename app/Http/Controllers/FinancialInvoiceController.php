@@ -14,14 +14,41 @@ class FinancialInvoiceController extends Controller
 {
     public function index()
     {
-        $totalInvoices = Invoice::count();
-        $paidInvoices = Invoice::where('status', 'paid')->count();
-        $pendingInvoices = Invoice::whereIn('status', ['sent', 'viewed', 'draft', 'partial'])->count();
+        $activeInvoices = Invoice::query()->where('status', '!=', 'cancelled');
+
+        // Purchase invoices are costs, not revenue.
+        $revenueInvoices = (clone $activeInvoices)->where(function ($query) {
+            $query->whereNull('invoice_type')
+                ->orWhere('invoice_type', '!=', 'purchase');
+        });
+
+        $totalInvoices = (clone $activeInvoices)->count();
+        $paidInvoices = (clone $activeInvoices)
+            ->where(function ($query) {
+                $query->where('status', 'paid')
+                    ->orWhere('payment_status', 'paid');
+            })
+            ->count();
+        $pendingInvoices = (clone $activeInvoices)
+            ->whereIn('status', ['sent', 'viewed', 'draft', 'partial', 'overdue'])
+            ->count();
         $overdueInvoices = Invoice::overdue()->count();
 
-        $totalRevenue = Invoice::where('status', 'paid')->sum('total_amount');
-        $monthlyRevenue = Invoice::currentMonth()->where('status', 'paid')->sum('total_amount');
-        $pendingAmount = Invoice::whereIn('status', ['sent', 'viewed', 'partial'])->sum('balance_due');
+        // Collected revenue must include partial payments (paid_amount), not only fully paid totals.
+        $totalRevenue = (float) (clone $revenueInvoices)->sum('paid_amount');
+        $monthlyRevenue = (float) (clone $revenueInvoices)
+            ->whereYear('invoice_date', now()->year)
+            ->whereMonth('invoice_date', now()->month)
+            ->sum('paid_amount');
+        $pendingAmount = (float) (clone $activeInvoices)
+            ->where(function ($query) {
+                $query->where('status', '!=', 'paid')
+                    ->where(function ($inner) {
+                        $inner->whereNull('payment_status')
+                            ->orWhere('payment_status', '!=', 'paid');
+                    });
+            })
+            ->sum('balance_due');
 
         $invoices = Invoice::with(['client', 'project', 'createdBy'])
             ->orderBy('created_at', 'desc')
@@ -379,10 +406,12 @@ class FinancialInvoiceController extends Controller
         foreach ($items as $item) {
             $qty = (float) ($item['quantity'] ?? 1);
             $price = (float) ($item['unit_price'] ?? 0);
-            $description = $item['description'];
+            $description = trim((string) ($item['description'] ?? ''));
+            // item_name is a short label; keep full text in description.
+            $itemName = mb_substr($description, 0, 255);
 
             $invoice->items()->create([
-                'item_name' => $description,
+                'item_name' => $itemName !== '' ? $itemName : 'بند',
                 'description' => $description,
                 'quantity' => $qty,
                 'unit_price' => $price,
