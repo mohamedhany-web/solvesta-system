@@ -110,6 +110,27 @@ class FinancialInvoice extends Model
             ->whereYear('created_at', now()->year);
     }
 
+    /** Monthly after-sales / client-service invoices. */
+    public function scopeMonthlyService($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('invoice_type', 'service')
+                ->orWhereNotNull('client_service_id');
+        });
+    }
+
+    /** General financial invoices (not monthly service bills). */
+    public function scopeGeneralFinancial($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('client_service_id')
+                ->where(function ($inner) {
+                    $inner->whereNull('invoice_type')
+                        ->orWhere('invoice_type', '!=', 'service');
+                });
+        });
+    }
+
     /**
      * Generate a unique invoice number for financial invoices.
      * Format: FINV-YYYYMM-0001

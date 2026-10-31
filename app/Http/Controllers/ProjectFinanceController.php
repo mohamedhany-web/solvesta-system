@@ -36,7 +36,7 @@ class ProjectFinanceController extends Controller
 
         $invoice = $finance->createDeliveryInvoice($project);
 
-        return redirect()->route('invoices.show', $invoice)
+        return redirect()->route('project-invoices.show', $invoice)
             ->with('success', 'تم إنشاء فاتورة التسليم (50%).');
     }
 }

@@ -14,7 +14,10 @@ class FinancialInvoiceController extends Controller
 {
     public function index()
     {
-        $activeInvoices = Invoice::query()->where('status', '!=', 'cancelled');
+        // General financial invoices only (exclude monthly after-sales / service invoices).
+        $activeInvoices = Invoice::query()
+            ->generalFinancial()
+            ->where('status', '!=', 'cancelled');
 
         // Purchase invoices are costs, not revenue.
         $revenueInvoices = (clone $activeInvoices)->where(function ($query) {
@@ -32,7 +35,7 @@ class FinancialInvoiceController extends Controller
         $pendingInvoices = (clone $activeInvoices)
             ->whereIn('status', ['sent', 'viewed', 'draft', 'partial', 'overdue'])
             ->count();
-        $overdueInvoices = Invoice::overdue()->count();
+        $overdueInvoices = Invoice::generalFinancial()->overdue()->count();
 
         // Collected revenue must include partial payments (paid_amount), not only fully paid totals.
         $totalRevenue = (float) (clone $revenueInvoices)->sum('paid_amount');
@@ -50,7 +53,8 @@ class FinancialInvoiceController extends Controller
             })
             ->sum('balance_due');
 
-        $invoices = Invoice::with(['client', 'project', 'createdBy'])
+        $invoices = Invoice::generalFinancial()
+            ->with(['client', 'project', 'createdBy'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -97,9 +101,15 @@ class FinancialInvoiceController extends Controller
 
         $totals = $this->calculateTotals($validated);
 
+        // Keep general financial invoices out of the monthly-service module.
+        $invoiceType = $validated['invoice_type'] ?? 'sales';
+        if ($invoiceType === 'service') {
+            $invoiceType = 'sales';
+        }
+
         $invoice = Invoice::create([
             'invoice_number' => Invoice::generateInvoiceNumber(),
-            'invoice_type' => $validated['invoice_type'] ?? 'sales',
+            'invoice_type' => $invoiceType,
             'client_id' => $validated['client_id'],
             'project_id' => $validated['project_id'] ?? null,
             'invoice_date' => $validated['invoice_date'],

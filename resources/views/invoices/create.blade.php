@@ -11,7 +11,7 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">إنشاء فاتورة جديدة</h1>
                 <p class="text-sm sm:text-base text-gray-600">إنشاء وإصدار فاتورة مالية جديدة</p>
             </div>
-            <a href="{{ route('financial-invoices.index') }}" class="bg-gray-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-gray-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
+            <a href="{{ request()->routeIs('project-invoices.*') ? route('project-invoices.index') : route('financial-invoices.index') }}" class="bg-gray-600 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-gray-700 transition-all duration-200 flex items-center justify-center shadow-sm text-sm sm:text-base">
                 <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -21,7 +21,12 @@
     </div>
 
     <!-- Invoice Form -->
-    <form id="invoiceForm" action="{{ route('invoices.store') }}" method="POST" class="space-y-6">
+    @php
+        $isProjectCreate = request()->routeIs('project-invoices.*');
+        $storeUrl = $isProjectCreate ? route('project-invoices.store') : route('financial-invoices.store');
+        $indexUrl = $isProjectCreate ? route('project-invoices.index') : route('financial-invoices.index');
+    @endphp
+    <form id="invoiceForm" action="{{ $storeUrl }}" method="POST" class="space-y-6">
         @csrf
         
         <!-- Basic Information -->
@@ -153,7 +158,7 @@
 
         <!-- Action Buttons -->
         <div class="flex items-center justify-end gap-4 pt-6">
-            <a href="{{ route('financial-invoices.index') }}" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200">
+            <a href="{{ $indexUrl }}" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200">
                 إلغاء
             </a>
             <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center">
@@ -261,20 +266,24 @@ document.getElementById('invoiceForm').addEventListener('submit', function(e) {
     
     const formData = new FormData(this);
     
-    fetch('{{ route("financial-invoices.store") }}', {
+    fetch(@json($storeUrl), {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
         },
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('تم إنشاء الفاتورة بنجاح', 'success');
+    .then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && (data.success || data.invoice_id || !data.message)) {
+            showNotification(data.message || 'تم إنشاء الفاتورة بنجاح', 'success');
             setTimeout(() => {
-                window.location.href = '{{ route("financial-invoices.index") }}';
-            }, 1000);
+                window.location.href = data.invoice_id
+                    ? (@json($isProjectCreate) ? `/project-invoices/${data.invoice_id}` : `/financial-invoices/${data.invoice_id}`)
+                    : @json($indexUrl);
+            }, 800);
         } else {
             showNotification(data.message || 'حدث خطأ أثناء إنشاء الفاتورة', 'error');
         }

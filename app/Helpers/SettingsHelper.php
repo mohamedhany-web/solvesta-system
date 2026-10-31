@@ -350,4 +350,41 @@ class SettingsHelper
     {
         return SystemSetting::get('invoice_financial_notes', '');
     }
+
+    public static function getInvoiceHeaderTitle(): string
+    {
+        return (string) SystemSetting::get('invoice_header_title', 'فاتورة');
+    }
+
+    public static function getInvoiceHeaderSubtitle(): string
+    {
+        return (string) SystemSetting::get('invoice_header_subtitle', '');
+    }
+
+    public static function getInvoiceAccentColor(): string
+    {
+        $color = (string) SystemSetting::get('invoice_accent_color', self::getThemeColor());
+
+        return $color !== '' ? $color : '#0f172a';
+    }
+
+    public static function getInvoiceShowLogo(): bool
+    {
+        return (bool) SystemSetting::get('invoice_show_logo', '1');
+    }
+
+    public static function getInvoiceShowTaxNumber(): bool
+    {
+        return (bool) SystemSetting::get('invoice_show_tax_number', '1');
+    }
+
+    public static function getInvoiceShowQr(): bool
+    {
+        return (bool) SystemSetting::get('invoice_show_qr', '0');
+    }
+
+    public static function getInvoiceFooterText(): string
+    {
+        return (string) SystemSetting::get('invoice_footer_text', '');
+    }
 }

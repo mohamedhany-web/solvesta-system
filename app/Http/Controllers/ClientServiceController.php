@@ -143,7 +143,7 @@ class ClientServiceController extends Controller
         }
 
         return redirect()
-            ->route('financial-invoices.show', $invoice)
+            ->route('invoices.show', $invoice)
             ->with('success', 'تم إصدار فاتورة الخدمة '.$invoice->invoice_number);
     }
 

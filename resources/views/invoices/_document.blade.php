@@ -2,6 +2,15 @@
     $companyName = \App\Helpers\SettingsHelper::getCompanyName();
     $logoPath = \App\Helpers\SettingsHelper::getLogoPath();
     $logoExists = $logoPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($logoPath);
+    $showLogo = \App\Helpers\SettingsHelper::getInvoiceShowLogo();
+    $accent = \App\Helpers\SettingsHelper::getInvoiceAccentColor();
+    $headerTitle = \App\Helpers\SettingsHelper::getInvoiceHeaderTitle() ?: 'فاتورة';
+    $headerSubtitle = \App\Helpers\SettingsHelper::getInvoiceHeaderSubtitle();
+    $footerText = \App\Helpers\SettingsHelper::getInvoiceFooterText();
+    $showTax = \App\Helpers\SettingsHelper::getInvoiceShowTaxNumber();
+    $showQr = \App\Helpers\SettingsHelper::getInvoiceShowQr();
+    $taxNumber = \App\Helpers\SettingsHelper::getTaxNumber();
+    $commercialReg = \App\Helpers\SettingsHelper::getCommercialRegistration();
 
     $issueDate = $invoice->invoice_date
         ? ($invoice->invoice_date instanceof \Carbon\Carbon ? $invoice->invoice_date : \Carbon\Carbon::parse($invoice->invoice_date))
@@ -40,6 +49,7 @@
     $bankName = \App\Helpers\SettingsHelper::getBankName();
     $accountNumber = \App\Helpers\SettingsHelper::getBankAccountNumber();
     $iban = \App\Helpers\SettingsHelper::getBankIban();
+    $accountHolder = \App\Helpers\SettingsHelper::getBankAccountHolder();
 
     $paymentsList = ($invoice->relationLoaded('payments') && $invoice->payments)
         ? $invoice->payments->where('status', 'completed')->sortBy('payment_date')
@@ -53,51 +63,42 @@
         'online' => 'دفع إلكتروني',
         default => $method ?: '—',
     };
+
+    $companyPhone = trim((string) \App\Helpers\SettingsHelper::getCompanyPhone());
+    $companyEmail = trim((string) \App\Helpers\SettingsHelper::getCompanyEmail());
+    $companyAddress = trim((string) \App\Helpers\SettingsHelper::getCompanyAddress());
+    $serviceTitle = optional($invoice->clientService)->title;
+    $isMonthly = ($invoice->invoice_type ?? null) === 'service' || ! empty($invoice->client_service_id);
 @endphp
 
-<article class="invoice-doc" id="invoice-print-root">
-    @php
-        $companyPhone = trim((string) \App\Helpers\SettingsHelper::getCompanyPhone());
-        $companyEmail = trim((string) \App\Helpers\SettingsHelper::getCompanyEmail());
-    @endphp
-    <header class="inv-head">
-        <div class="inv-head__edge inv-head__edge--right">
-            <p class="inv-head__label">من</p>
-            <p class="inv-head__company">{{ $companyName }}</p>
-            @if($companyPhone || $companyEmail)
-            <div class="inv-head__lines">
-                @if($companyPhone)<span>{{ $companyPhone }}</span>@endif
-                @if($companyEmail)<span>{{ $companyEmail }}</span>@endif
-            </div>
+<article class="invoice-doc" id="invoice-print-root" style="--inv-accent: {{ $accent }};">
+    <header class="inv-hero">
+        <div class="inv-hero__glow"></div>
+        <div class="inv-hero__brand">
+            @if($showLogo && $logoExists)
+                <img src="{{ asset('storage/' . $logoPath) }}" alt="{{ $companyName }}" class="inv-hero__logo">
+            @elseif($showLogo)
+                <div class="inv-hero__mark">{{ mb_substr($companyName ?: 'S', 0, 1) }}</div>
             @endif
-        </div>
-
-        <div class="inv-head__logo-wrap">
-            @if($logoExists)
-                <img src="{{ asset('storage/' . $logoPath) }}" alt="{{ $companyName }}" class="inv-head__logo">
-            @else
-                <div class="inv-head__logo inv-head__logo--placeholder">{{ mb_substr($companyName, 0, 1) }}</div>
-            @endif
-        </div>
-
-        <div class="inv-head__edge inv-head__edge--left">
-            <div class="inv-head__invoice-id">
-                <span class="inv-head__title">فاتورة</span>
-                <span class="inv-head__number">{{ $invoice->invoice_number }}</span>
+            <div>
+                <p class="inv-hero__company">{{ $companyName }}</p>
+                @if($headerSubtitle)<p class="inv-hero__sub">{{ $headerSubtitle }}</p>@endif
+                <div class="inv-hero__contact">
+                    @if($companyPhone)<span>{{ $companyPhone }}</span>@endif
+                    @if($companyEmail)<span>{{ $companyEmail }}</span>@endif
+                    @if($showTax && $taxNumber)<span>ضريبي: {{ $taxNumber }}</span>@endif
+                    @if($commercialReg)<span>س.ت: {{ $commercialReg }}</span>@endif
+                </div>
             </div>
-            <div class="inv-head__meta-box">
-                <div class="inv-head__meta-row">
-                    <span class="inv-head__meta-key">تاريخ الإصدار</span>
-                    <span class="inv-head__meta-val">{{ $issueDate ? $issueDate->format('Y/m/d') : '—' }}</span>
-                </div>
-                <div class="inv-head__meta-row">
-                    <span class="inv-head__meta-key">تاريخ الاستحقاق</span>
-                    <span class="inv-head__meta-val">{{ $dueDate ? $dueDate->format('Y/m/d') : '—' }}</span>
-                </div>
-                <div class="inv-head__meta-row">
-                    <span class="inv-head__meta-key">الحالة</span>
-                    <span class="inv-head__meta-val inv-head__meta-val--status">{{ $statusLabel }}</span>
-                </div>
+        </div>
+        <div class="inv-hero__meta">
+            <p class="inv-hero__title">{{ $headerTitle }}</p>
+            @if($isMonthly)<span class="inv-hero__badge">فاتورة شهرية</span>@endif
+            <p class="inv-hero__number">{{ $invoice->invoice_number }}</p>
+            <div class="inv-hero__dates">
+                <div><span>الإصدار</span><strong>{{ $issueDate ? $issueDate->format('Y/m/d') : '—' }}</strong></div>
+                <div><span>الاستحقاق</span><strong>{{ $dueDate ? $dueDate->format('Y/m/d') : '—' }}</strong></div>
+                <div><span>الحالة</span><strong>{{ $statusLabel }}</strong></div>
             </div>
         </div>
     </header>
@@ -106,7 +107,7 @@
         <div class="inv-party">
             <div class="inv-party__label">من</div>
             <strong>{{ $companyName }}</strong>
-            @if(\App\Helpers\SettingsHelper::getCompanyAddress())<div>{{ \App\Helpers\SettingsHelper::getCompanyAddress() }}</div>@endif
+            @if($companyAddress)<div>{{ $companyAddress }}</div>@endif
         </div>
         <div class="inv-party">
             <div class="inv-party__label">إلى</div>
@@ -115,10 +116,19 @@
             @if(optional($invoice->client)->phone)<div>{{ $invoice->client->phone }}</div>@endif
             @if(optional($invoice->client)->email)<div>{{ $invoice->client->email }}</div>@endif
         </div>
+        @if($showQr)
+        <div class="inv-party inv-party--qr">
+            <div class="inv-party__label">مرجع</div>
+            <div class="inv-qr">{{ $invoice->invoice_number }}</div>
+        </div>
+        @endif
     </section>
 
-    @if($invoice->project)
-    <div class="inv-project">المشروع: <strong>{{ $invoice->project->name }}</strong></div>
+    @if($serviceTitle || $invoice->project)
+    <div class="inv-project">
+        @if($serviceTitle)الخدمة: <strong>{{ $serviceTitle }}</strong>@endif
+        @if($invoice->project){{ $serviceTitle ? ' · ' : '' }}المشروع: <strong>{{ $invoice->project->name }}</strong>@endif
+    </div>
     @endif
 
     <section class="inv-main">
@@ -127,17 +137,23 @@
             <table class="inv-table inv-table--services">
                 <thead>
                     <tr>
-                        <th class="col-desc">وصف الخدمة</th>
+                        <th class="col-n">#</th>
+                        <th class="col-desc">الوصف</th>
+                        <th class="col-qty">الكمية</th>
+                        <th class="col-price">السعر</th>
                         <th class="col-amount">المبلغ</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($itemsArray as $item)
+                    @foreach($itemsArray as $idx => $item)
                     @php
                         $lineAmount = $item['amount'] ?? (($item['quantity'] ?? 1) * ($item['unit_price'] ?? 0));
                     @endphp
                     <tr>
+                        <td class="col-n">{{ $idx + 1 }}</td>
                         <td class="col-desc">{{ $item['description'] ?? '—' }}</td>
+                        <td class="col-qty">{{ number_format((float) ($item['quantity'] ?? 1), 2) }}</td>
+                        <td class="col-price">{{ number_format((float) ($item['unit_price'] ?? $lineAmount), 2) }}</td>
                         <td class="col-amount">{{ number_format($lineAmount, 2) }} ج.م</td>
                     </tr>
                     @endforeach
@@ -219,12 +235,15 @@
             <div>
                 @if($bankName || $accountNumber || $iban)
                 <strong>التحويل:</strong>
+                @if($accountHolder) {{ $accountHolder }} · @endif
                 @if($bankName) {{ $bankName }} @endif
                 @if($accountNumber) · حساب {{ $accountNumber }} @endif
                 @if($iban) · {{ $iban }} @endif
                 @endif
             </div>
         </div>
-        <div class="inv-foot__bar">شكراً لتعاملكم معنا — {{ $companyName }} — {{ date('Y') }}</div>
+        <div class="inv-foot__bar">
+            {{ $footerText !== '' ? $footerText : ('شكراً لتعاملكم معنا — '.$companyName.' — '.date('Y')) }}
+        </div>
     </footer>
 </article>

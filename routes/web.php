@@ -25,6 +25,7 @@ use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\MonthlyInvoiceController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\BugController;
 use App\Http\Controllers\ReportController;
@@ -664,18 +665,27 @@ Route::middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])->gr
     Route::put('expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update')->middleware('permission:edit-finance');
     Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy')->middleware('permission:delete-finance');
     
-    // Invoices
-    Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index')->middleware('permission:view-invoices');
-    Route::get('invoices/create', [InvoiceController::class, 'create'])->name('invoices.create')->middleware('permission:create-invoices');
-    Route::post('invoices', [InvoiceController::class, 'store'])->name('invoices.store')->middleware('permission:create-invoices');
-    Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show')->middleware('permission:view-invoices');
-    Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print')->middleware('permission:view-invoices');
-    Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments.store')->middleware('permission:edit-invoices');
-    Route::get('invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit')->middleware('permission:edit-invoices');
-    Route::put('invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update')->middleware('permission:edit-invoices');
-    Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy')->middleware('permission:delete-invoices');
-    Route::post('invoices/{invoice}/mark-as-sent', [InvoiceController::class, 'markAsSent'])->name('invoices.mark-as-sent')->middleware('permission:edit-invoices');
-    Route::post('invoices/{invoice}/mark-as-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-as-paid')->middleware('permission:edit-invoices');
+    // Monthly after-sales invoices (ClientService)
+    Route::get('invoices', [MonthlyInvoiceController::class, 'index'])->name('invoices.index')->middleware('permission:view-finance|view-invoices');
+    Route::get('invoices/create', [MonthlyInvoiceController::class, 'create'])->name('invoices.create')->middleware('permission:create-finance|create-invoices');
+    Route::get('invoices/billables', [MonthlyInvoiceController::class, 'billables'])->name('invoices.billables')->middleware('permission:create-finance|create-invoices');
+    Route::post('invoices', [MonthlyInvoiceController::class, 'store'])->name('invoices.store')->middleware('permission:create-finance|create-invoices');
+    Route::get('invoices/{invoice}', [MonthlyInvoiceController::class, 'show'])->name('invoices.show')->middleware('permission:view-finance|view-invoices');
+    Route::get('invoices/{invoice}/print', [MonthlyInvoiceController::class, 'print'])->name('invoices.print')->middleware('permission:view-finance|view-invoices');
+    Route::post('invoices/{invoice}/payments', [MonthlyInvoiceController::class, 'recordPayment'])->name('invoices.payments.store')->middleware('permission:edit-finance|edit-invoices');
+
+    // Project invoices (legacy project/contract billing)
+    Route::get('project-invoices', [InvoiceController::class, 'index'])->name('project-invoices.index')->middleware('permission:view-invoices');
+    Route::get('project-invoices/create', [InvoiceController::class, 'create'])->name('project-invoices.create')->middleware('permission:create-invoices');
+    Route::post('project-invoices', [InvoiceController::class, 'store'])->name('project-invoices.store')->middleware('permission:create-invoices');
+    Route::get('project-invoices/{invoice}', [InvoiceController::class, 'show'])->name('project-invoices.show')->middleware('permission:view-invoices');
+    Route::get('project-invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('project-invoices.print')->middleware('permission:view-invoices');
+    Route::post('project-invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('project-invoices.payments.store')->middleware('permission:edit-invoices');
+    Route::get('project-invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('project-invoices.edit')->middleware('permission:edit-invoices');
+    Route::put('project-invoices/{invoice}', [InvoiceController::class, 'update'])->name('project-invoices.update')->middleware('permission:edit-invoices');
+    Route::delete('project-invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('project-invoices.destroy')->middleware('permission:delete-invoices');
+    Route::post('project-invoices/{invoice}/mark-as-sent', [InvoiceController::class, 'markAsSent'])->name('project-invoices.mark-as-sent')->middleware('permission:edit-invoices');
+    Route::post('project-invoices/{invoice}/mark-as-paid', [InvoiceController::class, 'markAsPaid'])->name('project-invoices.mark-as-paid')->middleware('permission:edit-invoices');
     
     // Legal - Contracts
     Route::get('contracts', [ContractController::class, 'index'])->name('contracts.index')->middleware('permission:view-contracts');

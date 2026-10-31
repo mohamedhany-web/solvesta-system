@@ -1,11 +1,14 @@
 @php
     $balanceDue = (float) ($invoice->balance_due ?? max(0, ($invoice->total_amount ?? 0) - ($invoice->paid_amount ?? 0)));
+    $isMonthly = request()->routeIs('invoices.*');
     $isFinancial = request()->routeIs('financial-invoices.*');
-    $isProject = request()->routeIs('invoices.*');
-    $canPay = ($isFinancial || $isProject) && $balanceDue > 0;
-    $paymentUrl = $isFinancial
-        ? route('financial-invoices.payments.store', $invoice)
-        : ($isProject ? route('invoices.payments.store', $invoice) : null);
+    $isProject = request()->routeIs('project-invoices.*');
+    $canPay = ($isMonthly || $isFinancial || $isProject) && $balanceDue > 0;
+    $paymentUrl = $isMonthly
+        ? route('invoices.payments.store', $invoice)
+        : ($isFinancial
+            ? route('financial-invoices.payments.store', $invoice)
+            : ($isProject ? route('project-invoices.payments.store', $invoice) : null));
 @endphp
 
 @if($canPay && ($wallets ?? collect())->isNotEmpty())

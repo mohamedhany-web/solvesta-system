@@ -1,6 +1,18 @@
 @extends('layouts.app')
 
-@section('page-title', 'إدارة الفواتير')
+@php
+    $isFinancial = request()->routeIs('financial-invoices.*');
+    $isProject = request()->routeIs('project-invoices.*');
+    $pageTitle = $isFinancial ? 'الفواتير المالية' : ($isProject ? 'فواتير المشاريع' : 'الفواتير');
+    $pageSubtitle = $isFinancial
+        ? 'فواتير مالية عامة غير شهرية'
+        : ($isProject ? 'فواتير المشاريع والعقود والتسليم' : 'إدارة الفواتير');
+    $createUrl = $isFinancial ? route('financial-invoices.create') : ($isProject ? route('project-invoices.create') : route('invoices.create'));
+    $showRoute = fn ($invoice) => $isFinancial
+        ? route('financial-invoices.show', $invoice)
+        : ($isProject ? route('project-invoices.show', $invoice) : route('invoices.show', $invoice));
+@endphp
+@section('page-title', $pageTitle)
 
 @section('content')
 <div class="w-full">
@@ -8,11 +20,11 @@
     <div class="mb-8">
         <div class="flex items-center justify-between mb-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">إدارة الفواتير</h1>
-                <p class="text-gray-600">إدارة وتتبع الفواتير والمدفوعات المالية</p>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $pageTitle }}</h1>
+                <p class="text-gray-600">{{ $pageSubtitle }}</p>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.create') : route('invoices.create') }}" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center shadow-sm">
+                <a href="{{ $createUrl }}" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center shadow-sm">
                     <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
@@ -220,14 +232,14 @@
                                     $invBalance = (float) ($invoice->balance_due ?? $invoice->balance_amount ?? 0);
                                     $invCanPay = !in_array($invoice->status, ['paid', 'cancelled']) && $invBalance > 0;
                                 @endphp
-                                <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.show', $invoice) : route('invoices.show', $invoice) }}" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded-lg hover:bg-blue-100 transition-colors duration-200">عرض</a>
+                                <a href="{{ $showRoute($invoice) }}" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded-lg hover:bg-blue-100 transition-colors duration-200">عرض</a>
                                 @can('edit-finance')
-                                @if($invoice->status !== 'paid')
+                                @if($isFinancial && $invoice->status !== 'paid')
                                 <a href="{{ route('financial-invoices.edit', $invoice) }}" class="text-amber-700 hover:text-amber-900 bg-amber-50 px-3 py-1 rounded-lg hover:bg-amber-100 transition-colors duration-200">تعديل</a>
                                 @endif
                                 @endcan
                                 @if($invCanPay)
-                                <a href="{{ (request()->routeIs('financial-invoices.*') ? route('financial-invoices.show', $invoice) : route('invoices.show', $invoice)) }}?pay=1" class="text-green-600 hover:text-green-800 bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 font-semibold">دفعة</a>
+                                <a href="{{ $showRoute($invoice) }}?pay=1" class="text-green-600 hover:text-green-800 bg-green-50 px-3 py-1 rounded-lg hover:bg-green-100 font-semibold">دفعة</a>
                                 @endif
                                 @canany(['delete-finance', 'edit-finance'])
                                 @if($invoice->status !== 'paid')
@@ -248,7 +260,7 @@
                                 </div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2">لا توجد فواتير</h3>
                                 <p class="text-gray-600 mb-4">ابدأ بإنشاء فاتورة جديدة</p>
-                                <a href="{{ route('invoices.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium">
+                                <a href="{{ $createUrl }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium">
                                     إضافة فاتورة جديدة
                                 </a>
                             </div>
@@ -267,7 +279,7 @@
 </div>
 
 <script>
-var invoicesBasePath = '{{ request()->routeIs("financial-invoices.*") ? "financial-invoices" : "invoices" }}';
+var invoicesBasePath = '{{ $isFinancial ? "financial-invoices" : ($isProject ? "project-invoices" : "invoices") }}';
 function markAsPaid(invoiceId) {
     if (confirm('هل أنت متأكد من تحديد هذه الفاتورة كمدفوعة؟')) {
         fetch(`/${invoicesBasePath}/${invoiceId}/mark-as-paid`, {

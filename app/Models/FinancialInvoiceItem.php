@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class FinancialInvoiceItem extends Model
 {
@@ -14,6 +15,8 @@ class FinancialInvoiceItem extends Model
         'quantity',
         'unit_price',
         'amount',
+        'billable_type',
+        'billable_id',
     ];
 
     protected $casts = [
@@ -25,6 +28,11 @@ class FinancialInvoiceItem extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(FinancialInvoice::class, 'invoice_id');
+    }
+
+    public function billable(): MorphTo
+    {
+        return $this->morphTo();
     }
 }
 

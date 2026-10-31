@@ -336,7 +336,7 @@ class SaleController extends Controller
         $existingInvoice = Invoice::where('sale_id', $sale->id)->first();
         
         if ($existingInvoice) {
-            return redirect()->route('invoices.show', $existingInvoice)
+            return redirect()->route('project-invoices.show', $existingInvoice)
                 ->with('info', 'تم إنشاء فاتورة لهذا البيع مسبقاً');
         }
 
@@ -363,7 +363,7 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect()->route('invoices.show', $invoice)
+            return redirect()->route('project-invoices.show', $invoice)
                 ->with('success', 'تم إنشاء الفاتورة بنجاح');
         } catch (\Exception $e) {
             DB::rollback();

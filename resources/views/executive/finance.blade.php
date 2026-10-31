@@ -89,7 +89,7 @@
         <ul class="space-y-2 text-sm font-tajawal">
             @forelse($summary['recent_delivery_invoices'] as $inv)
             <li class="flex justify-between py-2 border-b border-gray-50">
-                <a href="{{ route('invoices.show', $inv) }}" class="text-blue-600 font-semibold">{{ $inv->invoice_number }}</a>
+                <a href="{{ route('project-invoices.show', $inv) }}" class="text-blue-600 font-semibold">{{ $inv->invoice_number }}</a>
                 <span>{{ $inv->client?->name }} — {{ $inv->project?->name }}</span>
                 <strong>{{ number_format($inv->total_amount) }} ({{ $inv->status }})</strong>
             </li>

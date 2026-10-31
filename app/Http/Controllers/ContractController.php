@@ -315,7 +315,7 @@ class ContractController extends Controller
             ->first();
 
         if ($existingInvoice) {
-            return redirect()->route('invoices.show', $existingInvoice)
+            return redirect()->route('project-invoices.show', $existingInvoice)
                 ->with('info', 'تم العثور على فاتورة موجودة لهذا العقد');
         }
 
@@ -354,7 +354,7 @@ class ContractController extends Controller
 
             DB::commit();
 
-            return redirect()->route('invoices.show', $invoice)
+            return redirect()->route('project-invoices.show', $invoice)
                 ->with('success', 'تم إنشاء الفاتورة بنجاح');
         } catch (\Exception $e) {
             DB::rollback();

@@ -12,22 +12,28 @@
                 <p class="text-sm text-gray-600">رقم {{ $invoice->invoice_number }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.index') : route('invoices.index') }}" class="bg-gray-600 text-white px-5 py-2.5 rounded-lg hover:bg-gray-700 text-sm font-semibold inline-flex items-center">
+                @php
+                    $listRoute = request()->routeIs('financial-invoices.*')
+                        ? route('financial-invoices.index')
+                        : (request()->routeIs('project-invoices.*') ? route('project-invoices.index') : route('invoices.index'));
+                    $printRoute = request()->routeIs('financial-invoices.*')
+                        ? route('financial-invoices.print', $invoice)
+                        : (request()->routeIs('project-invoices.*') ? route('project-invoices.print', $invoice) : route('invoices.print', $invoice));
+                    $canPay = !in_array($invoice->status, ['paid', 'cancelled']) && (($invoice->balance_due ?? $invoice->balance_amount ?? 0) > 0);
+                @endphp
+                <a href="{{ $listRoute }}" class="bg-gray-600 text-white px-5 py-2.5 rounded-lg hover:bg-gray-700 text-sm font-semibold inline-flex items-center">
                     <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                     العودة
                 </a>
-                @php
-                    $canPay = !in_array($invoice->status, ['paid', 'cancelled']) && ($invoice->balance_due ?? 0) > 0;
-                @endphp
                 @can('edit-finance')
-                @if($invoice->status !== 'paid')
+                @if(request()->routeIs('financial-invoices.*') && $invoice->status !== 'paid')
                 <a href="{{ route('financial-invoices.edit', $invoice) }}" class="bg-amber-500 text-white px-5 py-2.5 rounded-lg hover:bg-amber-600 text-sm font-semibold inline-flex items-center">
                     تعديل
                 </a>
                 @endif
                 @endcan
                 @canany(['delete-finance', 'edit-finance'])
-                @if($invoice->status !== 'paid')
+                @if(request()->routeIs('financial-invoices.*') && $invoice->status !== 'paid')
                 <form method="POST" action="{{ route('financial-invoices.destroy', $invoice) }}" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الفاتورة؟');">
                     @csrf
                     @method('DELETE')
@@ -35,12 +41,12 @@
                 </form>
                 @endif
                 @endcanany
-                @if($canPay && (request()->routeIs('financial-invoices.*') || request()->routeIs('invoices.*')))
+                @if($canPay && (request()->routeIs('financial-invoices.*') || request()->routeIs('invoices.*') || request()->routeIs('project-invoices.*')))
                 <button type="button" onclick="openPaymentModal()" class="bg-green-600 text-white px-5 py-2.5 rounded-lg hover:bg-green-700 text-sm font-semibold inline-flex items-center">
                     تسجيل دفعة
                 </button>
                 @endif
-                <a href="{{ request()->routeIs('financial-invoices.*') ? route('financial-invoices.print', $invoice) : route('invoices.print', $invoice) }}"
+                <a href="{{ $printRoute }}"
                    target="_blank"
                    class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 text-sm font-semibold inline-flex items-center">
                     <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>

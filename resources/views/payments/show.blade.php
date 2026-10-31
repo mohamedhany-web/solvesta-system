@@ -35,8 +35,10 @@
     $isIncoming = $payment->payment_type === 'invoice' || ($payment->client_id && ! in_array($payment->payment_type, ['salary', 'expense'], true));
     $linkedInvoice = $payment->invoice ?? $payment->projectInvoice;
     $invoiceRoute = $payment->invoice
-        ? route('financial-invoices.show', $payment->invoice)
-        : ($payment->projectInvoice ? route('invoices.show', $payment->projectInvoice) : null);
+        ? (($payment->invoice->invoice_type === 'service' || $payment->invoice->client_service_id)
+            ? route('invoices.show', $payment->invoice)
+            : route('financial-invoices.show', $payment->invoice))
+        : ($payment->projectInvoice ? route('project-invoices.show', $payment->projectInvoice) : null);
 @endphp
 
 <div class="w-full max-w-4xl mx-auto">

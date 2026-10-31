@@ -171,7 +171,7 @@ class InvoiceController extends Controller
                 
                 DB::commit();
                 
-                return redirect()->route('invoices.show', $invoice->id)
+                return redirect()->route('project-invoices.show', $invoice->id)
                     ->with('success', 'تم إنشاء الفاتورة بنجاح');
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -223,7 +223,7 @@ class InvoiceController extends Controller
 
         return view('invoices.print', [
             'invoice' => $invoice,
-            'backUrl' => route('invoices.show', $invoice),
+            'backUrl' => route('project-invoices.show', $invoice),
         ]);
     }
 
@@ -305,7 +305,7 @@ class InvoiceController extends Controller
             ]);
         }
         
-        return redirect()->route('invoices.show', $invoice->id)
+        return redirect()->route('project-invoices.show', $invoice->id)
             ->with('success', 'تم تحديث الفاتورة بنجاح');
     }
 
@@ -338,7 +338,7 @@ class InvoiceController extends Controller
                 ]);
             }
             
-            return redirect()->route('invoices.index')->with('success', 'تم حذف الفاتورة بنجاح');
+            return redirect()->route('project-invoices.index')->with('success', 'تم حذف الفاتورة بنجاح');
         } catch (\Exception $e) {
             \Log::error('Error deleting invoice: ' . $e->getMessage());
             

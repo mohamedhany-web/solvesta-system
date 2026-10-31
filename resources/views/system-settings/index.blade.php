@@ -434,6 +434,59 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Invoice branding -->
+                    <div class="border border-gray-200 rounded-lg p-4 sm:p-6 bg-slate-50">
+                        <h4 class="text-base font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg class="h-5 w-5 ml-2 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            تصميم الفاتورة (الهيدر والفوتر)
+                        </h4>
+                        @php
+                            $fin = $settings['financial'] ?? collect();
+                            $finVal = fn ($key, $default = '') => old('settings.'.$key, $fin->where('key', $key)->first()?->value ?? $default);
+                        @endphp
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">عنوان الهيدر</label>
+                                <input type="text" name="settings[invoice_header_title]" value="{{ $finVal('invoice_header_title', 'فاتورة') }}"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">عنوان فرعي</label>
+                                <input type="text" name="settings[invoice_header_subtitle]" value="{{ $finVal('invoice_header_subtitle', 'Solvesta Invoice') }}"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">لون التمييز</label>
+                                <input type="color" name="settings[invoice_accent_color]" value="{{ $finVal('invoice_accent_color', '#0f172a') }}"
+                                       class="w-full h-11 px-2 border border-gray-300 rounded-lg bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">نص الفوتر المخصص</label>
+                                <input type="text" name="settings[invoice_footer_text]" value="{{ $finVal('invoice_footer_text') }}"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent" placeholder="يظهر أسفل الفاتورة">
+                            </div>
+                            <div class="md:col-span-2 flex flex-wrap gap-6">
+                                <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                    <input type="hidden" name="settings[invoice_show_logo]" value="0">
+                                    <input type="checkbox" name="settings[invoice_show_logo]" value="1" class="rounded border-gray-300 text-yellow-600" @checked($finVal('invoice_show_logo', '1') == '1')>
+                                    إظهار الشعار
+                                </label>
+                                <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                    <input type="hidden" name="settings[invoice_show_tax_number]" value="0">
+                                    <input type="checkbox" name="settings[invoice_show_tax_number]" value="1" class="rounded border-gray-300 text-yellow-600" @checked($finVal('invoice_show_tax_number', '1') == '1')>
+                                    إظهار الرقم الضريبي
+                                </label>
+                                <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                    <input type="hidden" name="settings[invoice_show_qr]" value="0">
+                                    <input type="checkbox" name="settings[invoice_show_qr]" value="1" class="rounded border-gray-300 text-yellow-600" @checked($finVal('invoice_show_qr', '0') == '1')>
+                                    إظهار QR
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

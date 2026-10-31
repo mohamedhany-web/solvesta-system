@@ -78,7 +78,7 @@ class CommercialWorkflowController extends Controller
 
         $invoice = $workflow->createDepositInvoice($contract);
 
-        return redirect()->route('invoices.show', $invoice)
+        return redirect()->route('project-invoices.show', $invoice)
             ->with('success', 'تم إنشاء فاتورة الدفعة المقدمة (50%). لا يبدأ المشروع قبل تأكيد الدفع.');
     }
 

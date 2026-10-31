@@ -53,7 +53,7 @@
     <div class="bg-white border rounded-xl overflow-hidden shadow-sm">
         <div class="px-6 py-4 border-b flex justify-between items-center">
             <h2 class="text-lg font-bold">فواتير الخدمة</h2>
-            <a href="{{ route('financial-invoices.index', ['client_id' => $clientService->client_id]) }}" class="text-sm text-blue-600 font-semibold">كل فواتير العميل</a>
+            <a href="{{ route('invoices.index', ['client_id' => $clientService->client_id, 'client_service_id' => $clientService->id]) }}" class="text-sm text-blue-600 font-semibold">فواتير الخدمة الشهرية</a>
         </div>
         <table class="w-full text-sm">
             <thead class="bg-gray-50">
@@ -78,7 +78,7 @@
                             {{ $inv->payment_status === 'paid' ? 'مدفوعة' : 'غير مدفوعة' }}
                         </span>
                     </td>
-                    <td class="px-4 py-3"><a href="{{ route('financial-invoices.show', $inv) }}" class="text-blue-600 font-bold">عرض</a></td>
+                    <td class="px-4 py-3"><a href="{{ route('invoices.show', $inv) }}" class="text-blue-600 font-bold">عرض</a></td>
                 </tr>
                 @empty
                 <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">لم تُصدر فواتير بعد.</td></tr>

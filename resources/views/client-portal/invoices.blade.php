@@ -23,7 +23,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="font-bold text-gray-900">الفواتير (العادية)</h2>
+                <h2 class="font-bold text-gray-900">فواتير المشاريع</h2>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full divide-y divide-gray-200">
@@ -66,7 +66,7 @@
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="font-bold text-gray-900">الفواتير (المالية)</h2>
+                <h2 class="font-bold text-gray-900">الفواتير الشهرية والمالية</h2>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full divide-y divide-gray-200">

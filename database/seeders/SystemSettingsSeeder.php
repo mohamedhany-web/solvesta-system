@@ -263,6 +263,62 @@ class SystemSettingsSeeder extends Seeder
                 'description' => 'ملاحظات مالية للفواتير',
                 'is_public' => true
             ],
+            [
+                'key' => 'invoice_header_title',
+                'value' => 'فاتورة',
+                'type' => 'string',
+                'group' => 'financial',
+                'description' => 'عنوان هيدر الفاتورة',
+                'is_public' => true
+            ],
+            [
+                'key' => 'invoice_header_subtitle',
+                'value' => 'Solvesta Invoice',
+                'type' => 'string',
+                'group' => 'financial',
+                'description' => 'عنوان فرعي لهيدر الفاتورة',
+                'is_public' => true
+            ],
+            [
+                'key' => 'invoice_accent_color',
+                'value' => '#0f172a',
+                'type' => 'string',
+                'group' => 'financial',
+                'description' => 'لون تمييز تصميم الفاتورة',
+                'is_public' => true
+            ],
+            [
+                'key' => 'invoice_show_logo',
+                'value' => '1',
+                'type' => 'boolean',
+                'group' => 'financial',
+                'description' => 'إظهار الشعار في الفاتورة',
+                'is_public' => true
+            ],
+            [
+                'key' => 'invoice_show_tax_number',
+                'value' => '1',
+                'type' => 'boolean',
+                'group' => 'financial',
+                'description' => 'إظهار الرقم الضريبي في الفاتورة',
+                'is_public' => true
+            ],
+            [
+                'key' => 'invoice_show_qr',
+                'value' => '0',
+                'type' => 'boolean',
+                'group' => 'financial',
+                'description' => 'إظهار QR لرابط الفاتورة',
+                'is_public' => true
+            ],
+            [
+                'key' => 'invoice_footer_text',
+                'value' => '',
+                'type' => 'text',
+                'group' => 'financial',
+                'description' => 'نص فوتر مخصص للفاتورة',
+                'is_public' => true
+            ],
         ];
 
         foreach ($settings as $setting) {

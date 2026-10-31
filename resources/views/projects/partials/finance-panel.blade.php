@@ -9,7 +9,7 @@
                 <button class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold">فاتورة تسليم 50%</button>
             </form>
             @elseif($financials['delivery_invoice'])
-            <a href="{{ route('invoices.show', $financials['delivery_invoice']) }}" class="px-4 py-2 rounded-xl border font-bold text-sm text-blue-600">
+            <a href="{{ route('project-invoices.show', $financials['delivery_invoice']) }}" class="px-4 py-2 rounded-xl border font-bold text-sm text-blue-600">
                 فاتورة التسليم — {{ $financials['delivery_invoice']->status }}
             </a>
             @endif
@@ -44,14 +44,14 @@
         @if($financials['deposit_invoice'])
         <div class="p-3 rounded-xl bg-gray-50 border">
             <strong>دفعة مقدمة:</strong>
-            <a href="{{ route('invoices.show', $financials['deposit_invoice']) }}" class="text-blue-600">{{ $financials['deposit_invoice']->invoice_number }}</a>
+            <a href="{{ route('project-invoices.show', $financials['deposit_invoice']) }}" class="text-blue-600">{{ $financials['deposit_invoice']->invoice_number }}</a>
             — {{ $financials['deposit_invoice']->status }}
         </div>
         @endif
         @if($financials['delivery_invoice'])
         <div class="p-3 rounded-xl bg-gray-50 border">
             <strong>عند التسليم:</strong>
-            <a href="{{ route('invoices.show', $financials['delivery_invoice']) }}" class="text-blue-600">{{ $financials['delivery_invoice']->invoice_number }}</a>
+            <a href="{{ route('project-invoices.show', $financials['delivery_invoice']) }}" class="text-blue-600">{{ $financials['delivery_invoice']->invoice_number }}</a>
             — {{ $financials['delivery_invoice']->status }}
         </div>
         @endif
