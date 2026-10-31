@@ -136,25 +136,37 @@ class AccountingDashboardService
     protected function monthlyRevenue(Carbon $start, Carbon $end): float
     {
         $fromLedger = $this->sumLinesForTypeInPeriod('revenue', $start, $end, 'credit');
-
-        $fromInvoices = (float) Invoice::where('status', 'paid')
-            ->whereBetween('paid_date', [$start, $end])
-            ->sum('paid_amount');
-
-        $fromFinancial = (float) FinancialInvoice::where('status', 'paid')
-            ->whereBetween('invoice_date', [$start, $end])
-            ->sum('paid_amount');
-
-        $fromPaymentsIn = (float) Payment::whereIn('status', ['completed', 'paid', 'approved'])
-            ->whereBetween('payment_date', [$start, $end])
-            ->where('payment_type', 'invoice')
-            ->sum('amount');
-
         if ($fromLedger > 0) {
             return $fromLedger;
         }
 
-        return $fromInvoices + $fromFinancial + $fromPaymentsIn;
+        // Prefer actual payments in the period (includes partials, no double-count).
+        $fromPaymentsIn = (float) Payment::whereIn('status', ['completed', 'paid', 'approved'])
+            ->whereBetween('payment_date', [$start->toDateString(), $end->toDateString()])
+            ->where(function ($query) {
+                $query->whereNotNull('invoice_id')
+                    ->orWhereNotNull('project_invoice_id');
+            })
+            ->sum('amount');
+
+        if ($fromPaymentsIn > 0) {
+            return $fromPaymentsIn;
+        }
+
+        // Fallback when payments table is empty: collected amounts on invoices in period.
+        $fromInvoices = (float) Invoice::where('status', '!=', 'cancelled')
+            ->whereBetween('invoice_date', [$start->toDateString(), $end->toDateString()])
+            ->sum('paid_amount');
+
+        $fromFinancial = (float) FinancialInvoice::where('status', '!=', 'cancelled')
+            ->where(function ($query) {
+                $query->whereNull('invoice_type')
+                    ->orWhere('invoice_type', '!=', 'purchase');
+            })
+            ->whereBetween('invoice_date', [$start->toDateString(), $end->toDateString()])
+            ->sum('paid_amount');
+
+        return $fromInvoices + $fromFinancial;
     }
 
     protected function monthlyExpenses(Carbon $start, Carbon $end): float

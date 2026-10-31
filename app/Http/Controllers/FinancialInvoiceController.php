@@ -355,6 +355,12 @@ class FinancialInvoiceController extends Controller
     {
         $financialInvoice->update(['status' => 'sent']);
 
+        try {
+            app(\App\Services\Accounting\AccountingPostingService::class)->postInvoiceSent($financialInvoice);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'تم تحديث حالة الفاتورة إلى مرسل',

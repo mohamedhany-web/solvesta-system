@@ -1,13 +1,11 @@
 <?php
 
 return [
-    // Codes must match records in `accounts` table
-    'cash_or_bank' => '1000',
-    'accounts_receivable' => '1100',
-    'revenue' => '4000',
-    'tax_payable' => '2100',
-    'unapplied_receipts' => '2300',
-    'default_expense' => '5000',
+    // Must match ChartOfAccountsSeeder account codes
+    'cash_or_bank' => '1100',          // النقدية
+    'accounts_receivable' => '1300',   // العملاء
+    'revenue' => '6200',               // إيرادات الخدمات
+    'tax_payable' => '3300',           // الضرائب المستحقة
+    'unapplied_receipts' => '3000',    // الخصوم المتداولة (دفعات غير مخصّصة)
+    'default_expense' => '7600',       // مصروفات أخرى
 ];
-
-

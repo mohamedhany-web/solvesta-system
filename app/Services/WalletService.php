@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
+use App\Services\Accounting\AccountingPostingService;
 use Illuminate\Support\Facades\DB;
 
 class WalletService
@@ -74,6 +75,15 @@ class WalletService
             }
 
             $invoice->save();
+
+            try {
+                $paymentDate = $payment->payment_date instanceof \DateTimeInterface
+                    ? $payment->payment_date->format('Y-m-d')
+                    : (string) $payment->payment_date;
+                app(AccountingPostingService::class)->postInvoicePaid($invoice, $amount, $paymentDate);
+            } catch (\Throwable $e) {
+                report($e);
+            }
 
             if ($invoice->status === 'paid') {
                 try {
@@ -150,6 +160,15 @@ class WalletService
             }
 
             $invoice->save();
+
+            try {
+                $paymentDate = $payment->payment_date instanceof \DateTimeInterface
+                    ? $payment->payment_date->format('Y-m-d')
+                    : (string) $payment->payment_date;
+                app(AccountingPostingService::class)->postInvoicePaid($invoice, $amount, $paymentDate);
+            } catch (\Throwable $e) {
+                report($e);
+            }
 
             return $payment->load('wallet');
         });

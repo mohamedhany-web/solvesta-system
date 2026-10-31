@@ -697,7 +697,7 @@
             @endif
             
             <!-- Navigation - Scrollable -->
-            <nav class="flex-1 overflow-y-auto sidebar-scroll sidebar-nav-bg">
+            <nav id="sidebarNav" class="flex-1 overflow-y-auto sidebar-scroll sidebar-nav-bg">
                 <div class="p-4">
                     <div class="space-y-1.5">
                         <!-- Dashboard (web users only) -->
@@ -1238,6 +1238,38 @@
                         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
                         const sidebar = document.getElementById('sidebar');
                         const sidebarOverlay = document.getElementById('sidebarOverlay');
+                        const sidebarNav = document.getElementById('sidebarNav');
+                        const SIDEBAR_SCROLL_KEY = 'solvesta.sidebarNavScroll';
+
+                        function saveSidebarScroll() {
+                            if (!sidebarNav) return;
+                            try {
+                                sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(sidebarNav.scrollTop));
+                            } catch (e) {}
+                        }
+
+                        function restoreSidebarScroll() {
+                            if (!sidebarNav) return;
+                            try {
+                                const saved = sessionStorage.getItem(SIDEBAR_SCROLL_KEY);
+                                if (saved === null) return;
+                                const top = parseInt(saved, 10);
+                                if (Number.isNaN(top)) return;
+                                // Restore after layout/Alpine group open settles.
+                                const apply = () => { sidebarNav.scrollTop = top; };
+                                apply();
+                                requestAnimationFrame(apply);
+                                setTimeout(apply, 50);
+                                setTimeout(apply, 200);
+                            } catch (e) {}
+                        }
+
+                        if (sidebarNav) {
+                            sidebarNav.addEventListener('scroll', function() {
+                                saveSidebarScroll();
+                            }, { passive: true });
+                            restoreSidebarScroll();
+                        }
                         
                         function openSidebar() {
                             sidebar.classList.add('mobile-open');
@@ -1269,11 +1301,15 @@
                         const sidebarLinks = sidebar.querySelectorAll('.sidebar-link');
                         sidebarLinks.forEach(link => {
                             link.addEventListener('click', function() {
+                                saveSidebarScroll();
                                 if (window.innerWidth <= 768) {
                                     closeSidebar();
                                 }
                             });
                         });
+
+                        window.addEventListener('pagehide', saveSidebarScroll);
+                        window.addEventListener('beforeunload', saveSidebarScroll);
                         
                         // Handle window resize
                         window.addEventListener('resize', function() {

@@ -207,8 +207,16 @@ class PaymentController extends Controller
                     $invoice->save();
 
                     try {
-                        app(AccountingPostingService::class)->postInvoicePaid($invoice, (float) $payment->amount);
+                        $paymentDate = $payment->payment_date instanceof \DateTimeInterface
+                            ? $payment->payment_date->format('Y-m-d')
+                            : (string) $payment->payment_date;
+                        app(AccountingPostingService::class)->postInvoicePaid(
+                            $invoice,
+                            (float) $payment->amount,
+                            $paymentDate
+                        );
                     } catch (\Throwable $e) {
+                        report($e);
                     }
                 }
             } else if ($payment->payment_type === 'invoice' && $payment->client_id) {
@@ -216,6 +224,7 @@ class PaymentController extends Controller
                 try {
                     app(AccountingPostingService::class)->postIncomingPayment(null, (float) $payment->amount, 'PAYMENT-IN-' . $payment->payment_number);
                 } catch (\Throwable $e) {
+                    report($e);
                 }
             }
             }

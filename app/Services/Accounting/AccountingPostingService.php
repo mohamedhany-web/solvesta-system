@@ -2,74 +2,52 @@
 
 namespace App\Services\Accounting;
 
-use App\Models\Invoice;
+use App\Models\Account;
 use App\Models\Expense;
+use App\Models\FinancialInvoice;
+use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
-use App\Models\Account;
 use Illuminate\Support\Facades\DB;
 
 class AccountingPostingService
 {
-    public function postInvoiceSent(Invoice $invoice): void
+    public function postInvoiceSent(Invoice|FinancialInvoice $invoice): void
     {
-        // الاعتراف بالإيراد مقابل الذمم المدينة
         $accounts = config('accounting');
         $arAccount = $this->getAccountByCode($accounts['accounts_receivable']);
         $revenueAccount = $this->getAccountByCode($accounts['revenue']);
         $taxPayableAccount = isset($accounts['tax_payable']) ? $this->getAccountByCode($accounts['tax_payable']) : null;
 
         DB::transaction(function () use ($invoice, $arAccount, $revenueAccount, $taxPayableAccount) {
-            $totalDebit = $invoice->total_amount;
-            $totalCredit = $invoice->total_amount;
+            $totalAmount = (float) $invoice->total_amount;
+            $taxAmount = (float) ($invoice->tax_amount ?? 0);
+            $revenueAmount = (float) ($invoice->subtotal ?? $invoice->amount ?? ($totalAmount - $taxAmount));
+            $entryDate = $invoice->issue_date
+                ?? $invoice->invoice_date
+                ?? now()->toDateString();
 
             $entry = JournalEntry::create([
-                'date' => $invoice->issue_date ?? now()->toDateString(),
-                'reference' => 'INV-' . $invoice->invoice_number,
-                'description' => 'Posting revenue for invoice #' . $invoice->invoice_number,
-                'total_debit' => $totalDebit,
-                'total_credit' => $totalCredit,
+                'date' => $entryDate instanceof \DateTimeInterface ? $entryDate->format('Y-m-d') : $entryDate,
+                'reference' => 'INV-'.$invoice->invoice_number,
+                'description' => 'Posting revenue for invoice #'.$invoice->invoice_number,
+                'total_debit' => $totalAmount,
+                'total_credit' => $totalAmount,
                 'status' => 'posted',
                 'created_by' => auth()->id(),
             ]);
 
-            // Dr Accounts Receivable
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->id,
-                'account_id' => $arAccount->id,
-                'description' => 'Accounts Receivable for invoice',
-                'debit' => $invoice->total_amount,
-                'credit' => 0,
-            ]);
+            $this->createLine($entry->id, $arAccount, 'Accounts Receivable for invoice', $totalAmount, 0);
+            $this->createLine($entry->id, $revenueAccount, 'Revenue for invoice', 0, $revenueAmount);
 
-            $revenueAmount = $invoice->amount;
-            $taxAmount = (float) ($invoice->tax_amount ?? 0);
-
-            // Cr Revenue
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->id,
-                'account_id' => $revenueAccount->id,
-                'description' => 'Revenue for invoice',
-                'debit' => 0,
-                'credit' => $revenueAmount,
-            ]);
-
-            // Cr Tax Payable (if any)
             if ($taxAmount > 0 && $taxPayableAccount) {
-                JournalEntryLine::create([
-                    'journal_entry_id' => $entry->id,
-                    'account_id' => $taxPayableAccount->id,
-                    'description' => 'Tax payable for invoice',
-                    'debit' => 0,
-                    'credit' => $taxAmount,
-                ]);
+                $this->createLine($entry->id, $taxPayableAccount, 'Tax payable for invoice', 0, $taxAmount);
             }
         });
     }
 
-    public function postInvoicePaid(Invoice $invoice, float $amount = null): void
+    public function postInvoicePaid(Invoice|FinancialInvoice $invoice, ?float $amount = null, ?string $paymentDate = null): void
     {
-        // استلام نقدي/بنك مقابل الذمم المدينة
         $accounts = config('accounting');
         $cashAccount = $this->getAccountByCode($accounts['cash_or_bank']);
         $arAccount = $this->getAccountByCode($accounts['accounts_receivable']);
@@ -79,40 +57,35 @@ class AccountingPostingService
             return;
         }
 
-        DB::transaction(function () use ($invoice, $cashAccount, $arAccount, $paidAmount) {
+        $entryDate = $paymentDate
+            ?? $invoice->payment_date
+            ?? $invoice->paid_date
+            ?? now()->toDateString();
+
+        if ($entryDate instanceof \DateTimeInterface) {
+            $entryDate = $entryDate->format('Y-m-d');
+        }
+
+        DB::transaction(function () use ($invoice, $cashAccount, $arAccount, $paidAmount, $entryDate) {
+            $reference = 'INV-PAY-'.$invoice->invoice_number.'-'.now()->format('YmdHis');
+
             $entry = JournalEntry::create([
-                'date' => $invoice->payment_date ?? now()->toDateString(),
-                'reference' => 'INV-PAY-' . $invoice->invoice_number,
-                'description' => 'Customer payment for invoice #' . $invoice->invoice_number,
+                'date' => $entryDate,
+                'reference' => $reference,
+                'description' => 'Customer payment for invoice #'.$invoice->invoice_number,
                 'total_debit' => $paidAmount,
                 'total_credit' => $paidAmount,
                 'status' => 'posted',
                 'created_by' => auth()->id(),
             ]);
 
-            // Dr Cash/Bank
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->id,
-                'account_id' => $cashAccount->id,
-                'description' => 'Cash received',
-                'debit' => $paidAmount,
-                'credit' => 0,
-            ]);
-
-            // Cr Accounts Receivable
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->id,
-                'account_id' => $arAccount->id,
-                'description' => 'Reduce AR',
-                'debit' => 0,
-                'credit' => $paidAmount,
-            ]);
+            $this->createLine($entry->id, $cashAccount, 'Cash received', $paidAmount, 0);
+            $this->createLine($entry->id, $arAccount, 'Reduce AR', 0, $paidAmount);
         });
     }
 
-    public function postIncomingPayment(?Invoice $invoice, float $amount, string $reference = null): void
+    public function postIncomingPayment(Invoice|FinancialInvoice|null $invoice, float $amount, ?string $reference = null): void
     {
-        // مدفوعات واردة غير مرتبطة بفاتورة: نقد/بنك مقابل إيرادات أخرى أو أرباح مؤجلة
         $accounts = config('accounting');
         $cashAccount = $this->getAccountByCode($accounts['cash_or_bank']);
         $unappliedReceiptsAccount = $this->getAccountByCode($accounts['unapplied_receipts']);
@@ -121,37 +94,31 @@ class AccountingPostingService
             $entry = JournalEntry::create([
                 'date' => now()->toDateString(),
                 'reference' => $reference ?? 'PAYMENT-IN',
-                'description' => $invoice ? ('Payment for invoice #' . $invoice->invoice_number) : 'Unapplied incoming payment',
+                'description' => $invoice ? ('Payment for invoice #'.$invoice->invoice_number) : 'Unapplied incoming payment',
                 'total_debit' => $amount,
                 'total_credit' => $amount,
                 'status' => 'posted',
                 'created_by' => auth()->id(),
             ]);
 
-            // Dr Cash/Bank
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->id,
-                'account_id' => $cashAccount->id,
-                'description' => 'Incoming payment',
-                'debit' => $amount,
-                'credit' => 0,
-            ]);
+            $this->createLine($entry->id, $cashAccount, 'Incoming payment', $amount, 0);
 
-            // Cr Unapplied Receipts (or AR if invoice provided)
-            $creditAccount = $invoice ? $this->getAccountByCode(config('accounting.accounts_receivable')) : $unappliedReceiptsAccount;
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->id,
-                'account_id' => $creditAccount->id,
-                'description' => $invoice ? 'Reduce AR' : 'Unapplied receipts',
-                'debit' => 0,
-                'credit' => $amount,
-            ]);
+            $creditAccount = $invoice
+                ? $this->getAccountByCode(config('accounting.accounts_receivable'))
+                : $unappliedReceiptsAccount;
+
+            $this->createLine(
+                $entry->id,
+                $creditAccount,
+                $invoice ? 'Reduce AR' : 'Unapplied receipts',
+                0,
+                $amount
+            );
         });
     }
 
     public function postExpenseApproved(Expense $expense): void
     {
-        // مصروف مقابل نقد/بنك (تبسيطاً)
         $accounts = config('accounting');
         $expenseAccount = $this->getAccountByCode($accounts['default_expense']);
         $cashAccount = $this->getAccountByCode($accounts['cash_or_bank']);
@@ -160,40 +127,44 @@ class AccountingPostingService
             $amount = (float) $expense->amount;
             $entry = JournalEntry::create([
                 'date' => $expense->expense_date ?? now()->toDateString(),
-                'reference' => 'EXP-' . $expense->expense_number,
-                'description' => 'Expense approved #' . $expense->description,
+                'reference' => 'EXP-'.$expense->expense_number,
+                'description' => 'Expense approved #'.$expense->description,
                 'total_debit' => $amount,
                 'total_credit' => $amount,
                 'status' => 'posted',
                 'created_by' => auth()->id(),
             ]);
 
-            // Dr Expense
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->id,
-                'account_id' => $expenseAccount->id,
-                'description' => 'Expense',
-                'debit' => $amount,
-                'credit' => 0,
-            ]);
-
-            // Cr Cash/Bank
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->id,
-                'account_id' => $cashAccount->id,
-                'description' => 'Cash/Bank',
-                'debit' => 0,
-                'credit' => $amount,
-            ]);
+            $this->createLine($entry->id, $expenseAccount, 'Expense', $amount, 0);
+            $this->createLine($entry->id, $cashAccount, 'Cash/Bank', 0, $amount);
         });
+    }
+
+    private function createLine(int $journalEntryId, Account $account, string $description, float $debit, float $credit): void
+    {
+        JournalEntryLine::create([
+            'journal_entry_id' => $journalEntryId,
+            'account_id' => $account->id,
+            'description' => $description,
+            'debit' => $debit,
+            'credit' => $credit,
+        ]);
+
+        // Keep cached Account.balance in sync with ledger lines (same rules as manual journals).
+        if (in_array($account->type, ['asset', 'expense'], true)) {
+            $account->increment('balance', $debit - $credit);
+        } else {
+            $account->increment('balance', $credit - $debit);
+        }
     }
 
     private function getAccountByCode(string $code): Account
     {
         $account = Account::where('code', $code)->first();
-        if (!$account) {
+        if (! $account) {
             throw new \RuntimeException("Account with code {$code} not found. Configure config/accounting.php correctly.");
         }
+
         return $account;
     }
 }
