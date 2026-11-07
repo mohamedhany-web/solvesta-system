@@ -63,6 +63,15 @@ class DepartmentProfileService
             'sidebar_modules' => ['hr', 'promotions', 'training', 'meetings'],
             'levels' => ['محلل', 'أخصائي ترقيات', 'مدير التطوير الوظيفي'],
         ],
+        'DES' => [
+            'name' => 'قسم التصميم',
+            'default_role' => 'designer',
+            'default_position' => 'مصمم UI/UX',
+            'kpi_profile' => 'designer_strict',
+            'career_track' => 'design',
+            'sidebar_modules' => ['projects', 'tasks', 'design', 'meetings', 'training'],
+            'levels' => ['مصمم مبتدئ', 'مصمم', 'مصمم أول', 'مدير تصميم'],
+        ],
         'DEV' => [
             'name' => 'قسم التطوير',
             'default_role' => 'developer',
@@ -154,6 +163,7 @@ class DepartmentProfileService
             'hr_strict' => 'KPI صارم — HR (التزام 30% + جودة 30%)',
             'legal' => 'KPI — قانوني (جودة 40% + التزام 25%)',
             'admin' => 'KPI — إدارة عامة',
+            'designer_strict' => 'KPI صارم — تصميم (تسليم 40% + جودة 30%)',
             'default' => 'KPI افتراضي',
         ];
     }
@@ -174,7 +184,7 @@ class DepartmentProfileService
         }
 
         if ($user->hasRole('designer')) {
-            return ['projects', 'tasks', 'meetings', 'training'];
+            return ['projects', 'tasks', 'design', 'meetings', 'training'];
         }
 
         if ($user->hasRole(['project_manager', 'admin', 'super_admin'])) {

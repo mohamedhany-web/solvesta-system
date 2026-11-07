@@ -115,7 +115,7 @@
                             class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 @error('status') border-red-500 @enderror">
                         <option value="">اختر الحالة</option>
                         @foreach(\App\Models\Task::workflowStatuses() as $status)
-                            <option value="{{ $status }}" {{ old('status', \App\Models\Task::normalizeStatus($task->status)) == $status ? 'selected' : '' }}>{{ \App\Models\Task::statusLabelAr($status) }}</option>
+                            <option value="{{ $status }}" {{ old('status', \App\Models\Task::normalizeStatus($task->status)) == $status ? 'selected' : '' }}>{{ \App\Models\Task::statusLabelAr($status, \App\Models\Task::resolveWorkflowTrack(auth()->user(), $task)) }}</option>
                         @endforeach
                         <option value="cancelled" {{ old('status', $task->status) == 'cancelled' ? 'selected' : '' }}>ملغي</option>
                     </select>

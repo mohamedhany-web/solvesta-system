@@ -144,12 +144,12 @@ class Task extends Model
 
     public function getStatusLabelAttribute(): string
     {
-        return self::statusLabel($this->status);
+        return self::statusLabel($this->status, self::resolveWorkflowTrack(null, $this));
     }
 
     public function getStatusLabelArAttribute(): string
     {
-        return self::statusLabelAr($this->status);
+        return self::statusLabelAr($this->status, self::resolveWorkflowTrack(null, $this));
     }
 
     public function getTaskKeyAttribute(): string
@@ -189,9 +189,54 @@ class Task extends Model
         return self::LEGACY_STATUS_MAP[$status] ?? $status;
     }
 
-    public static function statusLabel(?string $status): string
+    /**
+     * Resolve display track for workflow labels without changing status keys.
+     * design | development
+     */
+    public static function resolveWorkflowTrack(?User $user = null, ?self $task = null): string
     {
-        return match (self::normalizeStatus($status)) {
+        $designSpecializations = ['design', 'ui', 'ux', 'ui_ux', 'graphic', 'branding', 'motion'];
+
+        if ($task) {
+            $specialization = strtolower((string) ($task->specialization ?? ''));
+            if (in_array($specialization, $designSpecializations, true)) {
+                return 'design';
+            }
+
+            $projectType = strtolower((string) optional($task->project)->project_type);
+            if ($projectType === 'design') {
+                return 'design';
+            }
+        }
+
+        $user = $user ?? auth()->user();
+        if ($user && $user->hasRole('designer') && ! $user->hasAnyRole(['developer', 'project_manager', 'admin', 'super_admin'])) {
+            return 'design';
+        }
+
+        return 'development';
+    }
+
+    public static function statusLabel(?string $status, ?string $track = null): string
+    {
+        $normalized = self::normalizeStatus($status);
+        $track = $track ?: 'development';
+
+        if ($track === 'design') {
+            return match ($normalized) {
+                'backlog' => 'Backlog',
+                'todo' => 'Ready to Design',
+                'in_progress' => 'Designing',
+                'code_review' => 'Design Review',
+                'qa_testing' => 'Internal Review',
+                'client_review' => 'Client Review',
+                'done' => 'Delivered',
+                'cancelled' => 'Cancelled',
+                default => (string) $status,
+            };
+        }
+
+        return match ($normalized) {
             'backlog' => 'Backlog',
             'todo' => 'To Do',
             'in_progress' => 'In Progress',
@@ -199,14 +244,31 @@ class Task extends Model
             'qa_testing' => 'QA Testing',
             'client_review' => 'Client Review',
             'done' => 'Done',
-            'cancelled' => 'ملغي',
+            'cancelled' => 'Cancelled',
             default => (string) $status,
         };
     }
 
-    public static function statusLabelAr(?string $status): string
+    public static function statusLabelAr(?string $status, ?string $track = null): string
     {
-        return match (self::normalizeStatus($status)) {
+        $normalized = self::normalizeStatus($status);
+        $track = $track ?: 'development';
+
+        if ($track === 'design') {
+            return match ($normalized) {
+                'backlog' => 'قائمة الانتظار',
+                'todo' => 'جاهز للتصميم',
+                'in_progress' => 'قيد التصميم',
+                'code_review' => 'مراجعة التصميم',
+                'qa_testing' => 'مراجعة داخلية',
+                'client_review' => 'مراجعة العميل',
+                'done' => 'تم التسليم',
+                'cancelled' => 'ملغي',
+                default => (string) $status,
+            };
+        }
+
+        return match ($normalized) {
             'backlog' => 'قائمة الانتظار',
             'todo' => 'للتنفيذ',
             'in_progress' => 'قيد التنفيذ',

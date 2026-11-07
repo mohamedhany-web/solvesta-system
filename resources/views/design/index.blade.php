@@ -3,22 +3,32 @@
 @section('page-title', 'إدارة التصميم')
 
 @section('content')
+@php
+    $workflowTrack = $workflowTrack ?? 'design';
+@endphp
 <div class="w-full">
     <!-- Page Header -->
     <div class="mb-8">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">إدارة التصميم</h1>
-                <p class="text-gray-600">إدارة مشاريع التصميم والأعمال الفنية</p>
+                <p class="text-gray-600">مشاريع التصميم · التاسكات · التسليمات</p>
             </div>
-            @can('create-design')
-            <a href="{{ route('projects.create') }}?type=design" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center shadow-sm">
-                <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                مشروع تصميم جديد
-            </a>
-            @endcan
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('workspace.index') }}" class="bg-white border border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl hover:bg-gray-50 transition-all duration-200 text-sm font-semibold shadow-sm">مساحة العمل</a>
+                @can('create-design')
+                @can('create-projects')
+                <a href="{{ route('projects.create') }}?type=design" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center shadow-sm">
+                    <svg class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    مشروع تصميم جديد
+                </a>
+                @else
+                <span class="text-xs text-gray-500 bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl">إنشاء المشاريع يتم عبر مدير المشروع</span>
+                @endcan
+                @endcan
+            </div>
         </div>
     </div>
 
@@ -30,7 +40,6 @@
 
     <!-- Quick Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Total Projects -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between">
                 <div>
@@ -46,7 +55,6 @@
             </div>
         </div>
 
-        <!-- Active Projects -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between">
                 <div>
@@ -62,7 +70,6 @@
             </div>
         </div>
 
-        <!-- Completed Projects -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between">
                 <div>
@@ -78,7 +85,6 @@
             </div>
         </div>
 
-        <!-- Designers -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between">
                 <div>
@@ -90,6 +96,65 @@
                     <svg class="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+        <div class="xl:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">مهام التصميم</h3>
+                <a href="{{ route('tasks.index') }}" class="text-sm font-semibold text-blue-600 hover:underline">كل المهام</a>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @forelse($myTasks as $task)
+                    <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50">
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-gray-900 truncate">{{ $task->title }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $task->project->name ?? '—' }} · {{ $task->assignedTo->name ?? 'غير معيّن' }}</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">{{ \App\Models\Task::statusLabelAr($task->status, $workflowTrack) }}</span>
+                            <a href="{{ route('tasks.show', $task) }}" class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100">فتح</a>
+                        </div>
+                    </div>
+                @empty
+                    <div class="px-6 py-10 text-center text-sm text-gray-500">لا توجد مهام تصميم حالياً.</div>
+                @endforelse
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">بانتظار المراجعة / التسليم</h3>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    @forelse($awaitingDelivery as $task)
+                        <a href="{{ route('tasks.show', $task) }}" class="block px-6 py-3 hover:bg-gray-50">
+                            <p class="text-sm font-semibold text-gray-900 truncate">{{ $task->title }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ \App\Models\Task::statusLabelAr($task->status, $workflowTrack) }}</p>
+                        </a>
+                    @empty
+                        <div class="px-6 py-8 text-center text-sm text-gray-500">لا يوجد شيء بانتظار المراجعة.</div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">آخر التسليمات</h3>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    @forelse($recentDeliveries as $delivery)
+                        <div class="px-6 py-3">
+                            <p class="text-sm font-semibold text-gray-900 truncate">{{ $delivery->task->title ?? 'مهمة' }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $delivery->user->name ?? '—' }} · {{ $delivery->created_at?->diffForHumans() }}</p>
+                        </div>
+                    @empty
+                        <div class="px-6 py-8 text-center text-sm text-gray-500">لا توجد تسليمات مرفوعة بعد.</div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -131,8 +196,8 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($projects as $project)
                     @php
-                        $totalTasks = $project->tasks()->count();
-                        $completedTasks = $project->tasks()->where('status', 'completed')->count();
+                        $totalTasks = $project->tasks->count();
+                        $completedTasks = $project->tasks->filter(fn ($t) => in_array(\App\Models\Task::normalizeStatus($t->status), ['done', 'completed'], true))->count();
                         $progress = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
                         
                         $statusColors = [

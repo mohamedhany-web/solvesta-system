@@ -12,6 +12,7 @@ class Department extends Model
     public const SIDEBAR_MODULES = [
         'projects' => 'المشاريع و PMO',
         'tasks' => 'المهام ومساحة العمل',
+        'design' => 'إدارة التصميم',
         'dev_workflow' => 'بيئة التطوير',
         'github' => 'تكامل GitHub',
         'bugs' => 'الأخطاء والجودة',

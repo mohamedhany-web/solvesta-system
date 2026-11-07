@@ -5,16 +5,25 @@
 @section('content')
 @php
     $themeColor = \App\Helpers\SettingsHelper::getThemeColor();
+    $workflowTrack = $workflowTrack ?? \App\Models\Task::resolveWorkflowTrack(auth()->user());
+    $isDesignTrack = $workflowTrack === 'design';
 @endphp
 <div class="w-full max-w-full font-tajawal" id="workspace-app">
     @include('partials.erp-page-header', [
-        'title' => 'مساحة عمل المطوّر',
-        'subtitle' => ($teamView ? 'عرض الفريق' : 'مهامي') . ' · Kanban · Git · تقارير · ' . now()->translatedFormat('l j F'),
+        'title' => $isDesignTrack ? 'مساحة عمل المصمم' : 'مساحة عمل المطوّر',
+        'subtitle' => ($teamView ? 'عرض الفريق' : 'مهامي') . ($isDesignTrack ? ' · Kanban · تسليمات · تقارير · ' : ' · Kanban · Git · تقارير · ') . now()->translatedFormat('l j F'),
         'icon' => 'workspace',
     ])
 
     {{-- Quick actions --}}
     <div class="flex flex-wrap gap-2 mb-6 -mt-2">
+        @if($isDesignTrack)
+        @can('view-design')
+        <a href="{{ route('design.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-bold shadow-sm hover:opacity-90 transition" style="background: {{ $themeColor }};">
+            إدارة التصميم
+        </a>
+        @endcan
+        @else
         @can('view-dev-workflow')
         <a href="{{ route('dev-workflow.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-bold shadow-sm hover:opacity-90 transition" style="background: {{ $themeColor }};">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -26,6 +35,7 @@
             تكامل GitHub
         </a>
         @endcan
+        @endif
         <a href="{{ route('daily-reports.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">
             التقرير اليومي
             @unless($todayReport)<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>@endunless
@@ -49,10 +59,10 @@
     <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3 mb-6">
         @foreach([
             ['مفتوحة', $stats['open'], $themeColor, 'مهام نشطة'],
-            ['تنفيذ', $stats['in_progress'], '#2563eb', 'In Progress'],
-            ['Code Review', $stats['code_review'], '#7c3aed', 'مراجعة كود'],
-            ['QA', $stats['qa_testing'], '#0891b2', 'اختبار'],
-            ['مكتملة', $stats['done'], '#059669', 'Done'],
+            [$isDesignTrack ? 'تصميم' : 'تنفيذ', $stats['in_progress'], '#2563eb', $isDesignTrack ? 'قيد التصميم' : 'In Progress'],
+            [$isDesignTrack ? 'مراجعة' : 'Code Review', $stats['code_review'], '#7c3aed', $isDesignTrack ? 'مراجعة التصميم' : 'مراجعة كود'],
+            [$isDesignTrack ? 'داخلي' : 'QA', $stats['qa_testing'], '#0891b2', $isDesignTrack ? 'مراجعة داخلية' : 'اختبار'],
+            [$isDesignTrack ? 'مُسلَّم' : 'مكتملة', $stats['done'], '#059669', $isDesignTrack ? 'تم التسليم' : 'Done'],
             ['متأخرة', $stats['overdue'], '#dc2626', 'تحتاج انتباه'],
             ['عوائق', $stats['blockers'], '#ea580c', 'Blockers'],
             ['ساعات', $stats['estimated_hours'].'س', '#d97706', 'متوقعة'],
@@ -91,7 +101,7 @@
         <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-gray-600">
             @foreach(\App\Models\Task::workflowStatuses() as $i => $status)
                 @if($i > 0)<span class="text-gray-300">→</span>@endif
-                <span class="px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-100">{{ \App\Models\Task::statusLabelAr($status) }}</span>
+                <span class="px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-100">{{ \App\Models\Task::statusLabelAr($status, $workflowTrack) }}</span>
             @endforeach
         </div>
     </div>
@@ -128,7 +138,7 @@
                                 <td class="px-4 py-3 text-xs text-gray-600">{{ $task->project->name ?? '—' }}</td>
                                 <td class="px-4 py-3 text-xs text-violet-700">{{ $task->milestone->name ?? '—' }}</td>
                                 <td class="px-4 py-3">
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100">{{ $task->status_label_ar }}</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100">{{ \App\Models\Task::statusLabelAr($task->status, $workflowTrack) }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-xs capitalize">{{ $task->priority }}</td>
                                 <td class="px-4 py-3 text-xs {{ $task->is_overdue ? 'text-red-600 font-bold' : 'text-gray-500' }}">
@@ -158,7 +168,7 @@
                             <div class="rounded-t-xl px-3 py-2 {{ $styles['header'] }} flex items-center justify-between sticky top-0 z-10 border border-b-0 border-gray-200/50">
                                 <div class="flex items-center gap-1.5 min-w-0">
                                     <span class="w-2 h-2 rounded-full {{ $styles['dot'] }} shrink-0"></span>
-                                    <span class="text-xs font-bold truncate">{{ \App\Models\Task::statusLabelAr($status) }}</span>
+                                    <span class="text-xs font-bold truncate">{{ \App\Models\Task::statusLabelAr($status, $workflowTrack) }}</span>
                                 </div>
                                 <span class="text-[10px] font-bold bg-white/70 rounded-full px-1.5 py-0.5 column-count shrink-0">{{ $columnTasks->count() }}</span>
                             </div>

@@ -123,7 +123,7 @@
                     <select name="status" id="status" required
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 @error('status') border-red-500 @enderror">
                         @foreach(\App\Models\Task::workflowStatuses() as $status)
-                            <option value="{{ $status }}" {{ old('status', 'todo') == $status ? 'selected' : '' }}>{{ \App\Models\Task::statusLabelAr($status) }}</option>
+                            <option value="{{ $status }}" {{ old('status', 'todo') == $status ? 'selected' : '' }}>{{ \App\Models\Task::statusLabelAr($status, \App\Models\Task::resolveWorkflowTrack(auth()->user())) }}</option>
                         @endforeach
                         <option value="cancelled" {{ old('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
                     </select>

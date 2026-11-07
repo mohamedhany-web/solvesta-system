@@ -271,7 +271,9 @@
 
         <!-- Sidebar -->
         <div class="space-y-6">
-            @include('dev-workflow.partials.task-panel', ['task' => $task])
+            @if(auth()->user()?->can('view-dev-workflow') && \App\Models\Task::resolveWorkflowTrack(auth()->user(), $task) !== 'design')
+                @include('dev-workflow.partials.task-panel', ['task' => $task])
+            @endif
 
             <!-- Status & Priority -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -283,10 +285,11 @@
                         @if((int) $task->assigned_to === (int) auth()->id() || auth()->user()->can('edit-tasks'))
                         <form id="taskStatusForm" class="space-y-2">
                             @csrf
+                            @php $taskTrack = \App\Models\Task::resolveWorkflowTrack(auth()->user(), $task); @endphp
                             <select id="taskStatusSelect" name="status" class="w-full rounded-lg border-gray-300 text-sm">
                                 @foreach(\App\Models\Task::workflowStatuses() as $status)
                                     <option value="{{ $status }}" @selected(\App\Models\Task::normalizeStatus($task->status) === $status)>
-                                        {{ \App\Models\Task::statusLabelAr($status) }}
+                                        {{ \App\Models\Task::statusLabelAr($status, $taskTrack) }}
                                     </option>
                                 @endforeach
                             </select>

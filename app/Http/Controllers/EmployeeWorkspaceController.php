@@ -146,6 +146,7 @@ class EmployeeWorkspaceController extends Controller
             ->get();
 
         $githubConfigured = \App\Services\GitHubSettings::isConfigured();
+        $workflowTrack = Task::resolveWorkflowTrack($user);
 
         $accessRequests = collect();
         $pendingAccessCount = 0;
@@ -191,6 +192,7 @@ class EmployeeWorkspaceController extends Controller
             'githubConfigured',
             'accessRequests',
             'pendingAccessCount',
+            'workflowTrack',
         ));
     }
 
