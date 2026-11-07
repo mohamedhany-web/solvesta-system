@@ -6,13 +6,17 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskUpdate;
 use App\Models\User;
+use App\Services\WorkflowTrackService;
 use Illuminate\Http\Request;
 
 class DesignController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, WorkflowTrackService $tracks)
     {
         $user = auth()->user();
+        $designSpecialties = $tracks->specialtyKeysForTrack('design');
+        // Legacy aliases still seen in older tasks
+        $designSpecialties = array_values(array_unique(array_merge($designSpecialties, ['ui', 'ux'])));
 
         $designProjectQuery = Project::query()->where(function ($query) {
             $query->where('project_type', 'design')
@@ -51,8 +55,8 @@ class DesignController extends Controller
         $designers = User::role('designer')->with('employee')->orderBy('name')->get();
 
         $myTasksQuery = Task::with(['project', 'assignedTo'])
-            ->where(function ($q) {
-                $q->whereIn('specialization', ['design', 'ui', 'ux', 'ui_ux', 'graphic', 'branding', 'motion'])
+            ->where(function ($q) use ($designSpecialties) {
+                $q->whereIn('specialization', $designSpecialties)
                     ->orWhereHas('project', function ($pq) {
                         $pq->where('project_type', 'design')
                             ->orWhere('name', 'like', '%تصميم%');
@@ -74,9 +78,9 @@ class DesignController extends Controller
 
         $recentDeliveries = TaskUpdate::with(['user', 'task.project'])
             ->where('type', 'file_upload')
-            ->whereHas('task', function ($q) use ($user) {
-                $q->where(function ($inner) {
-                    $inner->whereIn('specialization', ['design', 'ui', 'ux', 'ui_ux', 'graphic', 'branding', 'motion'])
+            ->whereHas('task', function ($q) use ($user, $designSpecialties) {
+                $q->where(function ($inner) use ($designSpecialties) {
+                    $inner->whereIn('specialization', $designSpecialties)
                         ->orWhereHas('project', fn ($pq) => $pq->where('project_type', 'design'));
                 })->when(
                     ! $user->can('view-all-tasks') && ! $user->can('manage-design'),

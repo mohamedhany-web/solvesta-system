@@ -1,4 +1,4 @@
-@props(['task', 'teamView' => false, 'themeColor' => '#2563eb'])
+@props(['task', 'teamView' => false, 'themeColor' => '#2563eb', 'workflowTrack' => null])
 
 @php
     $priorityColors = [
@@ -11,7 +11,8 @@
     $priorityBorder = $priorityColors[$task->priority] ?? 'border-r-gray-300';
     $activeBranch = $task->gitBranches->first();
     $openPr = $task->pullRequests->first();
-    $searchText = strtolower($task->task_key.' '.$task->title.' '.($task->project->name ?? ''));
+    $specialtyLabel = app(\App\Services\WorkflowTrackService::class)->specialtyLabel($task->specialization);
+    $searchText = strtolower($task->task_key.' '.$task->title.' '.($task->project->name ?? '').' '.($task->specialization ?? ''));
 @endphp
 
 <article
@@ -42,6 +43,9 @@
 
     <div class="flex flex-wrap gap-1 mb-2">
         <span class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-gray-100 text-gray-600">{{ $priorityLabels[$task->priority] ?? $task->priority }}</span>
+        @if($task->specialization)
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-sky-50 text-sky-800 font-medium">{{ $specialtyLabel }}</span>
+        @endif
         @if($task->milestone)
             <span class="text-[10px] px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 font-medium">{{ Str::limit($task->milestone->name, 18) }}</span>
         @endif

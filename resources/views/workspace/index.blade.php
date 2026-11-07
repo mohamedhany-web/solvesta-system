@@ -1,51 +1,94 @@
 @extends('layouts.app')
 
-@section('page-title', 'مساحة عملي')
+@section('page-title', $trackMeta['workspace_title'] ?? 'مساحة عملي')
 
 @section('content')
 @php
     $themeColor = \App\Helpers\SettingsHelper::getThemeColor();
     $workflowTrack = $workflowTrack ?? \App\Models\Task::resolveWorkflowTrack(auth()->user());
-    $isDesignTrack = $workflowTrack === 'design';
+    $trackMeta = $trackMeta ?? [];
+    $statColors = [
+        'open' => $themeColor,
+        'in_progress' => '#2563eb',
+        'code_review' => '#7c3aed',
+        'qa_testing' => '#0891b2',
+        'done' => '#059669',
+        'overdue' => '#dc2626',
+        'blockers' => '#ea580c',
+        'hours' => '#d97706',
+    ];
 @endphp
-<div class="w-full max-w-full font-tajawal" id="workspace-app">
+<div class="w-full max-w-full font-tajawal" id="workspace-app" data-track="{{ $workflowTrack }}">
     @include('partials.erp-page-header', [
-        'title' => $isDesignTrack ? 'مساحة عمل المصمم' : 'مساحة عمل المطوّر',
-        'subtitle' => ($teamView ? 'عرض الفريق' : 'مهامي') . ($isDesignTrack ? ' · Kanban · تسليمات · تقارير · ' : ' · Kanban · Git · تقارير · ') . now()->translatedFormat('l j F'),
+        'title' => $trackMeta['workspace_title'] ?? 'مساحة عملي',
+        'subtitle' => ($teamView ? 'عرض الفريق' : 'مهامي') . ' · ' . ($trackMeta['workspace_subtitle'] ?? 'Kanban') . ' · ' . now()->translatedFormat('l j F'),
         'icon' => 'workspace',
     ])
 
-    {{-- Quick actions --}}
-    <div class="flex flex-wrap gap-2 mb-6 -mt-2">
-        @if($isDesignTrack)
-        @can('view-design')
-        <a href="{{ route('design.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-bold shadow-sm hover:opacity-90 transition" style="background: {{ $themeColor }};">
-            إدارة التصميم
-        </a>
-        @endcan
-        @else
-        @can('view-dev-workflow')
-        <a href="{{ route('dev-workflow.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-bold shadow-sm hover:opacity-90 transition" style="background: {{ $themeColor }};">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            بيئة التطوير
-        </a>
-        @endcan
-        @can('view-github-integration')
-        <a href="{{ route('github.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-bold shadow-sm hover:bg-gray-800">
-            تكامل GitHub
-        </a>
-        @endcan
-        @endif
+    {{-- Track switcher (managers / multi-role) --}}
+    @if(count($availableTracks ?? []) > 1 && (auth()->user()->can('view-all-tasks') || auth()->user()->hasAnyRole(['admin', 'super_admin', 'project_manager'])))
+    <div class="flex flex-wrap gap-2 mb-4 -mt-2">
+        @foreach($availableTracks as $key => $t)
+            <a href="{{ route('workspace.index', array_filter([
+                'track' => $key,
+                'scope' => $teamView ? 'team' : null,
+                'project_id' => $projectId,
+                'view' => $viewMode,
+                'priority' => $priorityFilter,
+                'specialty' => $specialtyFilter,
+            ])) }}"
+               class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold border transition
+                      {{ $workflowTrack === $key ? 'text-white border-transparent' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50' }}"
+               @if($workflowTrack === $key) style="background: {{ $themeColor }};" @endif>
+                {{ $t['label_ar'] ?? $t['label'] ?? $key }}
+            </a>
+        @endforeach
+    </div>
+    @endif
+
+    {{-- Dynamic quick actions from track config --}}
+    <div class="flex flex-wrap gap-2 mb-6 -mt-1">
+        @foreach($quickLinks ?? [] as $link)
+            @if($link === 'dev_workflow')
+                @can('view-dev-workflow')
+                <a href="{{ route('dev-workflow.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-bold shadow-sm hover:opacity-90 transition" style="background: {{ $themeColor }};">بيئة التطوير</a>
+                @endcan
+            @elseif($link === 'design')
+                @can('view-design')
+                <a href="{{ route('design.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-bold shadow-sm hover:opacity-90 transition" style="background: {{ $themeColor }};">إدارة التصميم</a>
+                @endcan
+            @elseif($link === 'tasks')
+                <a href="{{ route('tasks.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">قائمة المهام</a>
+            @elseif($link === 'projects')
+                <a href="{{ route('projects.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">المشاريع</a>
+            @elseif($link === 'clients')
+                @can('view-clients')
+                <a href="{{ route('clients.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">العملاء</a>
+                @endcan
+            @elseif($link === 'bugs')
+                @can('view-bugs')
+                <a href="{{ route('bugs.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">الأخطاء</a>
+                @endcan
+            @elseif($link === 'qa')
+                @can('view-bugs')
+                <a href="{{ route('bugs.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">الجودة</a>
+                @endcan
+            @elseif($link === 'messages')
+                <a href="{{ route('messages.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">الرسائل</a>
+            @endif
+        @endforeach
         <a href="{{ route('daily-reports.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">
             التقرير اليومي
             @unless($todayReport)<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>@endunless
         </a>
-        <a href="{{ route('tasks.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">قائمة المهام</a>
-        <a href="{{ route('projects.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">المشاريع</a>
+        @if(!empty($showGit))
+            @can('view-github-integration')
+            <a href="{{ route('github.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-bold shadow-sm hover:bg-gray-800">تكامل GitHub</a>
+            @endcan
+        @endif
     </div>
 
-    @can('view-dev-workflow')
-    @if(!\App\Services\GitHubSettings::isConfigured())
+    @if(!empty($showGit) && auth()->user()->can('view-dev-workflow') && !($githubConfigured ?? false))
     <div class="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex flex-wrap items-center gap-2">
         <strong>GitHub غير مربوط.</strong>
         @can('manage-github-integration')
@@ -53,30 +96,19 @@
         @endcan
     </div>
     @endif
-    @endcan
 
-    {{-- Stats --}}
+    {{-- Dynamic stats from track --}}
     <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3 mb-6">
-        @foreach([
-            ['مفتوحة', $stats['open'], $themeColor, 'مهام نشطة'],
-            [$isDesignTrack ? 'تصميم' : 'تنفيذ', $stats['in_progress'], '#2563eb', $isDesignTrack ? 'قيد التصميم' : 'In Progress'],
-            [$isDesignTrack ? 'مراجعة' : 'Code Review', $stats['code_review'], '#7c3aed', $isDesignTrack ? 'مراجعة التصميم' : 'مراجعة كود'],
-            [$isDesignTrack ? 'داخلي' : 'QA', $stats['qa_testing'], '#0891b2', $isDesignTrack ? 'مراجعة داخلية' : 'اختبار'],
-            [$isDesignTrack ? 'مُسلَّم' : 'مكتملة', $stats['done'], '#059669', $isDesignTrack ? 'تم التسليم' : 'Done'],
-            ['متأخرة', $stats['overdue'], '#dc2626', 'تحتاج انتباه'],
-            ['عوائق', $stats['blockers'], '#ea580c', 'Blockers'],
-            ['ساعات', $stats['estimated_hours'].'س', '#d97706', 'متوقعة'],
-        ] as [$label, $value, $color, $sub])
+        @foreach($statCards as $card)
         <div class="bg-white rounded-2xl border border-gray-200 p-3 shadow-sm hover:shadow-md transition-shadow">
-            <p class="text-[10px] text-gray-500 font-medium">{{ $label }}</p>
-            <p class="text-xl font-bold mt-0.5" style="color: {{ $color }};">{{ $value }}</p>
-            <p class="text-[9px] text-gray-400 mt-0.5 truncate">{{ $sub }}</p>
+            <p class="text-[10px] text-gray-500 font-medium">{{ $card['label'] }}</p>
+            <p class="text-xl font-bold mt-0.5" style="color: {{ $statColors[$card['key']] ?? $themeColor }};">{{ $card['value'] }}</p>
+            <p class="text-[9px] text-gray-400 mt-0.5 truncate">{{ $card['sub'] }}</p>
         </div>
         @endforeach
     </div>
 
-    @can('view-dev-workflow')
-    @if(!empty($devStats))
+    @if(!empty($showGit) && !empty($devStats))
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         @foreach([
             ['مهام Git', $devStats['assigned'] ?? 0, 'تنفيذ'],
@@ -94,9 +126,66 @@
         @endforeach
     </div>
     @endif
-    @endcan
 
-    {{-- Workflow path --}}
+    {{-- Capacity board --}}
+    @if(in_array('capacity', $widgets ?? [], true) && ($capacity ?? collect())->isNotEmpty())
+    <div class="mb-6 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-sm text-gray-900">لوحة الطاقة الاستيعابية</h3>
+                <p class="text-[10px] text-gray-500">حمل الفريق · مهام مفتوحة · متأخرة</p>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                        <th class="text-right px-4 py-2 text-[10px] font-bold text-gray-500">الموظف</th>
+                        <th class="text-right px-3 py-2 text-[10px] font-bold text-gray-500">القسم</th>
+                        <th class="text-center px-3 py-2 text-[10px] font-bold text-gray-500">مفتوحة</th>
+                        <th class="text-center px-3 py-2 text-[10px] font-bold text-gray-500">تنفيذ</th>
+                        <th class="text-center px-3 py-2 text-[10px] font-bold text-gray-500">مراجعة</th>
+                        <th class="text-center px-3 py-2 text-[10px] font-bold text-gray-500">متأخرة</th>
+                        <th class="text-center px-3 py-2 text-[10px] font-bold text-gray-500">ساعات</th>
+                        <th class="text-center px-3 py-2 text-[10px] font-bold text-gray-500">الأسبوع</th>
+                        <th class="text-center px-3 py-2 text-[10px] font-bold text-gray-500">الحمل</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @foreach($capacity as $row)
+                    @php
+                        $loadClass = match($row['load']) {
+                            'high' => 'bg-red-100 text-red-800',
+                            'medium' => 'bg-amber-100 text-amber-800',
+                            default => 'bg-emerald-100 text-emerald-800',
+                        };
+                        $loadLabel = match($row['load']) {
+                            'high' => 'مرتفع',
+                            'medium' => 'متوسط',
+                            default => 'منخفض',
+                        };
+                    @endphp
+                    <tr class="hover:bg-gray-50/80">
+                        <td class="px-4 py-2.5 text-xs font-semibold text-gray-900">{{ $row['name'] }}</td>
+                        <td class="px-3 py-2.5 text-[11px] text-gray-500">{{ $row['department'] ?? '—' }}</td>
+                        <td class="px-3 py-2.5 text-center text-xs font-bold">{{ $row['open'] }}</td>
+                        <td class="px-3 py-2.5 text-center text-xs">{{ $row['in_progress'] }}</td>
+                        <td class="px-3 py-2.5 text-center text-xs">{{ $row['review'] }}</td>
+                        <td class="px-3 py-2.5 text-center text-xs {{ $row['overdue'] > 0 ? 'text-red-600 font-bold' : '' }}">{{ $row['overdue'] }}</td>
+                        <td class="px-3 py-2.5 text-center text-xs">{{ $row['estimated_hours'] }}س</td>
+                        <td class="px-3 py-2.5 text-center text-xs">{{ $row['week_hours'] }}س</td>
+                        <td class="px-3 py-2.5 text-center">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $loadClass }}">{{ $loadLabel }}</span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    {{-- Workflow path (dynamic labels) --}}
     <div class="mb-6 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm hidden md:block">
         <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-gray-600">
             @foreach(\App\Models\Task::workflowStatuses() as $i => $status)
@@ -107,12 +196,10 @@
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {{-- Main --}}
         <div class="xl:col-span-8 min-w-0">
             @include('workspace.partials.filters')
 
             @if($viewMode === 'list')
-            {{-- List view --}}
             <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
@@ -120,7 +207,7 @@
                             <tr>
                                 <th class="text-right px-4 py-3 text-xs font-bold text-gray-600">المهمة</th>
                                 <th class="text-right px-4 py-3 text-xs font-bold text-gray-600">المشروع</th>
-                                <th class="text-right px-4 py-3 text-xs font-bold text-gray-600">Epic</th>
+                                <th class="text-right px-4 py-3 text-xs font-bold text-gray-600">التخصص</th>
                                 <th class="text-right px-4 py-3 text-xs font-bold text-gray-600">الحالة</th>
                                 <th class="text-right px-4 py-3 text-xs font-bold text-gray-600">الأولوية</th>
                                 <th class="text-right px-4 py-3 text-xs font-bold text-gray-600">التسليم</th>
@@ -129,14 +216,16 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100" id="workspace-list-body">
                             @forelse($tasks as $task)
-                            <tr class="workspace-list-row hover:bg-gray-50/80" data-search="{{ strtolower($task->task_key.' '.$task->title) }}" data-priority="{{ $task->priority }}">
+                            <tr class="workspace-list-row hover:bg-gray-50/80" data-search="{{ strtolower($task->task_key.' '.$task->title.' '.($task->specialization ?? '')) }}" data-priority="{{ $task->priority }}">
                                 <td class="px-4 py-3">
                                     <p class="text-[11px] font-mono font-bold" style="color: {{ $themeColor }};">{{ $task->task_key }}</p>
                                     <p class="font-semibold text-gray-900 text-xs mt-0.5">{{ $task->title }}</p>
                                     @if($task->has_blocker)<span class="text-[10px] text-red-600">🚧 عائق</span>@endif
                                 </td>
                                 <td class="px-4 py-3 text-xs text-gray-600">{{ $task->project->name ?? '—' }}</td>
-                                <td class="px-4 py-3 text-xs text-violet-700">{{ $task->milestone->name ?? '—' }}</td>
+                                <td class="px-4 py-3 text-xs text-gray-600">
+                                    {{ app(\App\Services\WorkflowTrackService::class)->specialtyLabel($task->specialization) }}
+                                </td>
                                 <td class="px-4 py-3">
                                     <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100">{{ \App\Models\Task::statusLabelAr($task->status, $workflowTrack) }}</span>
                                 </td>
@@ -149,14 +238,13 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="7" class="px-4 py-12 text-center text-gray-500 text-sm">لا مهام — تحقق من الفلاتر أو انتظر تعيين مهام من Team Lead</td></tr>
+                            <tr><td colspan="7" class="px-4 py-12 text-center text-gray-500 text-sm">لا مهام — تحقق من الفلاتر أو انتظر تعيين مهام</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
             @else
-            {{-- Kanban --}}
             <div class="overflow-x-auto pb-4 -mx-1 px-1" id="workspace-kanban">
                 <div class="flex gap-3 min-w-max xl:min-w-0 xl:grid xl:grid-cols-7 xl:gap-2">
                     @foreach(\App\Models\Task::workflowStatuses() as $status)
@@ -175,7 +263,7 @@
                             <div class="workspace-dropzone flex-1 bg-white border border-gray-200 rounded-b-xl p-2 space-y-2 overflow-y-auto transition-colors min-h-[120px]"
                                  data-status="{{ $status }}">
                                 @forelse($columnTasks as $task)
-                                    @include('workspace.partials.task-card', ['task' => $task, 'teamView' => $teamView, 'themeColor' => $themeColor])
+                                    @include('workspace.partials.task-card', ['task' => $task, 'teamView' => $teamView, 'themeColor' => $themeColor, 'workflowTrack' => $workflowTrack])
                                 @empty
                                     <div class="empty-state text-center py-6 text-gray-300 text-[11px]">
                                         <p>فارغ</p>
@@ -189,7 +277,6 @@
             @endif
         </div>
 
-        {{-- Sidebar --}}
         <div class="xl:col-span-4">
             @include('workspace.partials.sidebar')
         </div>
@@ -246,7 +333,7 @@
                 showToast(data.message, 'success');
             } catch (err) {
                 showToast(err.message || 'تعذر تحديث الحالة', 'error');
-                setTimeout(() => location.reload(), 1500);
+                setTimeout(() => location.reload(), 1800);
             }
         });
     });

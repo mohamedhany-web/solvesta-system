@@ -1,5 +1,9 @@
+@php
+    $widgets = $widgets ?? [];
+    $showGit = $showGit ?? false;
+@endphp
 <div class="space-y-5">
-    {{-- Daily report --}}
+    @if(in_array('daily_report', $widgets, true))
     <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h3 class="font-bold text-sm text-gray-900">التقرير اليومي</h3>
@@ -22,12 +26,12 @@
             <p class="text-[10px] text-gray-400 mt-2 text-center">هذا الأسبوع: <strong class="text-gray-700">{{ $weekHours }}س</strong></p>
         </div>
     </div>
+    @endif
 
-    {{-- Focus --}}
-    @if($focusTasks->isNotEmpty())
+    @if(in_array('focus', $widgets, true) && $focusTasks->isNotEmpty())
     <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div class="px-4 py-3 border-b border-gray-100">
-            <h3 class="font-bold text-sm text-gray-900">🎯 تركيز اليوم</h3>
+            <h3 class="font-bold text-sm text-gray-900">تركيز اليوم</h3>
             <p class="text-[10px] text-gray-500">عاجلة أو تستحق خلال 3 أيام</p>
         </div>
         <ul class="divide-y divide-gray-50">
@@ -36,7 +40,7 @@
                 <a href="{{ route('tasks.show', $ft) }}" class="block">
                     <p class="text-[10px] font-mono font-bold" style="color: {{ $themeColor }};">{{ $ft->task_key }}</p>
                     <p class="text-xs font-semibold text-gray-900 mt-0.5 line-clamp-2">{{ $ft->title }}</p>
-                    <p class="text-[10px] text-gray-500 mt-1">{{ $ft->project->name ?? '' }} · {{ \App\Models\Task::statusLabelAr($ft->status) }}</p>
+                    <p class="text-[10px] text-gray-500 mt-1">{{ $ft->project->name ?? '' }} · {{ \App\Models\Task::statusLabelAr($ft->status, $workflowTrack ?? null) }}</p>
                 </a>
             </li>
             @endforeach
@@ -44,11 +48,10 @@
     </div>
     @endif
 
-    {{-- Blockers --}}
-    @if($blockerTasks->isNotEmpty())
+    @if(in_array('blockers', $widgets, true) && $blockerTasks->isNotEmpty())
     <div class="bg-white rounded-2xl border border-red-200 overflow-hidden shadow-sm">
         <div class="px-4 py-3 border-b border-red-100 bg-red-50/50">
-            <h3 class="font-bold text-sm text-red-800">🚧 عوائق ({{ $stats['blockers'] }})</h3>
+            <h3 class="font-bold text-sm text-red-800">عوائق ({{ $stats['blockers'] }})</h3>
         </div>
         <ul class="divide-y divide-red-50">
             @foreach($blockerTasks as $bt)
@@ -63,6 +66,47 @@
     </div>
     @endif
 
+    @if(in_array('deliveries', $widgets, true))
+    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        <div class="px-4 py-3 border-b border-gray-100">
+            <h3 class="font-bold text-sm text-gray-900">آخر التسليمات</h3>
+        </div>
+        <ul class="divide-y divide-gray-50">
+            @forelse(($recentDeliveries ?? collect()) as $delivery)
+            <li class="px-4 py-3">
+                <p class="text-[11px] text-gray-800 line-clamp-2">{{ $delivery->comment ?: 'رفع ملف' }}</p>
+                <p class="text-[10px] text-gray-400 mt-0.5">
+                    {{ $delivery->user?->name }}
+                    @if($delivery->task)
+                        · <a href="{{ route('tasks.show', $delivery->task) }}" class="hover:underline" style="color: {{ $themeColor }};">{{ $delivery->task->task_key }}</a>
+                    @endif
+                    · {{ $delivery->created_at?->diffForHumans() }}
+                </p>
+            </li>
+            @empty
+            <li class="px-4 py-6 text-center text-gray-400 text-[11px]">لا تسليمات بعد — ارفع ملفاً من صفحة المهمة</li>
+            @endforelse
+        </ul>
+    </div>
+    @endif
+
+    @if(in_array('awaiting_review', $widgets, true) && ($awaitingReview ?? collect())->isNotEmpty())
+    <div class="bg-white rounded-2xl border border-amber-200 overflow-hidden shadow-sm">
+        <div class="px-4 py-3 border-b border-amber-100 bg-amber-50/50">
+            <h3 class="font-bold text-sm text-amber-900">بانتظار المراجعة</h3>
+        </div>
+        <ul class="divide-y divide-amber-50">
+            @foreach($awaitingReview as $ar)
+            <li class="px-4 py-3">
+                <a href="{{ route('tasks.show', $ar) }}" class="text-xs font-semibold text-gray-900 hover:underline">{{ $ar->title }}</a>
+                <p class="text-[10px] text-gray-500 mt-1">{{ \App\Models\Task::statusLabelAr($ar->status, $workflowTrack ?? null) }} · {{ $ar->assignedTo?->name }}</p>
+            </li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
+    @if($showGit)
     @can('view-dev-workflow')
     @can('manage-github-integration')
     @include('dev-workflow.partials.git-access-requests', [
@@ -75,7 +119,7 @@
     @include('dev-workflow.partials.git-identity-form', ['themeColor' => $themeColor])
     @endcan
 
-    {{-- Active branches --}}
+    @if(in_array('git', $widgets, true) || in_array('repos', $widgets, true))
     <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
             <h3 class="font-bold text-sm">فروعي النشطة</h3>
@@ -95,9 +139,9 @@
             @endforelse
         </ul>
     </div>
+    @endif
 
-    {{-- My PRs --}}
-    @if($myPullRequests->isNotEmpty())
+    @if(in_array('prs', $widgets, true) && $myPullRequests->isNotEmpty())
     <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div class="px-4 py-3 border-b border-gray-100">
             <h3 class="font-bold text-sm">Pull Requests الخاصة بي</h3>
@@ -114,7 +158,7 @@
     @endif
 
     @can('review-code')
-    @if($prsToReview->isNotEmpty())
+    @if(in_array('prs', $widgets, true) && $prsToReview->isNotEmpty())
     <div class="bg-white rounded-2xl border border-amber-200 overflow-hidden shadow-sm">
         <div class="px-4 py-3 border-b border-amber-100 bg-amber-50/50">
             <h3 class="font-bold text-sm text-amber-900">مراجعة مطلوبة</h3>
@@ -131,8 +175,7 @@
     @endif
     @endcan
 
-    {{-- Repos --}}
-    @if($projectRepos->isNotEmpty())
+    @if(in_array('repos', $widgets, true) && $projectRepos->isNotEmpty())
     <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div class="px-4 py-3 border-b border-gray-100">
             <h3 class="font-bold text-sm">مستودعات المشاريع</h3>
@@ -152,9 +195,9 @@
     </div>
     @endif
     @endcan
+    @endif
 
-    {{-- Activity --}}
-    @if($recentActivity->isNotEmpty())
+    @if(in_array('activity', $widgets, true) && $recentActivity->isNotEmpty())
     <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div class="px-4 py-3 border-b border-gray-100">
             <h3 class="font-bold text-sm">آخر النشاط</h3>
@@ -170,16 +213,34 @@
     </div>
     @endif
 
-    {{-- Quick links --}}
     <div class="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
         <h3 class="font-bold text-sm text-gray-900 mb-3">اختصارات</h3>
         <div class="grid grid-cols-2 gap-2">
-            <a href="{{ route('tasks.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">المهام</a>
-            <a href="{{ route('projects.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">المشاريع</a>
-            @can('view-dev-workflow')
-            <a href="{{ route('dev-workflow.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">Git / PR</a>
-            @endcan
-            <a href="{{ route('messages.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">الرسائل</a>
+            @foreach($quickLinks ?? [] as $link)
+                @if($link === 'tasks')
+                    <a href="{{ route('tasks.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">المهام</a>
+                @elseif($link === 'projects')
+                    <a href="{{ route('projects.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">المشاريع</a>
+                @elseif($link === 'dev_workflow')
+                    @can('view-dev-workflow')
+                    <a href="{{ route('dev-workflow.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">Git / PR</a>
+                    @endcan
+                @elseif($link === 'design')
+                    @can('view-design')
+                    <a href="{{ route('design.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">التصميم</a>
+                    @endcan
+                @elseif($link === 'messages')
+                    <a href="{{ route('messages.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">الرسائل</a>
+                @elseif($link === 'clients')
+                    @can('view-clients')
+                    <a href="{{ route('clients.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">العملاء</a>
+                    @endcan
+                @elseif($link === 'bugs' || $link === 'qa')
+                    @can('view-bugs')
+                    <a href="{{ route('bugs.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">{{ $link === 'qa' ? 'الجودة' : 'الأخطاء' }}</a>
+                    @endcan
+                @endif
+            @endforeach
         </div>
     </div>
 </div>

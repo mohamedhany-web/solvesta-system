@@ -116,7 +116,7 @@ class PmoController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:5000',
             'assigned_to' => 'required|exists:users,id',
-            'specialization' => 'nullable|in:backend,frontend,ui_ux,design,qa,pm,other',
+            'specialization' => 'nullable|in:'.implode(',', array_keys(config('workflow_tracks.specialties', []))),
             'estimated_hours' => 'nullable|numeric|min:0',
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date|after_or_equal:start_date',

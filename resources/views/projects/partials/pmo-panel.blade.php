@@ -69,11 +69,10 @@
                             @endforeach
                         </select>
                         <select name="specialization" class="border rounded-lg px-3 py-2">
-                            <option value="backend">Backend</option>
-                            <option value="frontend">Frontend</option>
-                            <option value="ui_ux">UI/UX</option>
-                            <option value="qa">QA</option>
-                            <option value="design">Design</option>
+                            <option value="">التخصص</option>
+                            @foreach(\App\Models\Task::specialtyOptions() as $specKey => $specLabel)
+                                <option value="{{ $specKey }}">{{ $specLabel }}</option>
+                            @endforeach
                         </select>
                         <input type="number" step="0.5" name="estimated_hours" placeholder="ساعات تقديرية" class="border rounded-lg px-3 py-2">
                         <input type="date" name="due_date" class="border rounded-lg px-3 py-2">

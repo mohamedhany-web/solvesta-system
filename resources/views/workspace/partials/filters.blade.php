@@ -5,6 +5,8 @@
         'milestone_id' => $milestoneId,
         'view' => $viewMode,
         'priority' => $priorityFilter,
+        'specialty' => $specialtyFilter ?? null,
+        'track' => $forcedTrack ?? ($workflowTrack ?? null),
     ]);
 @endphp
 <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-5 shadow-sm">
@@ -12,6 +14,9 @@
         <form method="GET" action="{{ route('workspace.index') }}" class="flex flex-wrap flex-1 gap-3 items-end">
             @if($teamView)<input type="hidden" name="scope" value="team">@endif
             @if($viewMode)<input type="hidden" name="view" value="{{ $viewMode }}">@endif
+            @if(!empty($forcedTrack) || !empty($workflowTrack))
+                <input type="hidden" name="track" value="{{ $forcedTrack ?? $workflowTrack }}">
+            @endif
             <div class="min-w-[140px] flex-1">
                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">المشروع</label>
                 <select name="project_id" class="w-full rounded-xl border-gray-300 text-sm" onchange="this.form.submit()">
@@ -41,8 +46,19 @@
                     @endforeach
                 </select>
             </div>
-            @if($projectId || $milestoneId || $priorityFilter)
-            <a href="{{ route('workspace.index', $teamView ? ['scope' => 'team', 'view' => $viewMode] : ['view' => $viewMode]) }}" class="text-xs text-gray-500 hover:text-gray-800 py-2 px-2">مسح</a>
+            @if(!empty($specialtyOptions))
+            <div class="min-w-[130px]">
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">التخصص</label>
+                <select name="specialty" class="w-full rounded-xl border-gray-300 text-sm" onchange="this.form.submit()">
+                    <option value="">الكل</option>
+                    @foreach($specialtyOptions as $specKey => $specLabel)
+                        <option value="{{ $specKey }}" @selected(($specialtyFilter ?? null) === $specKey)>{{ $specLabel }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
+            @if($projectId || $milestoneId || $priorityFilter || ($specialtyFilter ?? null))
+            <a href="{{ route('workspace.index', array_filter(['scope' => $teamView ? 'team' : null, 'view' => $viewMode, 'track' => $forcedTrack ?? null])) }}" class="text-xs text-gray-500 hover:text-gray-800 py-2 px-2">مسح</a>
             @endif
         </form>
 
@@ -64,10 +80,10 @@
 
             @can('view-all-tasks')
             <div class="flex rounded-xl border border-gray-200 overflow-hidden text-xs font-bold">
-                <a href="{{ route('workspace.index', array_filter(['project_id' => $projectId, 'milestone_id' => $milestoneId, 'view' => $viewMode, 'priority' => $priorityFilter])) }}"
+                <a href="{{ route('workspace.index', array_filter(['project_id' => $projectId, 'milestone_id' => $milestoneId, 'view' => $viewMode, 'priority' => $priorityFilter, 'specialty' => $specialtyFilter ?? null, 'track' => $forcedTrack ?? null])) }}"
                    class="px-3 py-2 {{ !$teamView ? 'text-white' : 'bg-white text-gray-600' }}"
                    @if(!$teamView) style="background: {{ $themeColor }};" @endif>مهامي</a>
-                <a href="{{ route('workspace.index', array_filter(['scope' => 'team', 'project_id' => $projectId, 'milestone_id' => $milestoneId, 'view' => $viewMode, 'priority' => $priorityFilter])) }}"
+                <a href="{{ route('workspace.index', array_filter(['scope' => 'team', 'project_id' => $projectId, 'milestone_id' => $milestoneId, 'view' => $viewMode, 'priority' => $priorityFilter, 'specialty' => $specialtyFilter ?? null, 'track' => $forcedTrack ?? null])) }}"
                    class="px-3 py-2 {{ $teamView ? 'text-white' : 'bg-white text-gray-600' }}"
                    @if($teamView) style="background: {{ $themeColor }};" @endif>الفريق</a>
             </div>

@@ -75,6 +75,7 @@ class PmoService
                 'backend' => 'backend',
                 'frontend' => 'frontend',
                 'testing' => 'qa',
+                'design' => 'design',
                 default => 'other',
             },
             'estimated_hours' => $data['estimated_hours'] ?? 0,

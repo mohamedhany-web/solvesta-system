@@ -189,96 +189,28 @@ class Task extends Model
         return self::LEGACY_STATUS_MAP[$status] ?? $status;
     }
 
-    /**
-     * Resolve display track for workflow labels without changing status keys.
-     * design | development
-     */
-    public static function resolveWorkflowTrack(?User $user = null, ?self $task = null): string
+    public static function resolveWorkflowTrack(?User $user = null, ?self $task = null, ?string $forced = null): string
     {
-        $designSpecializations = ['design', 'ui', 'ux', 'ui_ux', 'graphic', 'branding', 'motion'];
-
-        if ($task) {
-            $specialization = strtolower((string) ($task->specialization ?? ''));
-            if (in_array($specialization, $designSpecializations, true)) {
-                return 'design';
-            }
-
-            $projectType = strtolower((string) optional($task->project)->project_type);
-            if ($projectType === 'design') {
-                return 'design';
-            }
-        }
-
-        $user = $user ?? auth()->user();
-        if ($user && $user->hasRole('designer') && ! $user->hasAnyRole(['developer', 'project_manager', 'admin', 'super_admin'])) {
-            return 'design';
-        }
-
-        return 'development';
+        return app(\App\Services\WorkflowTrackService::class)->resolve($user, $task, $forced);
     }
 
     public static function statusLabel(?string $status, ?string $track = null): string
     {
-        $normalized = self::normalizeStatus($status);
-        $track = $track ?: 'development';
+        $track = $track ?: self::resolveWorkflowTrack();
 
-        if ($track === 'design') {
-            return match ($normalized) {
-                'backlog' => 'Backlog',
-                'todo' => 'Ready to Design',
-                'in_progress' => 'Designing',
-                'code_review' => 'Design Review',
-                'qa_testing' => 'Internal Review',
-                'client_review' => 'Client Review',
-                'done' => 'Delivered',
-                'cancelled' => 'Cancelled',
-                default => (string) $status,
-            };
-        }
-
-        return match ($normalized) {
-            'backlog' => 'Backlog',
-            'todo' => 'To Do',
-            'in_progress' => 'In Progress',
-            'code_review' => 'Code Review',
-            'qa_testing' => 'QA Testing',
-            'client_review' => 'Client Review',
-            'done' => 'Done',
-            'cancelled' => 'Cancelled',
-            default => (string) $status,
-        };
+        return app(\App\Services\WorkflowTrackService::class)->statusLabel((string) $status, $track, false);
     }
 
     public static function statusLabelAr(?string $status, ?string $track = null): string
     {
-        $normalized = self::normalizeStatus($status);
-        $track = $track ?: 'development';
+        $track = $track ?: self::resolveWorkflowTrack();
 
-        if ($track === 'design') {
-            return match ($normalized) {
-                'backlog' => 'قائمة الانتظار',
-                'todo' => 'جاهز للتصميم',
-                'in_progress' => 'قيد التصميم',
-                'code_review' => 'مراجعة التصميم',
-                'qa_testing' => 'مراجعة داخلية',
-                'client_review' => 'مراجعة العميل',
-                'done' => 'تم التسليم',
-                'cancelled' => 'ملغي',
-                default => (string) $status,
-            };
-        }
+        return app(\App\Services\WorkflowTrackService::class)->statusLabel((string) $status, $track, true);
+    }
 
-        return match ($normalized) {
-            'backlog' => 'قائمة الانتظار',
-            'todo' => 'للتنفيذ',
-            'in_progress' => 'قيد التنفيذ',
-            'code_review' => 'مراجعة الكود',
-            'qa_testing' => 'اختبار QA',
-            'client_review' => 'مراجعة العميل',
-            'done' => 'مكتمل',
-            'cancelled' => 'ملغي',
-            default => (string) $status,
-        };
+    public static function specialtyOptions(): array
+    {
+        return app(\App\Services\WorkflowTrackService::class)->specialtyOptions();
     }
 
     public static function columnStyles(): array
