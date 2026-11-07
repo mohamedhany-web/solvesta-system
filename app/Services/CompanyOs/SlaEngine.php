@@ -7,10 +7,14 @@ use App\Models\Employee;
 use App\Models\EntityLifecycle;
 use App\Models\FinancialInvoice;
 use App\Models\Project;
+use App\Services\WorkspaceGovernanceService;
 
 class SlaEngine
 {
-    public function __construct(private ExceptionService $exceptions) {}
+    public function __construct(
+        private ExceptionService $exceptions,
+        private WorkspaceGovernanceService $workspaceGovernance,
+    ) {}
 
     public function scan(): int
     {
@@ -19,6 +23,7 @@ class SlaEngine
         $opened += $this->scanProjectDeadlines();
         $opened += $this->scanOverdueInvoices();
         $opened += $this->scanPendingApprovals();
+        $opened += $this->workspaceGovernance->scan();
 
         return $opened;
     }

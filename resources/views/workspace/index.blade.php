@@ -75,6 +75,10 @@
                 @endcan
             @elseif($link === 'messages')
                 <a href="{{ route('messages.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">الرسائل</a>
+            @elseif($link === 'ops')
+                @if(auth()->user()->can('view-all-tasks') || auth()->user()->can('view-reports') || auth()->user()->hasAnyRole(['super_admin', 'admin', 'project_manager']))
+                <a href="{{ route('workspace.ops') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">تقارير التشغيل</a>
+                @endif
             @endif
         @endforeach
         <a href="{{ route('daily-reports.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 shadow-sm">
@@ -329,6 +333,11 @@
                     body: JSON.stringify({ status: newStatus }),
                 });
                 const data = await res.json();
+                if (data.approval_required) {
+                    showToast(data.message || 'بانتظار موافقة المدير', 'success');
+                    setTimeout(() => location.reload(), 1200);
+                    return;
+                }
                 if (!res.ok) throw new Error(data.message || 'فشل التحديث');
                 showToast(data.message, 'success');
             } catch (err) {

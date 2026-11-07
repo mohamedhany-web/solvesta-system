@@ -5,8 +5,10 @@ namespace App\Services\CompanyOs;
 use App\Models\ApprovalRequest;
 use App\Models\ApprovalRule;
 use App\Models\FinancialInvoice;
+use App\Models\Task;
 use App\Models\User;
 use App\Policies\DepartmentAccess;
+use App\Services\WorkspaceGovernanceService;
 use Illuminate\Database\Eloquent\Model;
 use RuntimeException;
 
@@ -17,6 +19,7 @@ class ApprovalEngine
         private WorkflowEngine $workflow,
         private ExceptionService $exceptions,
         private CompanyOsNotifier $notifier,
+        private WorkspaceGovernanceService $workspaceGovernance,
     ) {}
 
     public function ruleFor(string $entityType, float $amount): ?ApprovalRule
@@ -109,9 +112,17 @@ class ApprovalEngine
             ], $user);
 
             $this->exceptions->resolve($subject, 'approval_pending');
+            $this->exceptions->resolve($subject, 'task_approval_pending');
 
             if ($subject instanceof FinancialInvoice && $subject->lifecycleStateKey() === 'pending_approval') {
                 $this->workflow->transition($subject, 'approved', $user, true);
+            }
+
+            if ($subject instanceof Task) {
+                $target = $steps[0]['target_status'] ?? null;
+                if ($target && $subject->status !== $target) {
+                    $this->workspaceGovernance->applyApprovedStatus($subject, $target, $user);
+                }
             }
 
             return;
@@ -149,6 +160,7 @@ class ApprovalEngine
             'notes' => $notes,
         ], $user);
         $this->exceptions->resolve($subject, 'approval_pending');
+        $this->exceptions->resolve($subject, 'task_approval_pending');
     }
 
     public function userCanAct(ApprovalRequest $request, User $user): bool

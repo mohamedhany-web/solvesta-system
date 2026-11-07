@@ -3,6 +3,30 @@
     $showGit = $showGit ?? false;
 @endphp
 <div class="space-y-5">
+    @if(($pendingApprovals ?? collect())->isNotEmpty())
+    <div class="bg-white rounded-2xl border border-amber-200 overflow-hidden shadow-sm">
+        <div class="px-4 py-3 border-b border-amber-100 bg-amber-50/50 flex items-center justify-between">
+            <h3 class="font-bold text-sm text-amber-900">موافقات معلّقة</h3>
+            <a href="{{ route('workspace.ops') }}" class="text-[10px] font-bold hover:underline" style="color: {{ $themeColor }};">التقارير</a>
+        </div>
+        <ul class="divide-y divide-amber-50">
+            @foreach($pendingApprovals as $approval)
+            @php $pt = $approval->subject; @endphp
+            <li class="px-4 py-3">
+                <p class="text-xs font-semibold text-gray-900">{{ $pt?->task_key ?? '#'.$approval->id }}</p>
+                <p class="text-[10px] text-gray-500 mt-0.5">{{ $approval->requester?->name }} · {{ $approval->notes }}</p>
+                @if($pt)
+                <div class="flex gap-2 mt-2">
+                    <form method="POST" action="{{ route('os.approvals.decide', $approval) }}">@csrf<input type="hidden" name="decision" value="approve"><button class="text-[10px] font-bold text-emerald-700">اعتماد</button></form>
+                    <form method="POST" action="{{ route('os.approvals.decide', $approval) }}">@csrf<input type="hidden" name="decision" value="reject"><button class="text-[10px] font-bold text-red-600">رفض</button></form>
+                </div>
+                @endif
+            </li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
     @if(in_array('daily_report', $widgets, true))
     <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
@@ -239,6 +263,10 @@
                     @can('view-bugs')
                     <a href="{{ route('bugs.index') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">{{ $link === 'qa' ? 'الجودة' : 'الأخطاء' }}</a>
                     @endcan
+                @elseif($link === 'ops')
+                    @if(auth()->user()->can('view-all-tasks') || auth()->user()->can('view-reports') || auth()->user()->hasAnyRole(['super_admin', 'admin', 'project_manager']))
+                    <a href="{{ route('workspace.ops') }}" class="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-700">التشغيل</a>
+                    @endif
                 @endif
             @endforeach
         </div>

@@ -57,6 +57,24 @@
         </svg>
         تقارير مالية CEO
     </a>
+    <a href="{{ route('workspace.ops') }}"
+       class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('workspace.ops') ? 'active' : '' }}">
+        <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        تقارير تشغيل Workspace
+    </a>
+    @endif
+    @if(Auth::user()?->can('view-all-tasks') || Auth::user()?->can('view-reports') || Auth::user()?->hasRole(['project_manager']))
+    @unless(Auth::user()?->hasRole(['super_admin', 'admin']))
+    <a href="{{ route('workspace.ops') }}"
+       class="sidebar-link flex items-center px-4 py-3 text-sm font-medium {{ request()->routeIs('workspace.ops') ? 'active' : '' }}">
+        <svg class="ml-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        تقارير تشغيل Workspace
+    </a>
+    @endunless
     @endif
     @can('view-users')
     <a href="{{ route('users.index') }}"

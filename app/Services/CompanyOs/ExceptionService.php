@@ -118,6 +118,7 @@ class ExceptionService
             \App\Models\Project::class => route('projects.show', $id),
             \App\Models\Employee::class => route('employees.show', $id),
             \App\Models\FinancialInvoice::class => route('financial-invoices.show', $id),
+            \App\Models\Task::class => route('tasks.show', $id),
             default => null,
         };
     }

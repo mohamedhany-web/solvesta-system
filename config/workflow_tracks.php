@@ -7,6 +7,25 @@
 return [
     'default' => 'general',
 
+    /**
+     * Governance + automation defaults (overridable per track via track.governance).
+     */
+    'governance' => [
+        'overdue_critical_days' => 3,
+        'blocker_escalate_days' => 2,
+        'stale_in_progress_days' => 5,
+        'capacity_high_open' => 8,
+        'capacity_high_overdue' => 3,
+        // Status transitions that require manager approval unless actor can bypass.
+        'approval_required_statuses' => ['done'],
+        'approval_required_priorities' => ['urgent', 'high'],
+        'approval_bypass_roles' => ['super_admin', 'admin', 'project_manager'],
+        'approval_bypass_permissions' => ['edit-tasks', 'view-all-tasks'],
+        'approval_steps' => [
+            ['role' => 'manager', 'label' => 'اعتماد مدير الفريق'],
+        ],
+    ],
+
     'specialties' => [
         'backend' => ['label' => 'Backend', 'label_ar' => 'باك إند', 'track' => 'development'],
         'frontend' => ['label' => 'Frontend', 'label_ar' => 'فرونت إند', 'track' => 'development'],
@@ -37,7 +56,7 @@ return [
             'department_codes' => ['DEV', 'DEV-WEB', 'DEV-MOB'],
             'project_types' => ['software', 'web', 'mobile', 'development'],
             'widgets' => ['git', 'prs', 'repos', 'daily_report', 'focus', 'blockers', 'activity', 'capacity'],
-            'quick_links' => ['tasks', 'projects', 'dev_workflow', 'messages'],
+            'quick_links' => ['tasks', 'projects', 'dev_workflow', 'messages', 'ops'],
             'stat_labels' => [
                 'open' => ['مفتوحة', 'مهام نشطة'],
                 'in_progress' => ['تنفيذ', 'In Progress'],
@@ -75,7 +94,7 @@ return [
             'department_codes' => ['DES'],
             'project_types' => ['design'],
             'widgets' => ['deliveries', 'awaiting_review', 'daily_report', 'focus', 'blockers', 'activity', 'capacity'],
-            'quick_links' => ['tasks', 'projects', 'design', 'messages'],
+            'quick_links' => ['tasks', 'projects', 'design', 'messages', 'ops'],
             'stat_labels' => [
                 'open' => ['مفتوحة', 'مهام نشطة'],
                 'in_progress' => ['تصميم', 'قيد التصميم'],
@@ -113,7 +132,7 @@ return [
             'department_codes' => ['QA'],
             'project_types' => [],
             'widgets' => ['daily_report', 'focus', 'blockers', 'activity', 'capacity'],
-            'quick_links' => ['tasks', 'projects', 'bugs', 'qa', 'messages'],
+            'quick_links' => ['tasks', 'projects', 'bugs', 'qa', 'messages', 'ops'],
             'stat_labels' => [
                 'open' => ['مفتوحة', 'حالات اختبار'],
                 'in_progress' => ['اختبار', 'قيد الاختبار'],
@@ -150,7 +169,7 @@ return [
             'department_codes' => ['SALES'],
             'project_types' => [],
             'widgets' => ['daily_report', 'focus', 'blockers', 'activity', 'capacity'],
-            'quick_links' => ['tasks', 'clients', 'messages'],
+            'quick_links' => ['tasks', 'clients', 'messages', 'ops'],
             'stat_labels' => [
                 'open' => ['مفتوحة', 'متابعات'],
                 'in_progress' => ['متابعة', 'قيد المتابعة'],
@@ -185,7 +204,7 @@ return [
             'department_codes' => [],
             'project_types' => [],
             'widgets' => ['daily_report', 'focus', 'blockers', 'activity', 'capacity'],
-            'quick_links' => ['tasks', 'projects', 'messages'],
+            'quick_links' => ['tasks', 'projects', 'messages', 'ops'],
             'stat_labels' => [
                 'open' => ['مفتوحة', 'مهام نشطة'],
                 'in_progress' => ['تنفيذ', 'قيد التنفيذ'],

@@ -411,6 +411,7 @@ Route::middleware(['auth', 'verified', 'verified.code', 'sales.rep.routes'])->gr
     
     // Tasks
     Route::get('workspace', [EmployeeWorkspaceController::class, 'index'])->name('workspace.index')->middleware('permission:view-own-tasks|view-all-tasks');
+    Route::get('workspace/ops', [\App\Http\Controllers\WorkspaceOpsController::class, 'index'])->name('workspace.ops');
     Route::patch('workspace/tasks/{task}/status', [EmployeeWorkspaceController::class, 'updateStatus'])->name('workspace.tasks.status')->middleware('permission:view-own-tasks|view-all-tasks');
     Route::get('tasks', [TaskController::class, 'index'])->name('tasks.index')->middleware('permission:view-own-tasks|view-all-tasks');
     Route::get('tasks/create', [TaskController::class, 'create'])->name('tasks.create')->middleware('permission:create-tasks');

@@ -77,6 +77,9 @@
                 <div class="absolute bottom-8 left-8 w-32 h-32 rounded-full" style="background: {{ $themeColor }};"></div>
             </div>
             <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                <div class="flex flex-wrap items-center gap-2 absolute top-4 left-4 z-20">
+                    <a href="{{ route('workspace.ops') }}" class="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-white/90 border border-gray-200 text-gray-800 hover:bg-white shadow-sm">تقارير تشغيل Workspace</a>
+                </div>
                 <div class="flex items-center gap-4 min-w-0">
                     <div class="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl flex items-center justify-center shadow-xl flex-shrink-0"
                          style="background: linear-gradient(135deg, {{ $themeColor }} 0%, {{ $themeColor }}dd 100%);">

@@ -13,6 +13,7 @@ use App\Models\TaskUpdate;
 use App\Models\UserGitIdentity;
 use App\Services\DevWorkflowService;
 use App\Services\WorkflowTrackService;
+use App\Services\WorkspaceGovernanceService;
 use App\Support\ProjectScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,8 @@ class EmployeeWorkspaceController extends Controller
 {
     public function __construct(
         private DevWorkflowService $devWorkflow,
-        private WorkflowTrackService $tracks
+        private WorkflowTrackService $tracks,
+        private WorkspaceGovernanceService $governance,
     ) {}
 
     public function index(Request $request): View
@@ -223,6 +225,7 @@ class EmployeeWorkspaceController extends Controller
         $specialtyOptions = $this->tracks->specialtyOptions();
         $widgets = $trackMeta['widgets'] ?? [];
         $quickLinks = $trackMeta['quick_links'] ?? [];
+        $pendingApprovals = $this->governance->pendingApprovalsForManager($user);
 
         return view('workspace.index', compact(
             'board',
@@ -261,6 +264,7 @@ class EmployeeWorkspaceController extends Controller
             'widgets',
             'quickLinks',
             'showGit',
+            'pendingApprovals',
         ));
     }
 
@@ -282,6 +286,22 @@ class EmployeeWorkspaceController extends Controller
         $deliveryError = $this->tracks->validateDelivery($task, $status, $user);
         if ($deliveryError) {
             return response()->json(['message' => $deliveryError], 422);
+        }
+
+        if ($this->governance->requiresApproval($task, $status, $user)) {
+            $approval = $this->governance->requestStatusApproval($task, $status, $user);
+
+            return response()->json([
+                'message' => 'تم إرسال طلب موافقة للمدير قبل اعتماد الحالة.',
+                'approval_required' => true,
+                'approval_id' => $approval->id,
+                'task' => [
+                    'id' => $task->id,
+                    'status' => $task->status,
+                    'status_label' => $task->status_label,
+                    'status_label_ar' => $task->status_label_ar,
+                ],
+            ], 202);
         }
 
         $oldStatus = $task->status;
@@ -307,6 +327,8 @@ class EmployeeWorkspaceController extends Controller
                 'track' => $track,
             ],
         ]);
+
+        $this->governance->recordStatusChange($task, $oldStatus, $status, $user, $track);
 
         return response()->json([
             'message' => 'تم تحديث حالة المهمة.',
